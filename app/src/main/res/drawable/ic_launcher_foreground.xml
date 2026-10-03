@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Cradle (crescent) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M32.07,40.25A24,24 0,1 0,75.93 40.25A22,22 0,1 1,32.07 40.25Z" />
+    <!-- Baby -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M47,52a7,7 0,1 0,14 0a7,7 0,1 0,-14 0z" />
+    <!-- Star -->
+    <path
+        android:fillColor="#FFFFE7A3"
+        android:pathData="M64,24L66,28L70,30L66,32L64,36L62,32L58,30L62,28Z" />
+</vector>

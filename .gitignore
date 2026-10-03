@@ -1,0 +1,21 @@
+# Gradle / Android Studio
+.gradle/
+build/
+/local.properties
+/captures
+.externalNativeBuild
+.cxx
+*.iml
+.idea/
+.kotlin/
+.DS_Store
+
+# Signing keys must never be committed
+*.jks
+*.keystore
+keystore.properties
+
+# Release outputs
+*.apk
+*.aab
+app/release/

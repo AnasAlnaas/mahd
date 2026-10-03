@@ -1,0 +1,277 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    All app text. The default language of this app is Arabic (tools:locale="ar").
+    The mother is addressed in the feminine form. Numbers are passed in as text (%1$s)
+    so they always show as 0-9 digits.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="ar">
+    <string name="app_name">مهد</string>
+
+    <!-- General actions -->
+    <string name="action_back">رجوع</string>
+    <string name="action_cancel">إلغاء</string>
+    <string name="action_ok">موافق</string>
+    <string name="action_save">حفظ</string>
+    <string name="action_delete">حذف</string>
+    <string name="action_edit">تعديل</string>
+    <string name="choose_date">اختاري التاريخ</string>
+    <string name="draft_notice">مسودة: هذا المحتوى لم يراجعه طبيب بعد.</string>
+
+    <!-- Plurals (Arabic has six forms) -->
+    <plurals name="years">
+        <item quantity="zero">%1$s سنة</item>
+        <item quantity="one">سنة</item>
+        <item quantity="two">سنتان</item>
+        <item quantity="few">%1$s سنوات</item>
+        <item quantity="many">%1$s سنة</item>
+        <item quantity="other">%1$s سنة</item>
+    </plurals>
+    <plurals name="months">
+        <item quantity="zero">%1$s شهر</item>
+        <item quantity="one">شهر</item>
+        <item quantity="two">شهران</item>
+        <item quantity="few">%1$s أشهر</item>
+        <item quantity="many">%1$s شهرًا</item>
+        <item quantity="other">%1$s شهر</item>
+    </plurals>
+    <plurals name="weeks">
+        <item quantity="zero">%1$s أسبوع</item>
+        <item quantity="one">أسبوع</item>
+        <item quantity="two">أسبوعان</item>
+        <item quantity="few">%1$s أسابيع</item>
+        <item quantity="many">%1$s أسبوعًا</item>
+        <item quantity="other">%1$s أسبوع</item>
+    </plurals>
+    <plurals name="days">
+        <item quantity="zero">%1$s يوم</item>
+        <item quantity="one">يوم</item>
+        <item quantity="two">يومان</item>
+        <item quantity="few">%1$s أيام</item>
+        <item quantity="many">%1$s يومًا</item>
+        <item quantity="other">%1$s يوم</item>
+    </plurals>
+    <string name="age_newborn">مولود اليوم</string>
+
+    <!-- Tabs and top bar -->
+    <string name="tab_home">الرئيسية</string>
+    <string name="tab_pregnancy">حملي</string>
+    <string name="tab_vaccines">التطعيمات</string>
+    <string name="tab_growth">النمو</string>
+    <string name="tab_milestones">المهارات</string>
+    <string name="settings_title">الإعدادات</string>
+    <string name="switch_profile">تغيير الملف</string>
+    <string name="add_pregnancy">إضافة حمل</string>
+    <string name="add_child">إضافة طفل</string>
+    <string name="default_pregnancy_name">حملي</string>
+    <string name="default_child_name">طفلي</string>
+
+    <!-- Welcome -->
+    <string name="welcome_title">أهلاً بكِ في مهد</string>
+    <string name="welcome_subtitle">رفيقتك من الحمل حتى عمر 4 سنوات</string>
+    <string name="welcome_feature_pregnancy">متابعة الحمل أسبوعًا بأسبوع</string>
+    <string name="welcome_feature_vaccines">تطعيمات طفلك حسب الجدول الليبي مع تذكير بالمواعيد</string>
+    <string name="welcome_feature_growth">نمو طفلك على منحنيات منظمة الصحة العالمية</string>
+    <string name="welcome_feature_milestones">مهارات طفلك المتوقعة في كل عمر</string>
+    <string name="welcome_feature_privacy">بياناتك تبقى على هاتفك، والتطبيق يعمل بدون إنترنت</string>
+    <string name="disclaimer_title">تنبيه مهم</string>
+    <string name="disclaimer_text">هذا التطبيق للمعلومات والمتابعة فقط، ولا يغني عن الطبيب. عند أي قلق أو علامة خطر، راجعي الطبيب أو أقرب مستشفى فورًا.</string>
+    <string name="welcome_accept">فهمت، لنبدأ</string>
+    <string name="choose_title">كيف نبدأ؟</string>
+    <string name="choose_pregnant">أنا حامل</string>
+    <string name="choose_pregnant_hint">تابعي حملك أسبوعًا بأسبوع</string>
+    <string name="choose_child">عندي طفل</string>
+    <string name="choose_child_hint">تطعيماته ونموه ومهاراته</string>
+    <string name="choose_more_later">يمكنك إضافة حمل أو أطفال آخرين لاحقًا.</string>
+
+    <!-- Pregnancy form -->
+    <string name="edit_pregnancy">تعديل بيانات الحمل</string>
+    <string name="pregnancy_name_label">اسم للمتابعة (اختياري)</string>
+    <string name="pregnancy_date_question">ماذا تعرفين؟</string>
+    <string name="pregnancy_by_last_period">تاريخ آخر دورة</string>
+    <string name="pregnancy_by_due_date">موعد الولادة</string>
+    <string name="last_period_label">أول يوم من آخر دورة شهرية</string>
+    <string name="due_date_label">موعد الولادة المتوقع</string>
+    <string name="computed_due_date">موعد الولادة المتوقع: %1$s</string>
+    <string name="computed_current_week">عمر الحمل اليوم: %1$s</string>
+    <string name="due_date_not_plausible">هذا التاريخ لا يناسب حملاً جاريًا. تأكدي من التاريخ.</string>
+    <string name="due_date_hint">إذا حدّد الطبيب موعد الولادة بالسونار، فاختاري «موعد الولادة» وأدخلي التاريخ الذي حدّده.</string>
+    <string name="delete_profile">حذف هذا الملف</string>
+    <string name="delete_profile_title">حذف الملف؟</string>
+    <string name="delete_profile_text">سيتم حذف كل البيانات المسجلة في هذا الملف نهائيًا من الهاتف.</string>
+
+    <!-- Child form -->
+    <string name="edit_child">تعديل بيانات الطفل</string>
+    <string name="child_name_label">اسم الطفل</string>
+    <string name="birth_date_label">تاريخ الميلاد</string>
+    <string name="sex_label">الجنس</string>
+    <string name="sex_boy">ولد</string>
+    <string name="sex_girl">بنت</string>
+    <string name="sex_why">نحتاجه لأن منحنيات النمو تختلف بين الأولاد والبنات.</string>
+    <string name="premature_question">وُلد قبل موعده؟</string>
+    <string name="premature_hint">قبل الأسبوع 37 من الحمل</string>
+    <string name="premature_weeks_label">في أي أسبوع من الحمل وُلد؟</string>
+
+    <!-- Baby born -->
+    <string name="baby_born_title">وصل طفلي</string>
+    <string name="baby_born_congrats">ألف مبروك!</string>
+    <string name="baby_born_text">أدخلي بيانات طفلك ليتحوّل هذا الملف من متابعة الحمل إلى متابعة الطفل: التطعيمات والنمو والمهارات.</string>
+    <string name="baby_born_weeks">وُلد في الأسبوع %1$s من الحمل.</string>
+    <string name="baby_born_premature_note">بما أنه وُلد قبل الأسبوع 37، سنستخدم «العمر المصحَّح» للمهارات والنمو حتى عمر سنتين.</string>
+    <string name="baby_born_question">هل وصل طفلك؟</string>
+    <string name="baby_born_hint">عند الولادة، انقلي هذا الملف إلى متابعة الطفل.</string>
+    <string name="baby_born_button">نعم، وصل طفلي</string>
+
+    <!-- Home: pregnancy -->
+    <string name="pregnancy_week_number">الأسبوع %1$s</string>
+    <string name="pregnancy_exact_age">عمر الحمل: %1$s</string>
+    <string name="days_until_due">باقي %1$s على موعد الولادة (%2$s)</string>
+    <string name="due_today">اليوم هو موعد الولادة المتوقع</string>
+    <string name="past_due">مضى على موعد الولادة %1$s. تابعي مع طبيبتك.</string>
+    <string name="trimester_label">%1$s</string>
+    <string name="trimester_1">الثلث الأول من الحمل</string>
+    <string name="trimester_2">الثلث الثاني من الحمل</string>
+    <string name="trimester_3">الثلث الأخير من الحمل</string>
+    <string name="baby_size_now">طفلك الآن بحجم %1$s تقريبًا</string>
+    <string name="read_this_week">اقرئي عن هذا الأسبوع</string>
+    <string name="danger_signs_title">متى تذهبين إلى المستشفى فورًا؟</string>
+    <string name="danger_signs_teaser">علامات الخطر أثناء الحمل: اعرفيها جيدًا.</string>
+    <string name="danger_signs_intro_title">لا تنتظري</string>
+    <string name="danger_signs_intro">إذا ظهرت عليك أي علامة من هذه العلامات، اذهبي إلى أقرب مستشفى أو اتصلي بالإسعاف فورًا، حتى في الليل.</string>
+    <string name="danger_signs_footer">ثقي بإحساسك: إذا شعرتِ أن شيئًا ليس على ما يرام، راجعي الطبيب حتى لو لم يكن في هذه القائمة.</string>
+
+    <!-- Pregnancy weeks -->
+    <string name="previous_week">الأسبوع السابق</string>
+    <string name="next_week">الأسبوع التالي</string>
+    <string name="this_is_your_week">هذا أسبوعك الحالي</string>
+    <string name="back_to_current_week">العودة إلى أسبوعي الحالي</string>
+    <string name="approx_length">الطول: حوالي %1$s سم</string>
+    <string name="approx_weight_g">الوزن: حوالي %1$s غرام</string>
+    <string name="approx_weight_kg">الوزن: حوالي %1$s كغ</string>
+    <string name="section_baby">طفلك هذا الأسبوع</string>
+    <string name="section_mother">جسمك هذا الأسبوع</string>
+    <string name="section_tip">نصيحة الأسبوع</string>
+
+    <!-- Home: child -->
+    <string name="child_age_title">عمر %1$s</string>
+    <string name="born_on">تاريخ الميلاد: %1$s</string>
+    <string name="due_on">موعد الولادة: %1$s</string>
+    <string name="corrected_age_line">العمر المصحَّح: %1$s</string>
+    <string name="next_vaccine_title">التطعيمة القادمة</string>
+    <string name="all_vaccines_done">أحسنتِ! تم تسجيل كل التطعيمات في الجدول.</string>
+    <string name="vaccine_in_days">باقي %1$s</string>
+    <string name="vaccine_today">موعدها اليوم</string>
+    <string name="vaccine_late_days">مضى على موعدها %1$s</string>
+    <string name="milestones_card_title">مهارات %1$s</string>
+    <string name="milestones_progress">ظهرت %1$s من أصل %2$s</string>
+    <string name="milestones_not_yet_count">مهارات لم تظهر بعد: %1$s</string>
+    <string name="growth_card_title">النمو</string>
+    <string name="growth_card_empty">لم تُسجَّل أي قياسات بعد. سجّلي الوزن والطول بعد كل زيارة للطبيب.</string>
+    <string name="last_weight">آخر وزن: %1$s كغ (%2$s)</string>
+    <string name="tip_of_the_day">فكرة لليوم</string>
+    <string name="growth_band_normal">ضمن المعدل الطبيعي</string>
+    <string name="growth_band_low">أقل من المعتاد قليلًا</string>
+    <string name="growth_band_high">أعلى من المعتاد قليلًا</string>
+    <string name="growth_band_very_low">أقل بكثير من المعتاد</string>
+    <string name="growth_band_very_high">أعلى بكثير من المعتاد</string>
+
+    <!-- Vaccines -->
+    <string name="vaccines_title">جدول التطعيمات</string>
+    <string name="vaccines_intro">اضغطي على التطعيمة عند أخذها لتسجيلها. سنذكّرك قبل كل موعد.</string>
+    <string name="vaccines_draft_notice">مسودة: يجب مطابقة هذا الجدول مع المركز الوطني لمكافحة الأمراض قبل النشر. اتبعي دائمًا ما يقوله مركز التطعيم.</string>
+    <string name="vaccines_source">المصدر: %1$s</string>
+    <string name="dose_given_on">أُعطيت في %1$s</string>
+    <string name="change_date">تغيير التاريخ</string>
+    <string name="mark_not_given">لم تُعطَ بعد</string>
+    <string name="mark_all_given">تم إعطاء الكل</string>
+    <string name="status_done">تمت</string>
+    <string name="status_overdue">متأخرة</string>
+    <string name="status_partly">ناقصة</string>
+    <string name="status_today">اليوم</string>
+    <string name="status_soon">قريبًا</string>
+    <string name="status_upcoming">لاحقًا</string>
+
+    <!-- Growth -->
+    <string name="indicator_weight">الوزن</string>
+    <string name="indicator_length">الطول</string>
+    <string name="indicator_head">محيط الرأس</string>
+    <string name="chart_title_weight">الوزن حسب العمر</string>
+    <string name="chart_title_length">الطول حسب العمر</string>
+    <string name="chart_title_head">محيط الرأس حسب العمر</string>
+    <string name="unit_kg">كغ</string>
+    <string name="unit_cm">سم</string>
+    <string name="growth_need_sex">أضيفي جنس الطفل في الإعدادات لعرض المنحنى.</string>
+    <string name="chart_axis_hint">الأفقي: العمر بالأشهر · العمودي: %1$s</string>
+    <string name="chart_legend">المنطقة الخضراء هي المعدل الطبيعي لمعظم الأطفال (95 من كل 100 طفل). الخط المتقطع في الوسط هو المتوسط.</string>
+    <string name="chart_corrected_note">النقاط مرسومة حسب العمر المصحَّح لأن الطفل وُلد مبكرًا.</string>
+    <string name="latest_measurement">آخر قياس: %1$s %2$s (%3$s)</string>
+    <string name="percentile_plain">من كل 100 طفل في نفس العمر، حوالي %1$s قياسهم أقل من طفلك.</string>
+    <string name="growth_see_doctor">ناقشي هذا القياس مع طبيب الأطفال في الزيارة القادمة. قياس واحد لا يكفي للحكم، والمهم هو اتجاه النمو مع الوقت.</string>
+    <string name="growth_out_of_range">هذا العمر خارج نطاق المنحنيات (من الولادة إلى 5 سنوات).</string>
+    <string name="add_measurement">إضافة قياس</string>
+    <string name="growth_empty">لا توجد قياسات بعد.</string>
+    <string name="measurements_history">القياسات السابقة</string>
+    <string name="delete_measurement_title">حذف هذا القياس؟</string>
+    <string name="value_weight">الوزن %1$s كغ</string>
+    <string name="value_length">الطول %1$s سم</string>
+    <string name="value_head">الرأس %1$s سم</string>
+    <string name="measurement_date">تاريخ القياس</string>
+    <string name="weight_label">الوزن (كغ)</string>
+    <string name="length_label">الطول (سم)</string>
+    <string name="head_label">محيط الرأس (سم)</string>
+    <string name="measurement_hint">يكفي إدخال قياس واحد. استخدمي أرقام الطبيب أو المركز الصحي.</string>
+    <string name="value_out_of_range">رقم غير معقول، تأكدي منه</string>
+
+    <!-- Milestones -->
+    <string name="milestones_by_age">مهارات %1$s</string>
+    <string name="milestones_corrected_note">نستخدم العمر المصحَّح لأن طفلك وُلد مبكرًا.</string>
+    <string name="milestones_intro">معظم الأطفال (75 من كل 100) يقومون بهذه الأشياء في هذا العمر. اختاري لكل مهارة: نعم، أو ليس بعد، أو غير متأكدة.</string>
+    <string name="milestones_future">لم يصل طفلك إلى هذا العمر بعد، ويمكنك الاطلاع على هذه المهارات مسبقًا.</string>
+    <string name="milestones_talk_to_doctor_title">تحدثي مع الطبيب</string>
+    <string name="milestones_talk_to_doctor">بعض المهارات لم تظهر بعد. كل طفل له وتيرته، لكن من الأفضل أن تخبري طبيب الأطفال بذلك في أقرب زيارة. الاكتشاف المبكر يساعد كثيرًا.</string>
+    <string name="milestones_tips_title">كيف تساعدين طفلك</string>
+    <string name="milestones_warnings_title">راجعي الطبيب في أي عمر إذا…</string>
+    <string name="milestones_source">مبنية على قوائم «تعرّفوا على العلامات، تصرّفوا مبكرًا» من مراكز السيطرة على الأمراض الأمريكية (CDC)، بعد تبسيطها. سيراجعها طبيب أطفال ليبي.</string>
+    <string name="answer_yes">نعم</string>
+    <string name="answer_not_yet">ليس بعد</string>
+    <string name="answer_not_sure">غير متأكدة</string>
+
+    <!-- Settings -->
+    <string name="settings_profiles">الملفات</string>
+    <string name="settings_reminders">التذكيرات</string>
+    <string name="reminders_switch">تذكير بمواعيد التطعيمات وببداية كل أسبوع حمل</string>
+    <string name="notifications_blocked">الإشعارات متوقفة لهذا التطبيق في إعدادات الهاتف، فلن تصلك التذكيرات.</string>
+    <string name="open_notification_settings">فتح إعدادات الإشعارات</string>
+    <string name="settings_backup">النسخة الاحتياطية</string>
+    <string name="backup_explain">بياناتك محفوظة على هذا الهاتف فقط. احفظي نسخة احتياطية من وقت لآخر (مثلًا أرسليها لنفسك على واتساب)، حتى تستعيديها إذا ضاع الهاتف أو تغيّر.</string>
+    <string name="backup_save">حفظ نسخة في ملف</string>
+    <string name="backup_share">إرسال النسخة (واتساب، درايف…)</string>
+    <string name="backup_restore">استعادة من نسخة</string>
+    <string name="backup_saved">تم حفظ النسخة الاحتياطية</string>
+    <string name="backup_failed">تعذّر حفظ النسخة، حاولي مرة أخرى</string>
+    <string name="restore_invalid">هذا الملف ليس نسخة احتياطية من تطبيق مهد</string>
+    <string name="restore_confirm_title">استعادة النسخة؟</string>
+    <string name="restore_confirm_text">ستُستبدل كل البيانات الحالية في التطبيق بالبيانات الموجودة في النسخة (عدد الملفات فيها: %1$s). لا يمكن التراجع عن ذلك.</string>
+    <string name="restore_confirm_button">استعادة</string>
+    <string name="restore_done">تمت استعادة النسخة</string>
+    <string name="settings_about">عن التطبيق</string>
+    <string name="about_title">عن مهد</string>
+    <string name="version_label">الإصدار %1$s</string>
+    <string name="about_mission">مهد تطبيق عربي يرافق الأم الليبية والعربية من الحمل حتى عمر 4 سنوات: الحمل أسبوعًا بأسبوع، والتطعيمات، والنمو، والمهارات، بلغة بسيطة وبدون إنترنت.</string>
+    <string name="privacy_title">خصوصيتك</string>
+    <string name="privacy_text">لا يطلب التطبيق إذن الاتصال بالإنترنت، ولا يرسل بياناتك لأي جهة. كل ما تسجلينه يبقى على هاتفك، وفي النسخة الاحتياطية التي تحفظينها أنتِ. لا إعلانات ولا تتبّع.</string>
+    <string name="sources_title">مصادر المعلومات</string>
+    <string name="sources_text">• منحنيات النمو: معايير نمو الطفل من منظمة الصحة العالمية (WHO).\n• المهارات: قوائم CDC «تعرّفوا على العلامات، تصرّفوا مبكرًا» (2022)، مبسّطة.\n• التطعيمات: البرنامج الوطني للتطعيم، المركز الوطني لمكافحة الأمراض – ليبيا.\n• محتوى الحمل: كُتب للتطبيق وسيراجعه طبيب نساء وتوليد.</string>
+    <string name="review_title">المراجعة الطبية</string>
+    <string name="review_pending">هذه نسخة تجريبية. المحتوى الطبي ما زال مسودة، وسيراجعه طبيب أطفال وطبيب نساء وتوليد قبل النشر.</string>
+    <string name="review_done">راجع المحتوى الطبي أطباء مختصون.</string>
+
+    <!-- Notifications -->
+    <string name="notification_channel_name">التذكيرات</string>
+    <string name="notification_channel_description">مواعيد التطعيمات وبداية كل أسبوع حمل</string>
+    <string name="notify_new_week_title">بدأ الأسبوع %1$s من حملك 🌸</string>
+    <string name="notify_new_week_text">اكتشفي ما الجديد عند طفلك هذا الأسبوع.</string>
+    <string name="notify_vaccine_title">تطعيمة %1$s</string>
+    <string name="notify_vaccine_soon">%1$s: باقي %2$s على الموعد.</string>
+    <string name="notify_vaccine_today">%1$s: موعدها اليوم.</string>
+    <string name="notify_vaccine_late">%1$s: مضى على موعدها %2$s. إذا أخذها طفلك، سجّليها في التطبيق.</string>
+</resources>

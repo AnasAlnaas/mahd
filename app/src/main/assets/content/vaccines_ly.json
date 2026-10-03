@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "reviewed": false,
+  "country": "LY",
+  "source": "البرنامج الوطني للتطعيم – المركز الوطني لمكافحة الأمراض، ليبيا (مسودة للمراجعة)",
+  "reviewNote": "DRAFT. Confirmed from public sources: birth doses (BCG, hepatitis B, oral polio — NCDC newborn poster); DTaP at 2, 4, 6 and 18 months; rotavirus at 2, 4, 6 months, not after 8 months; varicella and hepatitis A at 15 months (added 2023). Every dose with \"verify\": true is our best guess and MUST be checked against the official NCDC schedule (vaccine names/combinations, PCV booster, MMR ages, meningococcal vaccine, school-entry boosters) and signed off by a Libyan paediatrician before release.",
+  "visits": [
+    {
+      "id": "birth",
+      "months": 0,
+      "title": "عند الولادة",
+      "doses": [
+        { "id": "bcg", "name": "لقاح السل (BCG)", "description": "يحمي من مرض السل." },
+        { "id": "hepb_birth", "name": "التهاب الكبد ب – جرعة الولادة", "description": "يحمي من فيروس التهاب الكبد ب. يُعطى خلال أول 24 ساعة إن أمكن." },
+        { "id": "opv_0", "name": "شلل الأطفال (نقط بالفم)", "description": "الجرعة الأولى ضد شلل الأطفال." }
+      ]
+    },
+    {
+      "id": "m2",
+      "months": 2,
+      "title": "تطعيمة الشهرين",
+      "doses": [
+        { "id": "hexa_1", "name": "اللقاح السداسي – الجرعة 1", "description": "يحمي من الدفتيريا والكزاز والسعال الديكي وشلل الأطفال والمستدمية النزلية (Hib) والتهاب الكبد ب.", "verify": true },
+        { "id": "pcv_1", "name": "المكورات الرئوية – الجرعة 1", "description": "يحمي من الالتهاب الرئوي والتهاب السحايا وبعض التهابات الأذن.", "verify": true },
+        { "id": "rota_1", "name": "الروتا (نقط بالفم) – الجرعة 1", "description": "يحمي من الإسهال الشديد عند الرضع." }
+      ]
+    },
+    {
+      "id": "m4",
+      "months": 4,
+      "title": "تطعيمة الأربعة أشهر",
+      "doses": [
+        { "id": "hexa_2", "name": "اللقاح السداسي – الجرعة 2", "description": "الجرعة الثانية من اللقاح السداسي.", "verify": true },
+        { "id": "pcv_2", "name": "المكورات الرئوية – الجرعة 2", "description": "الجرعة الثانية.", "verify": true },
+        { "id": "rota_2", "name": "الروتا (نقط بالفم) – الجرعة 2", "description": "الجرعة الثانية." }
+      ]
+    },
+    {
+      "id": "m6",
+      "months": 6,
+      "title": "تطعيمة الستة أشهر",
+      "doses": [
+        { "id": "hexa_3", "name": "اللقاح السداسي – الجرعة 3", "description": "الجرعة الثالثة من اللقاح السداسي.", "verify": true },
+        { "id": "pcv_3", "name": "المكورات الرئوية – الجرعة 3", "description": "الجرعة الثالثة.", "verify": true },
+        { "id": "rota_3", "name": "الروتا (نقط بالفم) – الجرعة 3", "description": "الجرعة الثالثة.", "note": "لا يُعطى لقاح الروتا بعد عمر 8 أشهر." }
+      ]
+    },
+    {
+      "id": "m12",
+      "months": 12,
+      "title": "تطعيمة السنة",
+      "doses": [
+        { "id": "mmr_1", "name": "الحصبة والنكاف والحصبة الألمانية (MMR) – الجرعة 1", "description": "يحمي من الحصبة والنكاف والحصبة الألمانية.", "verify": true }
+      ]
+    },
+    {
+      "id": "m15",
+      "months": 15,
+      "title": "تطعيمة الخمسة عشر شهرًا",
+      "doses": [
+        { "id": "varicella_1", "name": "الجديري المائي", "description": "يحمي من الجديري المائي (أُضيف إلى الجدول الليبي سنة 2023)." },
+        { "id": "hepa_1", "name": "التهاب الكبد أ", "description": "يحمي من فيروس التهاب الكبد أ (أُضيف إلى الجدول الليبي سنة 2023)." }
+      ]
+    },
+    {
+      "id": "m18",
+      "months": 18,
+      "title": "تطعيمة الثمانية عشر شهرًا",
+      "doses": [
+        { "id": "dtap_booster_1", "name": "جرعة منشطة: الدفتيريا والكزاز والسعال الديكي", "description": "الجرعة الرابعة لتقوية المناعة.", "note": "قد تُعطى ضمن لقاح مركّب مع شلل الأطفال والمستدمية النزلية." },
+        { "id": "polio_booster_1", "name": "شلل الأطفال – جرعة منشطة", "description": "لتقوية المناعة ضد شلل الأطفال.", "verify": true },
+        { "id": "mmr_2", "name": "الحصبة والنكاف والحصبة الألمانية (MMR) – الجرعة 2", "description": "الجرعة الثانية.", "verify": true }
+      ]
+    },
+    {
+      "id": "y6",
+      "months": 72,
+      "title": "عند دخول المدرسة (6 سنوات)",
+      "doses": [
+        { "id": "school_booster", "name": "جرعة منشطة قبل المدرسة", "description": "الدفتيريا والكزاز (وغيرها حسب الجدول الوطني).", "verify": true }
+      ]
+    }
+  ]
+}

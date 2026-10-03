@@ -1,0 +1,237 @@
+package ly.mahd.app.data
+
+import android.content.ContentValues
+import android.database.Cursor
+import android.database.sqlite.SQLiteDatabase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withContext
+import java.time.LocalDate
+
+/**
+ * All reads and writes of the mother's data go through here.
+ *
+ * Screens observe data as [Flow]s. Every write bumps [version], which makes every observed
+ * query run again, so the screens always show fresh data without any extra library.
+ */
+class Repository(private val database: MahdDatabase) {
+
+    private val version = MutableStateFlow(0L)
+
+    private fun <T> observe(query: (SQLiteDatabase) -> T): Flow<T> =
+        version.map { query(database.readableDatabase) }.flowOn(Dispatchers.IO)
+
+    private suspend fun <T> write(block: (SQLiteDatabase) -> T): T = withContext(Dispatchers.IO) {
+        val db = database.writableDatabase
+        db.beginTransaction()
+        try {
+            val result = block(db)
+            db.setTransactionSuccessful()
+            result
+        } finally {
+            db.endTransaction()
+            version.update { it + 1 }
+        }
+    }
+
+    // ---------- Profiles ----------
+
+    val profiles: Flow<List<Profile>> = observe { queryProfiles(it) }
+
+    /** Blocking read, for background work such as reminders. */
+    fun profilesNow(): List<Profile> = queryProfiles(database.readableDatabase)
+
+    suspend fun addProfile(profile: Profile): Long = write { it.insertOrThrow("profiles", null, profile.toValues()) }
+
+    suspend fun updateProfile(profile: Profile) = write {
+        it.update("profiles", profile.toValues(), "id = ?", arrayOf(profile.id.toString()))
+    }
+
+    suspend fun deleteProfile(id: Long) = write { it.delete("profiles", "id = ?", arrayOf(id.toString())) }
+
+    private fun queryProfiles(db: SQLiteDatabase): List<Profile> =
+        db.rawQuery("SELECT * FROM profiles ORDER BY id", null).use { c -> c.mapRows { it.toProfile() } }
+
+    // ---------- Growth ----------
+
+    fun growth(profileId: Long): Flow<List<GrowthEntry>> = observe { queryGrowth(it, profileId) }
+
+    suspend fun addGrowth(entry: GrowthEntry): Long = write { it.insertOrThrow("growth", null, entry.toValues()) }
+
+    suspend fun deleteGrowth(id: Long) = write { it.delete("growth", "id = ?", arrayOf(id.toString())) }
+
+    private fun queryGrowth(db: SQLiteDatabase, profileId: Long): List<GrowthEntry> =
+        db.rawQuery("SELECT * FROM growth WHERE profile_id = ? ORDER BY date, id", arrayOf(profileId.toString()))
+            .use { c -> c.mapRows { it.toGrowth() } }
+
+    // ---------- Vaccines ----------
+
+    fun doses(profileId: Long): Flow<Map<String, LocalDate>> = observe { queryDoses(it, profileId) }
+
+    fun dosesNow(profileId: Long): Map<String, LocalDate> = queryDoses(database.readableDatabase, profileId)
+
+    suspend fun setDosesGiven(profileId: Long, doseIds: Collection<String>, date: LocalDate) = write { db ->
+        doseIds.forEach { doseId ->
+            val values = ContentValues().apply {
+                put("profile_id", profileId)
+                put("dose_id", doseId)
+                put("given_date", date.toString())
+            }
+            db.insertWithOnConflict("vaccine_doses", null, values, SQLiteDatabase.CONFLICT_REPLACE)
+        }
+    }
+
+    suspend fun clearDose(profileId: Long, doseId: String) = write {
+        it.delete("vaccine_doses", "profile_id = ? AND dose_id = ?", arrayOf(profileId.toString(), doseId))
+    }
+
+    private fun queryDoses(db: SQLiteDatabase, profileId: Long): Map<String, LocalDate> =
+        db.rawQuery("SELECT dose_id, given_date FROM vaccine_doses WHERE profile_id = ?", arrayOf(profileId.toString()))
+            .use { c -> c.mapRows { it.getString(0) to LocalDate.parse(it.getString(1)) }.toMap() }
+
+    // ---------- Milestones ----------
+
+    fun milestoneAnswers(profileId: Long): Flow<Map<String, MilestoneAnswer>> = observe { db ->
+        db.rawQuery("SELECT item_id, answer FROM milestone_answers WHERE profile_id = ?", arrayOf(profileId.toString()))
+            .use { c ->
+                c.mapRows { row -> MilestoneAnswer.fromCode(row.getInt(1))?.let { row.getString(0) to it } }
+                    .filterNotNull()
+                    .toMap()
+            }
+    }
+
+    suspend fun setMilestoneAnswer(profileId: Long, itemId: String, answer: MilestoneAnswer?) = write { db ->
+        if (answer == null) {
+            db.delete("milestone_answers", "profile_id = ? AND item_id = ?", arrayOf(profileId.toString(), itemId))
+        } else {
+            val values = ContentValues().apply {
+                put("profile_id", profileId)
+                put("item_id", itemId)
+                put("answer", answer.code)
+            }
+            db.insertWithOnConflict("milestone_answers", null, values, SQLiteDatabase.CONFLICT_REPLACE)
+        }
+    }
+
+    // ---------- Backup ----------
+
+    /** Everything the mother has entered, as a plain snapshot (used for backup files). */
+    suspend fun snapshot(): Snapshot = withContext(Dispatchers.IO) {
+        val db = database.readableDatabase
+        Snapshot(
+            profiles = queryProfiles(db),
+            growth = db.rawQuery("SELECT * FROM growth ORDER BY id", null).use { c -> c.mapRows { it.toGrowth() } },
+            doses = db.rawQuery("SELECT * FROM vaccine_doses", null).use { c ->
+                c.mapRows {
+                    DoseRecord(
+                        profileId = it.long("profile_id"),
+                        doseId = it.string("dose_id")!!,
+                        givenDate = LocalDate.parse(it.string("given_date")),
+                    )
+                }
+            },
+            milestones = db.rawQuery("SELECT * FROM milestone_answers", null).use { c ->
+                c.mapRows { Triple(it.long("profile_id"), it.string("item_id")!!, it.int("answer")) }
+            },
+        )
+    }
+
+    /** Replaces ALL data with the snapshot (used when restoring a backup). */
+    suspend fun replaceAll(snapshot: Snapshot) = write { db ->
+        db.delete("milestone_answers", null, null)
+        db.delete("vaccine_doses", null, null)
+        db.delete("growth", null, null)
+        db.delete("profiles", null, null)
+        snapshot.profiles.forEach { p ->
+            db.insertOrThrow("profiles", null, p.toValues().apply { put("id", p.id) })
+        }
+        snapshot.growth.forEach { g ->
+            db.insertOrThrow("growth", null, g.toValues().apply { put("id", g.id) })
+        }
+        snapshot.doses.forEach { d ->
+            db.insertOrThrow("vaccine_doses", null, ContentValues().apply {
+                put("profile_id", d.profileId)
+                put("dose_id", d.doseId)
+                put("given_date", d.givenDate.toString())
+            })
+        }
+        snapshot.milestones.forEach { (profileId, itemId, answer) ->
+            db.insertOrThrow("milestone_answers", null, ContentValues().apply {
+                put("profile_id", profileId)
+                put("item_id", itemId)
+                put("answer", answer)
+            })
+        }
+    }
+
+    data class Snapshot(
+        val profiles: List<Profile>,
+        val growth: List<GrowthEntry>,
+        val doses: List<DoseRecord>,
+        /** (profileId, itemId, answer code) */
+        val milestones: List<Triple<Long, String, Int>>,
+    )
+}
+
+// ---------- Row mapping helpers ----------
+
+private fun <T> Cursor.mapRows(map: (Cursor) -> T): List<T> {
+    val out = ArrayList<T>(count)
+    while (moveToNext()) out.add(map(this))
+    return out
+}
+
+private fun Cursor.string(column: String): String? =
+    getColumnIndexOrThrow(column).let { if (isNull(it)) null else getString(it) }
+
+private fun Cursor.long(column: String): Long = getLong(getColumnIndexOrThrow(column))
+
+private fun Cursor.int(column: String): Int = getInt(getColumnIndexOrThrow(column))
+
+private fun Cursor.intOrNull(column: String): Int? =
+    getColumnIndexOrThrow(column).let { if (isNull(it)) null else getInt(it) }
+
+private fun Cursor.doubleOrNull(column: String): Double? =
+    getColumnIndexOrThrow(column).let { if (isNull(it)) null else getDouble(it) }
+
+private fun Cursor.date(column: String): LocalDate? = string(column)?.let(LocalDate::parse)
+
+private fun Cursor.toProfile() = Profile(
+    id = long("id"),
+    kind = ProfileKind.fromCode(string("kind") ?: ""),
+    name = string("name") ?: "",
+    sex = Sex.fromCode(string("sex")),
+    birthDate = date("birth_date"),
+    dueDate = date("due_date"),
+    weeksAtBirth = intOrNull("weeks_at_birth"),
+)
+
+private fun Cursor.toGrowth() = GrowthEntry(
+    id = long("id"),
+    profileId = long("profile_id"),
+    date = date("date")!!,
+    weightKg = doubleOrNull("weight_kg"),
+    lengthCm = doubleOrNull("length_cm"),
+    headCm = doubleOrNull("head_cm"),
+)
+
+private fun Profile.toValues() = ContentValues().apply {
+    put("kind", kind.code)
+    put("name", name)
+    put("sex", sex?.code)
+    put("birth_date", birthDate?.toString())
+    put("due_date", dueDate?.toString())
+    if (weeksAtBirth != null) put("weeks_at_birth", weeksAtBirth) else putNull("weeks_at_birth")
+}
+
+private fun GrowthEntry.toValues() = ContentValues().apply {
+    put("profile_id", profileId)
+    put("date", date.toString())
+    if (weightKg != null) put("weight_kg", weightKg) else putNull("weight_kg")
+    if (lengthCm != null) put("length_cm", lengthCm) else putNull("length_cm")
+    if (headCm != null) put("head_cm", headCm) else putNull("head_cm")
+}

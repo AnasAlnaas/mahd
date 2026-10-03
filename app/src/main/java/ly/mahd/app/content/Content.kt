@@ -1,0 +1,164 @@
+package ly.mahd.app.content
+
+import android.content.res.AssetManager
+import org.json.JSONArray
+import org.json.JSONObject
+
+/*
+ * Medical and educational content lives in plain files under app/src/main/assets/content/,
+ * NOT in the code. Doctors can review the text, and a future web version can reuse the same files.
+ * Every file carries a "reviewed" flag; the app shows a "draft" notice until a doctor signs it off.
+ */
+
+data class PregnancyWeek(
+    val week: Int,
+    val emoji: String,
+    val size: String,
+    val lengthCm: Double?,
+    val weightG: Double?,
+    val baby: String,
+    val mother: String,
+    val tip: String,
+)
+
+data class PregnancyContent(
+    val reviewed: Boolean,
+    val weeks: List<PregnancyWeek>,
+    val dangerSigns: List<String>,
+) {
+    /** Content for a week; weeks outside the table use the nearest one. */
+    fun week(n: Int): PregnancyWeek = weeks.firstOrNull { it.week == n }
+        ?: if (n < weeks.first().week) weeks.first() else weeks.last()
+
+    val lastWeek: Int get() = weeks.last().week
+}
+
+data class MilestoneDomain(val id: String, val title: String, val emoji: String)
+
+data class MilestoneItem(val id: String, val domain: String, val text: String)
+
+data class MilestoneGroup(
+    val id: String,
+    val months: Int,
+    val title: String,
+    val items: List<MilestoneItem>,
+    val tips: List<String>,
+)
+
+data class MilestoneContent(
+    val reviewed: Boolean,
+    val domains: List<MilestoneDomain>,
+    val groups: List<MilestoneGroup>,
+    val warnings: List<String>,
+) {
+    fun domain(id: String) = domains.firstOrNull { it.id == id }
+
+    /** The checklist that fits a child of this age: the latest one the child has reached. */
+    fun groupForAge(months: Double): MilestoneGroup =
+        groups.lastOrNull { it.months <= months + 0.01 } ?: groups.first()
+}
+
+data class VaccineDose(
+    val id: String,
+    val name: String,
+    val description: String,
+    val note: String?,
+)
+
+data class VaccineVisit(
+    val id: String,
+    /** Age in months at which this visit is due (0 = at birth). */
+    val months: Int,
+    val title: String,
+    val doses: List<VaccineDose>,
+)
+
+data class VaccineSchedule(
+    val reviewed: Boolean,
+    val source: String,
+    val visits: List<VaccineVisit>,
+)
+
+class ContentRepository(private val assets: AssetManager) {
+
+    val pregnancy: PregnancyContent by lazy { parsePregnancy(readJson("content/pregnancy.json")) }
+    val milestones: MilestoneContent by lazy { parseMilestones(readJson("content/milestones.json")) }
+    val vaccines: VaccineSchedule by lazy { parseVaccines(readJson("content/vaccines_ly.json")) }
+    val growth: GrowthStandards by lazy {
+        GrowthStandards.parseCsv(assets.open("content/growth_who.csv").bufferedReader().use { it.readText() })
+    }
+
+    /** Parse everything once in the background so screens open instantly. */
+    fun preload() {
+        pregnancy
+        milestones
+        vaccines
+        growth
+    }
+
+    private fun readJson(path: String): JSONObject =
+        JSONObject(assets.open(path).bufferedReader(Charsets.UTF_8).use { it.readText() })
+
+    private fun parsePregnancy(o: JSONObject) = PregnancyContent(
+        reviewed = o.optBoolean("reviewed", false),
+        weeks = o.getJSONArray("weeks").objects().map { w ->
+            PregnancyWeek(
+                week = w.getInt("week"),
+                emoji = w.optString("emoji"),
+                size = w.optString("size"),
+                lengthCm = w.optNumber("lengthCm"),
+                weightG = w.optNumber("weightG"),
+                baby = w.optString("baby"),
+                mother = w.optString("mother"),
+                tip = w.optString("tip"),
+            )
+        }.sortedBy { it.week },
+        dangerSigns = o.getJSONArray("dangerSigns").strings(),
+    )
+
+    private fun parseMilestones(o: JSONObject) = MilestoneContent(
+        reviewed = o.optBoolean("reviewed", false),
+        domains = o.getJSONArray("domains").objects().map {
+            MilestoneDomain(it.getString("id"), it.getString("title"), it.optString("emoji"))
+        },
+        groups = o.getJSONArray("groups").objects().map { g ->
+            MilestoneGroup(
+                id = g.getString("id"),
+                months = g.getInt("months"),
+                title = g.getString("title"),
+                items = g.getJSONArray("items").objects().map {
+                    MilestoneItem(it.getString("id"), it.getString("domain"), it.getString("text"))
+                },
+                tips = g.optJSONArray("tips")?.strings().orEmpty(),
+            )
+        }.sortedBy { it.months },
+        warnings = o.getJSONArray("warnings").strings(),
+    )
+
+    private fun parseVaccines(o: JSONObject) = VaccineSchedule(
+        reviewed = o.optBoolean("reviewed", false),
+        source = o.optString("source"),
+        visits = o.getJSONArray("visits").objects().map { v ->
+            VaccineVisit(
+                id = v.getString("id"),
+                months = v.getInt("months"),
+                title = v.getString("title"),
+                doses = v.getJSONArray("doses").objects().map { d ->
+                    VaccineDose(
+                        id = d.getString("id"),
+                        name = d.getString("name"),
+                        description = d.optString("description"),
+                        note = if (d.has("note") && !d.isNull("note")) d.getString("note") else null,
+                    )
+                },
+            )
+        }.sortedBy { it.months },
+    )
+}
+
+private fun JSONArray.objects(): List<JSONObject> = (0 until length()).map { getJSONObject(it) }
+
+private fun JSONArray.strings(): List<String> = (0 until length()).map { getString(it) }
+
+private fun JSONObject.optNumber(key: String): Double? =
+    if (has(key) && !isNull(key)) getDouble(key) else null

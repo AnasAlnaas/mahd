@@ -1,0 +1,191 @@
+package ly.mahd.app.ui.screens
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import ly.mahd.app.MahdApp
+import ly.mahd.app.R
+import ly.mahd.app.content.PregnancyWeek
+import ly.mahd.app.data.Profile
+import ly.mahd.app.logic.PregnancyMath
+import ly.mahd.app.ui.Navigator
+import ly.mahd.app.ui.Routes
+import ly.mahd.app.ui.components.AppCard
+import ly.mahd.app.ui.components.AppIcon
+import ly.mahd.app.ui.components.BulletList
+import ly.mahd.app.ui.components.DraftNotice
+import ly.mahd.app.ui.components.LocalToday
+import ly.mahd.app.ui.components.SubScreen
+import ly.mahd.app.ui.components.WarningCard
+import ly.mahd.app.util.Format
+
+/** Week-by-week pregnancy guide. Opens on the current week; arrows move between weeks. */
+@Composable
+fun PregnancyScreen(app: MahdApp, profile: Profile, nav: Navigator, initialWeek: Int?, standalone: Boolean) {
+    val today = LocalToday.current
+    val content = app.content.pregnancy
+    val currentWeek = profile.dueDate?.let { PregnancyMath.gestationalAge(it, today).weeks }
+        ?.coerceIn(1, content.lastWeek) ?: 1
+    var week by rememberSaveable(profile.id) { mutableIntStateOf(initialWeek ?: currentWeek) }
+
+    val body: @Composable (PaddingValues) -> Unit = { padding ->
+        LazyColumn(
+            Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                start = 16.dp, end = 16.dp,
+                top = padding.calculateTopPadding() + 16.dp,
+                bottom = padding.calculateBottomPadding() + 16.dp,
+            ),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            item {
+                WeekSwitcher(
+                    week = week,
+                    lastWeek = content.lastWeek,
+                    isCurrent = week == currentWeek,
+                    onWeek = { week = it },
+                    onToday = { week = currentWeek },
+                )
+            }
+            if (!content.reviewed) item { DraftNotice() }
+            item { WeekDetail(content.week(week)) }
+            item {
+                WarningCard(
+                    title = stringResource(R.string.danger_signs_title),
+                    onClick = { nav.push(Routes.DANGER_SIGNS) },
+                ) { Text(stringResource(R.string.danger_signs_teaser), style = MaterialTheme.typography.bodyLarge) }
+            }
+        }
+    }
+
+    if (standalone) {
+        SubScreen(title = stringResource(R.string.tab_pregnancy), onBack = nav::back, content = body)
+    } else {
+        body(PaddingValues(0.dp))
+    }
+}
+
+@Composable
+private fun WeekSwitcher(week: Int, lastWeek: Int, isCurrent: Boolean, onWeek: (Int) -> Unit, onToday: () -> Unit) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            IconButton(onClick = { onWeek(week - 1) }, enabled = week > 1) {
+                AppIcon(R.drawable.ic_chevron_back, stringResource(R.string.previous_week))
+            }
+            Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    stringResource(R.string.pregnancy_week_number, week.toString()),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Text(
+                    stringResource(R.string.trimester_label, stringResource(trimesterName(PregnancyMath.trimester(week)))),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
+            IconButton(onClick = { onWeek(week + 1) }, enabled = week < lastWeek) {
+                AppIcon(R.drawable.ic_chevron_forward, stringResource(R.string.next_week))
+            }
+        }
+        if (isCurrent) {
+            Text(
+                stringResource(R.string.this_is_your_week),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.secondary,
+            )
+        } else {
+            TextButton(onClick = onToday) { Text(stringResource(R.string.back_to_current_week)) }
+        }
+    }
+}
+
+@Composable
+private fun WeekDetail(w: PregnancyWeek) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        AppCard(containerColor = MaterialTheme.colorScheme.primaryContainer) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(w.emoji, style = MaterialTheme.typography.displayMedium)
+                Spacer(Modifier.width(16.dp))
+                Column {
+                    Text(stringResource(R.string.baby_size_now, w.size), style = MaterialTheme.typography.titleLarge)
+                    val parts = buildList {
+                        w.lengthCm?.let { add(stringResource(R.string.approx_length, Format.decimal(it))) }
+                        w.weightG?.let { g ->
+                            add(
+                                if (g >= 1000) stringResource(R.string.approx_weight_kg, Format.decimal(g / 1000.0, 1))
+                                else stringResource(R.string.approx_weight_g, Format.decimal(g, 0)),
+                            )
+                        }
+                    }
+                    if (parts.isNotEmpty()) Text(parts.joinToString("  ·  "), style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+        }
+        AppCard {
+            Text("👶  " + stringResource(R.string.section_baby), style = MaterialTheme.typography.titleMedium)
+            Text(w.baby, style = MaterialTheme.typography.bodyLarge)
+        }
+        AppCard {
+            Text("🤰  " + stringResource(R.string.section_mother), style = MaterialTheme.typography.titleMedium)
+            Text(w.mother, style = MaterialTheme.typography.bodyLarge)
+        }
+        AppCard(containerColor = MaterialTheme.colorScheme.secondaryContainer) {
+            Text("💡  " + stringResource(R.string.section_tip), style = MaterialTheme.typography.titleMedium)
+            Text(w.tip, style = MaterialTheme.typography.bodyLarge)
+        }
+    }
+}
+
+/** "Go to the hospital now if…" — always one tap away. */
+@Composable
+fun DangerSignsScreen(app: MahdApp, onBack: () -> Unit) {
+    val content = app.content.pregnancy
+    SubScreen(title = stringResource(R.string.danger_signs_title), onBack = onBack) { padding ->
+        LazyColumn(
+            Modifier.fillMaxSize().padding(padding),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            item {
+                WarningCard(title = stringResource(R.string.danger_signs_intro_title)) {
+                    Text(stringResource(R.string.danger_signs_intro), style = MaterialTheme.typography.bodyLarge)
+                }
+            }
+            item {
+                AppCard {
+                    BulletList(content.dangerSigns)
+                }
+            }
+            item {
+                Text(
+                    stringResource(R.string.danger_signs_footer),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Start,
+                )
+            }
+            if (!content.reviewed) item { DraftNotice() }
+        }
+    }
+}
