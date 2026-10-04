@@ -147,6 +147,11 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
             item {
                 AppCard {
                     Text(stringResource(R.string.backup_explain), style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        stringResource(R.string.backup_privacy),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                     OutlinedButton(
                         onClick = { saveLauncher.launch("mahd-backup-$today.json") },
                         modifier = Modifier.fillMaxWidth(),

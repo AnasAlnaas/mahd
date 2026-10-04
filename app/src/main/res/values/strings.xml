@@ -306,6 +306,7 @@
     <string name="backup_save">حفظ نسخة في ملف</string>
     <string name="backup_share">إرسال النسخة (واتساب، درايف…)</string>
     <string name="backup_restore">استعادة من نسخة</string>
+    <string name="backup_privacy">🔒 ملف النسخة فيه معلومات حملك وأطفالك (الأسماء والتواريخ والتطعيمات والقياسات)، ويستطيع أي شخص يصله الملف أن يقرأه. أرسليه لنفسك فقط.</string>
     <string name="backup_saved">تم حفظ النسخة الاحتياطية</string>
     <string name="backup_failed">تعذّر حفظ النسخة، حاولي مرة أخرى</string>
     <string name="restore_invalid">هذا الملف ليس نسخة احتياطية من تطبيق أطوار</string>
