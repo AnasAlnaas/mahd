@@ -35,7 +35,9 @@ Libyan vaccine schedule or Libyan dialect. Plan: MVP first, add features over ti
 - Backups: `BackupFile.decode` validates the whole file (orphan/duplicate rows) before restore. Android Auto Backup
   is ON (database goes to the mother's own Google account); the privacy text says so. Declare it in Play's data-safety form.
 - Content files are covered by `ContentFilesTest`; run `gradlew testDebugUnitTest` after every content edit.
-- Working name "مهد / Mahd", package `ly.mahd.app` — both placeholders, easy to change.
+- App name: "أطوار" (Atwar), from the verse ﴿وَقَدْ خَلَقَكُمْ أَطْوَارًا﴾ (Nuh 71:14) — stages of growth. Decided by the owner.
+  The package `ly.mahd.app`, the `Mahd` class/theme names and the backup marker `"app": "mahd"` are still the old working name:
+  keep the backup marker forever (old backups), change `applicationId` before the first Play release (see build.gradle.kts).
 
 ## MVP scope (v1.0)
 Onboarding + disclaimer; pregnancy and child profiles (several allowed); "Today" home;

@@ -37,6 +37,7 @@ object Format {
     fun months(res: Resources, n: Int): String = res.getQuantityString(R.plurals.months, n, n.toString())
     fun weeks(res: Resources, n: Int): String = res.getQuantityString(R.plurals.weeks, n, n.toString())
     fun days(res: Resources, n: Int): String = res.getQuantityString(R.plurals.days, n, n.toString())
+    fun doses(res: Resources, n: Int): String = res.getQuantityString(R.plurals.doses, n, n.toString())
 
     /** Joins two parts with the Arabic "and": "8 أشهر و5 أيام". */
     fun and(first: String, second: String): String = "$first و$second"

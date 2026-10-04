@@ -5,7 +5,7 @@
     so they always show as 0-9 digits.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:locale="ar">
-    <string name="app_name">مهد</string>
+    <string name="app_name">أطوار</string>
 
     <!-- General actions -->
     <string name="action_back">رجوع</string>
@@ -50,6 +50,14 @@
         <item quantity="many">%1$s يومًا</item>
         <item quantity="other">%1$s يوم</item>
     </plurals>
+    <plurals name="doses">
+        <item quantity="zero">%1$s جرعة</item>
+        <item quantity="one">جرعة</item>
+        <item quantity="two">جرعتان</item>
+        <item quantity="few">%1$s جرعات</item>
+        <item quantity="many">%1$s جرعة</item>
+        <item quantity="other">%1$s جرعة</item>
+    </plurals>
     <string name="age_newborn">مولود اليوم</string>
 
     <!-- Tabs and top bar -->
@@ -66,7 +74,7 @@
     <string name="default_child_name">طفلي</string>
 
     <!-- Welcome -->
-    <string name="welcome_title">أهلاً بكِ في مهد</string>
+    <string name="welcome_title">أهلاً بكِ في أطوار</string>
     <string name="welcome_subtitle">رفيقتك من الحمل حتى عمر 4 سنوات</string>
     <string name="welcome_feature_pregnancy">متابعة الحمل أسبوعًا بأسبوع</string>
     <string name="welcome_feature_vaccines">تطعيمات طفلك حسب الجدول الليبي مع تذكير بالمواعيد</string>
@@ -81,6 +89,8 @@
     <string name="choose_pregnant_hint">تابعي حملك أسبوعًا بأسبوع</string>
     <string name="choose_child">عندي طفل</string>
     <string name="choose_child_hint">تطعيماته ونموه ومهاراته</string>
+    <string name="choose_restore">عندي نسخة احتياطية</string>
+    <string name="choose_restore_hint">استعيدي بياناتك من ملف نسخة محفوظة</string>
     <string name="choose_more_later">يمكنك إضافة حمل أو أطفال آخرين لاحقًا.</string>
 
     <!-- Pregnancy form -->
@@ -192,6 +202,11 @@
     <string name="status_soon">قريبًا</string>
     <string name="status_upcoming">لاحقًا</string>
     <string name="status_skipped">لا ينطبق</string>
+    <string name="vaccine_ring_of_total">من %1$s</string>
+    <string name="vaccine_summary_ok">كل شيء في موعده 👏</string>
+    <string name="vaccine_summary_late">متأخر: %1$s</string>
+    <string name="vaccine_summary_hint">اضغطي على أي تطعيمة لتسجيلها أو لتعديلها.</string>
+    <string name="visit_expand">عرض التفاصيل</string>
     <string name="dose_skipped">سُجّلت «لا ينطبق»: لن نذكّرك بها.</string>
     <string name="dose_expired">فات الوقت المسموح لها (بعد عمر %1$s لا تُعطى).</string>
     <string name="dose_skipped_dialog_text">سُجّلت هذه الجرعة «لا ينطبق»، فلا تُحسب متأخرة ولا نذكّرك بها.</string>
@@ -257,7 +272,7 @@
     <string name="settings_profiles">الأطفال والحمل</string>
     <string name="settings_reminders">التذكيرات</string>
     <string name="reminders_switch">تذكير بمواعيد التطعيمات وببداية كل أسبوع حمل</string>
-    <string name="reminders_battery_hint">إذا لم تصلك التذكيرات في مواعيدها، تأكدي أن هاتفك لا يوقف التطبيق في الخلفية (في إعدادات البطارية، اسمحي لمهد بالعمل في الخلفية).</string>
+    <string name="reminders_battery_hint">إذا لم تصلك التذكيرات في مواعيدها، تأكدي أن هاتفك لا يوقف التطبيق في الخلفية (في إعدادات البطارية، اسمحي لأطوار بالعمل في الخلفية).</string>
     <string name="notifications_blocked">الإشعارات متوقفة لهذا التطبيق في إعدادات الهاتف، فلن تصلك التذكيرات.</string>
     <string name="open_notification_settings">فتح إعدادات الإشعارات</string>
     <string name="settings_backup">النسخة الاحتياطية</string>
@@ -267,16 +282,17 @@
     <string name="backup_restore">استعادة من نسخة</string>
     <string name="backup_saved">تم حفظ النسخة الاحتياطية</string>
     <string name="backup_failed">تعذّر حفظ النسخة، حاولي مرة أخرى</string>
-    <string name="restore_invalid">هذا الملف ليس نسخة احتياطية من تطبيق مهد</string>
+    <string name="restore_invalid">هذا الملف ليس نسخة احتياطية من تطبيق أطوار</string>
     <string name="restore_confirm_title">استعادة النسخة؟</string>
     <string name="restore_confirm_text">ستُستبدل كل البيانات الحالية في التطبيق بالبيانات الموجودة في النسخة (عدد الأطفال والحمل المسجّلين فيها: %1$s). لا يمكن التراجع عن ذلك.</string>
     <string name="restore_failed">تعذّرت استعادة النسخة. لم يتغيّر شيء في بياناتك الحالية.</string>
     <string name="restore_confirm_button">استعادة</string>
     <string name="restore_done">تمت استعادة النسخة</string>
     <string name="settings_about">عن التطبيق</string>
-    <string name="about_title">عن مهد</string>
+    <string name="about_title">عن أطوار</string>
     <string name="version_label">الإصدار %1$s</string>
-    <string name="about_mission">مهد تطبيق عربي يرافق الأم الليبية والعربية من الحمل حتى عمر 4 سنوات: الحمل أسبوعًا بأسبوع، والتطعيمات، والنمو، والمهارات، بلغة بسيطة وبدون إنترنت.</string>
+    <string name="about_mission">أطوار تطبيق عربي يرافق الأم الليبية والعربية من الحمل حتى عمر 4 سنوات: الحمل أسبوعًا بأسبوع، والتطعيمات، والنمو، والمهارات، بلغة بسيطة وبدون إنترنت.</string>
+    <string name="about_name_meaning">اسم «أطوار» مأخوذ من قوله تعالى: ﴿وَقَدْ خَلَقَكُمْ أَطْوَارًا﴾ [نوح: 14]، أي مراحل متعاقبة، وهي مراحل الحمل والطفولة التي يرافقك فيها التطبيق.</string>
     <string name="privacy_title">خصوصيتك</string>
     <string name="privacy_text">لا يطلب التطبيق إذن الاتصال بالإنترنت، ولا يرسل بياناتك لأي جهة. كل ما تسجلينه يبقى على هاتفك، وفي النسخة الاحتياطية التي تحفظينها أنتِ. وإذا كان النسخ الاحتياطي مفعّلًا في أندرويد على هاتفك، فقد يحفظ النظام نسخة في حسابك الخاص على جوجل لتستعيديها على هاتف جديد؛ هذا من أندرويد وليس من التطبيق، ويمكنك إيقافه من إعدادات الهاتف. لا إعلانات ولا تتبّع.</string>
     <string name="sources_title">مصادر المعلومات</string>

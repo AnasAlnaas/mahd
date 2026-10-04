@@ -22,6 +22,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -41,6 +44,20 @@ import ly.mahd.app.ui.components.AppCard
 fun OnboardingFlow(app: MahdApp) {
     val accepted by app.prefs.disclaimerAccepted.collectAsState()
     var step by rememberSaveable { mutableStateOf(if (accepted) STEP_CHOOSE else STEP_WELCOME) }
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    // A mother on a new phone can bring her data back right away. On success the profiles appear
+    // and MahdRoot switches to the main screens by itself.
+    val pickBackup = rememberBackupPicker { snapshot ->
+        if (snapshot.profiles.isEmpty()) {
+            showToast(context, R.string.restore_invalid)
+        } else {
+            scope.launch {
+                val ok = applyRestore(app, snapshot)
+                showToast(context, if (ok) R.string.restore_done else R.string.restore_failed)
+            }
+        }
+    }
 
     when (step) {
         STEP_WELCOME -> WelcomeScreen(onContinue = {
@@ -50,6 +67,7 @@ fun OnboardingFlow(app: MahdApp) {
         STEP_CHOOSE -> ChooseStartScreen(
             onPregnant = { step = STEP_PREGNANCY },
             onChild = { step = STEP_CHILD },
+            onRestore = pickBackup,
         )
         STEP_PREGNANCY -> {
             BackHandler { step = STEP_CHOOSE }
@@ -121,7 +139,7 @@ private fun Feature(emoji: String, text: String) {
 }
 
 @Composable
-private fun ChooseStartScreen(onPregnant: () -> Unit, onChild: () -> Unit) {
+private fun ChooseStartScreen(onPregnant: () -> Unit, onChild: () -> Unit, onRestore: () -> Unit) {
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
         Column(
             Modifier
@@ -139,6 +157,16 @@ private fun ChooseStartScreen(onPregnant: () -> Unit, onChild: () -> Unit) {
             )
             BigChoice("🤰", stringResource(R.string.choose_pregnant), stringResource(R.string.choose_pregnant_hint), onPregnant)
             BigChoice("👶", stringResource(R.string.choose_child), stringResource(R.string.choose_child_hint), onChild)
+            AppCard(onClick = onRestore) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text("📂", style = MaterialTheme.typography.headlineSmall)
+                    Spacer(Modifier.width(16.dp))
+                    Column {
+                        Text(stringResource(R.string.choose_restore), style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.choose_restore_hint), style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+            }
             Text(
                 stringResource(R.string.choose_more_later),
                 style = MaterialTheme.typography.bodyMedium,

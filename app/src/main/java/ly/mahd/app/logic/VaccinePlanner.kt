@@ -68,6 +68,21 @@ object VaccinePlanner {
         VisitPlan(visit, due, given, skipped, expired, status, days)
     }
 
+    /**
+     * [given] doses recorded out of [total] doses that apply to this child (skipped and expired doses
+     * are left out), and how many of the remaining ones are already [lateDoses].
+     */
+    data class Summary(val given: Int, val total: Int, val lateDoses: Int) {
+        val progress: Float get() = if (total == 0) 1f else given / total.toFloat()
+    }
+
+    fun summary(plans: List<VisitPlan>): Summary {
+        val given = plans.sumOf { it.givenCount }
+        val remaining = plans.sumOf { it.remainingDoses.size }
+        val late = plans.filter { it.daysUntilDue < 0 }.sumOf { it.remainingDoses.size }
+        return Summary(given = given, total = given + remaining, lateDoses = late)
+    }
+
     /** The first visit that still has doses to give. */
     fun next(plans: List<VisitPlan>): VisitPlan? = plans.firstOrNull { !it.isComplete }
 }

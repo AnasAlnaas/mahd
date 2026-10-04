@@ -37,6 +37,7 @@ import ly.mahd.app.ui.Navigator
 import ly.mahd.app.ui.Routes
 import ly.mahd.app.ui.components.AppCard
 import ly.mahd.app.ui.components.LocalToday
+import ly.mahd.app.ui.components.ProgressRing
 import ly.mahd.app.ui.components.WarningCard
 import ly.mahd.app.ui.profileName
 import ly.mahd.app.util.Format
@@ -178,19 +179,39 @@ private fun NextVaccineCard(app: MahdApp, profile: Profile, nav: Navigator) {
     val plans = VaccinePlanner.plan(app.content.vaccines, birth, doses, today, skipped)
     val next = VaccinePlanner.next(plans)
 
+    val summary = VaccinePlanner.summary(plans)
+    val status = ly.mahd.app.ui.theme.LocalStatusColors.current
+
     AppCard(onClick = { nav.selectTab(Routes.VACCINES) }) {
-        Text("💉  " + stringResource(R.string.next_vaccine_title), style = MaterialTheme.typography.titleMedium)
-        if (next == null) {
-            Text(stringResource(R.string.all_vaccines_done), style = MaterialTheme.typography.bodyLarge)
-        } else {
-            Text(next.visit.title, style = MaterialTheme.typography.titleLarge)
-            Text(Format.date(next.dueDate), style = MaterialTheme.typography.bodyLarge)
-            Text(
-                vaccineWhenText(res, next.daysUntilDue),
-                style = MaterialTheme.typography.bodyLarge,
-                color = if (next.daysUntilDue < 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
-            )
-            Text(next.remainingDoses.joinToString("، ") { it.name }, style = MaterialTheme.typography.bodyMedium)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("💉  " + stringResource(R.string.next_vaccine_title), style = MaterialTheme.typography.titleMedium)
+                if (next == null) {
+                    Text(stringResource(R.string.all_vaccines_done), style = MaterialTheme.typography.bodyLarge)
+                } else {
+                    Text(next.visit.title, style = MaterialTheme.typography.titleLarge)
+                    Text(Format.date(next.dueDate), style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        vaccineWhenText(res, next.daysUntilDue),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = if (next.daysUntilDue < 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(next.remainingDoses.joinToString("، ") { it.name }, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
+            ProgressRing(
+                progress = summary.progress,
+                size = 68.dp,
+                stroke = 8.dp,
+                color = if (summary.lateDoses > 0) status.attention else status.good,
+            ) {
+                Text(summary.given.toString(), style = MaterialTheme.typography.titleMedium)
+                Text(
+                    stringResource(R.string.vaccine_ring_of_total, summary.total.toString()),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }

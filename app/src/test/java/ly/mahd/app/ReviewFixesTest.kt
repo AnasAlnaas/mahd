@@ -201,3 +201,38 @@ class BackupFileTest {
         assertThrows(IllegalArgumentException::class.java) { BackupFile.decode(badDate) }
     }
 }
+
+class VaccineSummaryTest {
+    private val birth = LocalDate.of(2026, 1, 15)
+    private val schedule = VaccineSchedule(
+        reviewed = false,
+        source = "test",
+        visits = listOf(
+            VaccineVisit("birth", 0, "birth", listOf(VaccineDose("bcg", "BCG", "", null))),
+            VaccineVisit(
+                "m2", 2, "2m",
+                listOf(VaccineDose("rota", "Rota", "", null, maxAgeMonths = 8), VaccineDose("a1", "A", "", null)),
+            ),
+            VaccineVisit("m4", 4, "4m", listOf(VaccineDose("a2", "A", "", null), VaccineDose("b2", "B", "", null))),
+            VaccineVisit("m12", 12, "12m", listOf(VaccineDose("mmr", "MMR", "", null))),
+        ),
+    )
+
+    @Test
+    fun countsOnlyDosesThatApplyAndSplitsOutTheLateOnes() {
+        val today = LocalDate.of(2026, 11, 1) // 9.5 months old: m2 and m4 are due, rotavirus has expired
+        val plans = VaccinePlanner.plan(schedule, birth, mapOf("bcg" to birth), today, skippedDoses = setOf("b2"))
+        val s = VaccinePlanner.summary(plans)
+        // applicable: bcg(given), a1, a2, mmr; rota expired and b2 skipped are left out
+        assertEquals(1, s.given)
+        assertEquals(4, s.total)
+        assertEquals(2, s.lateDoses) // a1 and a2 are late, mmr is not due yet
+        assertEquals(0.25f, s.progress, 1e-6f)
+    }
+
+    @Test
+    fun nothingToDoMeansFullRing() {
+        val s = VaccinePlanner.Summary(given = 0, total = 0, lateDoses = 0)
+        assertEquals(1f, s.progress, 1e-6f)
+    }
+}

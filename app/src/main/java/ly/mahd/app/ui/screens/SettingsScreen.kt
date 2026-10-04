@@ -76,18 +76,7 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
         }
     }
 
-    val restoreLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) scope.launch {
-            val snapshot = runCatching {
-                val text = withContext(Dispatchers.IO) {
-                    context.contentResolver.openInputStream(uri)?.use { it.readBytes().toString(Charsets.UTF_8) }
-                        ?: error("no stream")
-                }
-                BackupFile.decode(text)
-            }.getOrNull()
-            if (snapshot == null) toast(context, R.string.restore_invalid) else pendingRestore = snapshot
-        }
-    }
+    val pickBackup = rememberBackupPicker { snapshot -> pendingRestore = snapshot }
 
     SubScreen(title = stringResource(R.string.settings_title), onBack = nav::back) { padding ->
         LazyColumn(
@@ -166,7 +155,7 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text(stringResource(R.string.backup_share)) }
                     OutlinedButton(
-                        onClick = { restoreLauncher.launch(arrayOf("application/json", "text/plain", "application/octet-stream", "*/*")) },
+                        onClick = pickBackup,
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text(stringResource(R.string.backup_restore)) }
                 }
@@ -197,13 +186,8 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
             destructive = true,
             onConfirm = {
                 scope.launch {
-                    // The write is one transaction, so on failure the old data is left untouched.
-                    val ok = runCatching { app.repository.replaceAll(snapshot) }.isSuccess
-                    if (ok) {
-                        app.prefs.selectProfile(snapshot.profiles.firstOrNull()?.id)
-                        app.prefs.resetReminderBookkeeping()
-                        nav.selectTab(Routes.HOME)
-                    }
+                    val ok = applyRestore(app, snapshot)
+                    if (ok) nav.selectTab(Routes.HOME)
                     toast(context, if (ok) R.string.restore_done else R.string.restore_failed)
                 }
             },
@@ -212,9 +196,7 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
     }
 }
 
-private fun toast(context: Context, message: Int) {
-    Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-}
+private fun toast(context: Context, message: Int) = showToast(context, message)
 
 /** Writes the backup to the app's cache and opens Android's share sheet (WhatsApp, Drive, email…). */
 private suspend fun shareBackup(context: Context, app: MahdApp, today: java.time.LocalDate) {
@@ -246,6 +228,7 @@ fun AboutScreen(app: MahdApp, onBack: () -> Unit) {
                 AppCard(containerColor = MaterialTheme.colorScheme.primaryContainer) {
                     Text("🌙  " + stringResource(R.string.app_name), style = MaterialTheme.typography.headlineSmall)
                     Text(stringResource(R.string.about_mission), style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.about_name_meaning), style = MaterialTheme.typography.bodyMedium)
                     Text(stringResource(R.string.version_label, BuildConfig.VERSION_NAME), style = MaterialTheme.typography.bodyMedium)
                 }
             }

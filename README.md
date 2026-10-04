@@ -1,4 +1,4 @@
-# مهد · Mahd
+# أطوار · Atwar
 
 An Arabic-first, offline Android app that helps Libyan and Arab mothers follow their child
 from pregnancy to age 4: pregnancy week by week, the Libyan vaccine schedule with reminders,
