@@ -154,9 +154,14 @@ private fun ChildAgeCard(profile: Profile) {
         )
         Text(stringResource(R.string.born_on, Format.date(birth)), style = MaterialTheme.typography.bodyMedium)
         if (ChildAge.usesCorrectedAge(birth, profile.weeksAtBirth, today)) {
-            val corrected = ChildAge.period(ChildAge.correctedBirthDate(birth, profile.weeksAtBirth), today)
+            val correctedBirth = ChildAge.correctedBirthDate(birth, profile.weeksAtBirth)
             Text(
-                stringResource(R.string.corrected_age_line, Format.age(res, corrected)),
+                if (today.isBefore(correctedBirth)) {
+                    // Not yet at the original due date: "corrected age" would be negative.
+                    stringResource(R.string.corrected_age_before_term, Format.age(res, ChildAge.period(today, correctedBirth)))
+                } else {
+                    stringResource(R.string.corrected_age_line, Format.age(res, ChildAge.period(correctedBirth, today)))
+                },
                 style = MaterialTheme.typography.bodyLarge,
             )
         }

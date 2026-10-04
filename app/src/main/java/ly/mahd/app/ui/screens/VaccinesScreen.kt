@@ -242,9 +242,17 @@ private fun VisitCard(
             ) {
                 Checkbox(checked = given != null, onCheckedChange = { onDoseClick(dose) })
                 Column(Modifier.weight(1f)) {
-                    Text(dose.name, style = MaterialTheme.typography.bodyLarge)
+                    val muted = isSkipped || isExpired
+                    Text(
+                        dose.name,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = if (muted) colors.onSurfaceVariant else colors.onSurface,
+                    )
                     Text(dose.description, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
-                    dose.note?.let { Text("⚠️ $it", style = MaterialTheme.typography.bodyMedium, color = colors.tertiary) }
+                    // The age-limit note is redundant once the "too late" line below is shown.
+                    if (!isExpired) {
+                        dose.note?.let { Text("⚠️ $it", style = MaterialTheme.typography.bodyMedium, color = colors.tertiary) }
+                    }
                     if (given != null) {
                         Text(
                             stringResource(R.string.dose_given_on, Format.date(given)),

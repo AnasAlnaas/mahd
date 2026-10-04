@@ -157,6 +157,7 @@
     <string name="born_on">تاريخ الميلاد: %1$s</string>
     <string name="due_on">موعد الولادة: %1$s</string>
     <string name="corrected_age_line">العمر المصحَّح: %1$s</string>
+    <string name="corrected_age_before_term">العمر المصحَّح: قبل موعد الولادة المتوقع (باقي %1$s)</string>
     <string name="next_vaccine_title">التطعيمة القادمة</string>
     <string name="all_vaccines_done">أحسنتِ! تم تسجيل كل التطعيمات في الجدول.</string>
     <string name="vaccine_in_days">باقي %1$s</string>
