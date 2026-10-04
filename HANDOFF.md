@@ -157,8 +157,8 @@ flows on the emulator → added first-launch restore, renamed to أطوار, vac
 Commits: `44923d3` review fixes · `a3b86dd` polish after emulator testing · `ad18201` rename + restore + timeline + ring ·
 `cd4d0d3` visual polish.
 
-Second chat (same day): full review (bugs, security, code quality, UX) → 17 commits on `fix/review-round-2`, one per
-item, each checked on the emulator: reminder alarm no longer reset on app open + check on app open; chart vertical zoom;
+Second chat (same day): full review (bugs, security, code quality, UX) → one commit per item on `fix/review-round-2`,
+each checked on the emulator: reminder alarm no longer reset on app open + check on app open; chart vertical zoom;
 scrollable first-launch screen; reminder tap opens its profile/tab; sharing without crashes; live notification warning;
 no empty-data flash + Home reads once; overdue pregnancy can be saved; backup validation by value; backup privacy note;
 lock-screen version; tidy-up; in-context notification permission; dark-mode timeline marks; child danger signs; notes in
