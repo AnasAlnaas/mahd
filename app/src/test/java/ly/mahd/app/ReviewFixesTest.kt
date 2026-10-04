@@ -17,6 +17,7 @@ import ly.mahd.app.logic.ReminderRules
 import ly.mahd.app.logic.VaccinePlanner
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
@@ -183,38 +184,78 @@ class BackupFileTest {
         skipped = listOf(1L to "rota_1"),
     )
 
+    private fun decode(text: String) = BackupFile.decode(text, today)
+
+    private fun encode(s: Repository.Snapshot) = BackupFile.encode(s, today)
+
     @Test
     fun roundTrip() {
-        assertEquals(snapshot, BackupFile.decode(BackupFile.encode(snapshot, today)))
+        assertEquals(snapshot, decode(encode(snapshot)))
     }
 
     @Test
     fun oldBackupsWithoutSkippedDosesStillLoad() {
-        val old = BackupFile.encode(snapshot.copy(skipped = emptyList()), today)
+        val old = encode(snapshot.copy(skipped = emptyList()))
             .replace(Regex("\"skippedDoses\": \\[\\s*]"), "\"unknown\": []")
-        assertTrue(BackupFile.decode(old).skipped.isEmpty())
+        assertTrue(decode(old).skipped.isEmpty())
     }
 
     @Test
     fun rowsWithoutAProfileAreRejectedInsteadOfCrashingTheRestore() {
         val orphanGrowth = snapshot.copy(growth = listOf(GrowthEntry(5, 99, LocalDate.of(2026, 3, 1), 4.5, null, null)))
-        assertThrows(IllegalArgumentException::class.java) { BackupFile.decode(BackupFile.encode(orphanGrowth, today)) }
+        assertThrows(IllegalArgumentException::class.java) { decode(encode(orphanGrowth)) }
         val orphanDose = snapshot.copy(doses = listOf(DoseRecord(99, "bcg", today)))
-        assertThrows(IllegalArgumentException::class.java) { BackupFile.decode(BackupFile.encode(orphanDose, today)) }
+        assertThrows(IllegalArgumentException::class.java) { decode(encode(orphanDose)) }
     }
 
     @Test
     fun duplicateRowsAreRejected() {
         val twice = snapshot.copy(doses = snapshot.doses + snapshot.doses)
-        assertThrows(IllegalArgumentException::class.java) { BackupFile.decode(BackupFile.encode(twice, today)) }
+        assertThrows(IllegalArgumentException::class.java) { decode(encode(twice)) }
     }
 
     @Test
     fun garbageIsRejectedWithTheDocumentedException() {
-        assertThrows(IllegalArgumentException::class.java) { BackupFile.decode("not json") }
-        assertThrows(IllegalArgumentException::class.java) { BackupFile.decode("{\"app\":\"mahd\",\"format\":1}") }
-        val badDate = BackupFile.encode(snapshot, today).replace("2026-03-01", "2026-13-45")
-        assertThrows(IllegalArgumentException::class.java) { BackupFile.decode(badDate) }
+        assertThrows(IllegalArgumentException::class.java) { decode("not json") }
+        assertThrows(IllegalArgumentException::class.java) { decode("{\"app\":\"mahd\",\"format\":1}") }
+        val badDate = encode(snapshot).replace("2026-03-01", "2026-13-45")
+        assertThrows(IllegalArgumentException::class.java) { decode(badDate) }
+    }
+
+    @Test
+    fun anEmptyBackupIsRejectedBecauseRestoringItWouldWipeEverything() {
+        assertThrows(IllegalArgumentException::class.java) {
+            decode(encode(Repository.Snapshot(emptyList(), emptyList(), emptyList(), emptyList())))
+        }
+    }
+
+    @Test
+    fun valuesThatWouldBreakTheAppAreRejected() {
+        val pregnancyWithoutDueDate = Profile(2, ProfileKind.PREGNANCY, "", null, null, null, null)
+        val broken = listOf(
+            snapshot.copy(profiles = listOf(profile.copy(birthDate = null))), // child without a birth date
+            snapshot.copy(profiles = listOf(profile, pregnancyWithoutDueDate)),
+            snapshot.copy(profiles = listOf(profile.copy(birthDate = LocalDate.MAX))), // crashed the app on every launch
+            snapshot.copy(profiles = listOf(profile.copy(weeksAtBirth = -5))),
+            snapshot.copy(growth = listOf(GrowthEntry(5, 1, LocalDate.of(3026, 3, 1), 4.5, null, null))), // far future
+            snapshot.copy(growth = listOf(GrowthEntry(5, 1, LocalDate.of(2026, 3, 1), -4.5, null, null))), // negative
+            snapshot.copy(growth = listOf(GrowthEntry(5, 1, LocalDate.of(2026, 3, 1), null, null, null))), // no value
+            snapshot.copy(milestones = listOf(Triple(1L, "m2_s1", 7))), // unknown answer
+        ).map(::encode)
+        val text = encode(snapshot)
+        val edited = listOf(
+            text.replace("\"kind\": \"child\"", "\"kind\": \"cat\""),
+            text.replace("\"sex\": \"girl\"", "\"sex\": \"x\""),
+            text.replace("\"weightKg\": 4.5", "\"weightKg\": \"NaN\""),
+        )
+        edited.forEach { assertNotEquals("the edit did not apply", text, it) }
+        (broken + edited).forEach { file -> assertThrows(IllegalArgumentException::class.java) { decode(file) } }
+    }
+
+    @Test
+    fun aBackupFromAPhoneWhoseClockWasSlightlyWrongStillLoads() {
+        val ahead = encode(snapshot).replace("2026-03-01", "2026-10-20") // a measurement 16 days "in the future"
+        assertEquals(LocalDate.of(2026, 10, 20), decode(ahead).growth.single().date)
     }
 }
 

@@ -66,13 +66,21 @@ object BackupFile {
         return root.toString(2)
     }
 
+    /** The oldest date accepted in a backup. */
+    private val OLDEST = LocalDate.of(1900, 1, 1)
+
+    /** Longest name or id accepted (the app itself allows 40 characters for a name). */
+    private const val MAX_TEXT = 100
+
     /**
-     * Throws [IllegalArgumentException] when the file is not a valid, consistent backup of this app
-     * (bad JSON, bad dates, rows pointing at a profile that is not in the file, duplicate rows).
-     * Checking everything here means restoring can never fail half-way through.
+     * Throws [IllegalArgumentException] when the file is not a valid, consistent backup of this app:
+     * bad JSON, bad dates, rows pointing at a profile that is not in the file, duplicate rows, or values
+     * that make no sense (a child without a birth date, a date in the year 3000, a negative weight…).
+     * Checking everything here means restoring can never fail half-way through, and a broken or
+     * hand-edited file can never leave the app crashing every time it opens.
      */
-    fun decode(text: String): Repository.Snapshot = try {
-        parse(text)
+    fun decode(text: String, today: LocalDate): Repository.Snapshot = try {
+        parse(text).also { validate(it, today) }
     } catch (e: IllegalArgumentException) {
         throw e
     } catch (e: Exception) {
@@ -85,14 +93,15 @@ object BackupFile {
         require(root.optInt("format") in 1..FORMAT) { "backup made by a newer version" }
 
         val profiles = root.getJSONArray("profiles").objects().map { o ->
+            val kind = o.getString("kind")
             Profile(
                 id = o.getLong("id"),
-                kind = ProfileKind.fromCode(o.getString("kind")),
+                kind = requireNotNull(ProfileKind.entries.firstOrNull { it.code == kind }) { "unknown profile kind" },
                 name = o.optString("name"),
-                sex = Sex.fromCode(o.optStringOrNull("sex")),
+                sex = o.optStringOrNull("sex")?.let { code -> requireNotNull(Sex.fromCode(code)) { "unknown sex" } },
                 birthDate = o.optStringOrNull("birthDate")?.let(LocalDate::parse),
                 dueDate = o.optStringOrNull("dueDate")?.let(LocalDate::parse),
-                weeksAtBirth = if (o.has("weeksAtBirth")) o.getInt("weeksAtBirth") else null,
+                weeksAtBirth = if (o.has("weeksAtBirth") && !o.isNull("weeksAtBirth")) o.getInt("weeksAtBirth") else null,
             )
         }
         val growth = root.optJSONArray("growth").objects().map { o ->
@@ -132,6 +141,39 @@ object BackupFile {
         require(skipped.toSet().size == skipped.size) { "duplicate skipped doses" }
 
         return Repository.Snapshot(profiles, growth, doses, milestones, skipped)
+    }
+
+    /** Checks that the values make sense; everything the app itself can save passes. */
+    private fun validate(s: Repository.Snapshot, today: LocalDate) {
+        // A year of slack for dates "in the future", in case the phone's clock was wrong when they were entered.
+        val newest = today.plusYears(1)
+        fun LocalDate?.inRange() = this == null || (!isBefore(OLDEST) && !isAfter(newest))
+        fun String.isId() = isNotBlank() && length <= MAX_TEXT
+
+        require(s.profiles.isNotEmpty()) { "no profiles" }
+        s.profiles.forEach { p ->
+            require(p.id > 0 && p.name.length <= MAX_TEXT) { "bad profile" }
+            require(p.birthDate.inRange() && p.dueDate.inRange()) { "profile date out of range" }
+            when (p.kind) {
+                ProfileKind.CHILD -> require(p.birthDate != null) { "child without a birth date" }
+                ProfileKind.PREGNANCY -> require(p.dueDate != null) { "pregnancy without a due date" }
+            }
+            // Any non-negative number of weeks can come from the app ("my baby is born" long after the due date).
+            require(p.weeksAtBirth == null || p.weeksAtBirth >= 0) { "bad weeks at birth" }
+        }
+        s.growth.forEach { g ->
+            require(g.id > 0 && g.date.inRange()) { "bad growth entry" }
+            val values = listOfNotNull(g.weightKg, g.lengthCm, g.headCm)
+            require(values.isNotEmpty() && values.all { it.isFinite() && it > 0 }) { "bad measurement" }
+            require((g.weightKg ?: 0.0) <= 150 && (g.lengthCm ?: 0.0) <= 250 && (g.headCm ?: 0.0) <= 100) {
+                "measurement out of range"
+            }
+        }
+        s.doses.forEach { require(it.doseId.isId() && it.givenDate.inRange()) { "bad dose" } }
+        s.milestones.forEach { (_, itemId, answer) ->
+            require(itemId.isId() && MilestoneAnswer.fromCode(answer) != null) { "bad milestone answer" }
+        }
+        s.skipped.forEach { (_, doseId) -> require(doseId.isId()) { "bad skipped dose" } }
     }
 
     private fun JSONArray?.objects(): List<JSONObject> =

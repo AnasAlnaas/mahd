@@ -235,21 +235,24 @@ fun DatePickerPopup(
     onDismiss: () -> Unit,
     onPick: (LocalDate) -> Unit,
 ) {
-    val selectable = remember(min, max) {
+    // A birth date "in the future" (entered while the phone's clock was wrong) would leave no valid range,
+    // and the calendar does not accept an empty one.
+    val end = if (max.isBefore(min)) min else max
+    val selectable = remember(min, end) {
         object : SelectableDates {
             override fun isSelectableDate(utcTimeMillis: Long): Boolean {
                 val d = utcTimeMillis.toLocalDateUtc()
-                return !d.isBefore(min) && !d.isAfter(max)
+                return !d.isBefore(min) && !d.isAfter(end)
             }
 
-            override fun isSelectableYear(year: Int): Boolean = year in min.year..max.year
+            override fun isSelectableYear(year: Int): Boolean = year in min.year..end.year
         }
     }
-    val start = initial?.clamp(min, max)
+    val start = initial?.clamp(min, end)
     val state = rememberDatePickerState(
         initialSelectedDateMillis = start?.toUtcMillis(),
-        initialDisplayedMonthMillis = (start ?: LocalDate.now().clamp(min, max)).toUtcMillis(),
-        yearRange = min.year..max.year,
+        initialDisplayedMonthMillis = (start ?: LocalDate.now().clamp(min, end)).toUtcMillis(),
+        yearRange = min.year..end.year,
         selectableDates = selectable,
     )
     DatePickerDialog(

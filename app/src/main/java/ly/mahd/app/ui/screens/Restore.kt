@@ -16,6 +16,12 @@ import ly.mahd.app.MahdApp
 import ly.mahd.app.R
 import ly.mahd.app.data.BackupFile
 import ly.mahd.app.data.Repository
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.time.LocalDate
+
+/** A real backup is a few kilobytes; anything much bigger (a video picked by mistake) is not read at all. */
+private const val MAX_BACKUP_BYTES = 5 * 1024 * 1024
 
 /**
  * Shared by Settings and the first-launch screen: lets the mother pick a backup file, checks it, and
@@ -28,17 +34,29 @@ fun rememberBackupPicker(onPicked: (Repository.Snapshot) -> Unit): () -> Unit {
     val scope = rememberCoroutineScope()
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) scope.launch {
-            val snapshot = runCatching {
-                val text = withContext(Dispatchers.IO) {
-                    context.contentResolver.openInputStream(uri)?.use { it.readBytes().toString(Charsets.UTF_8) }
-                        ?: error("no stream")
-                }
-                BackupFile.decode(text)
-            }.getOrNull()
+            // Reading and checking happen off the main thread, so even a wrong, large file cannot freeze the screen.
+            val snapshot = withContext(Dispatchers.IO) {
+                runCatching {
+                    val bytes = context.contentResolver.openInputStream(uri)?.use { it.readAtMost(MAX_BACKUP_BYTES) }
+                    BackupFile.decode(requireNotNull(bytes) { "unreadable or too large" }.toString(Charsets.UTF_8), LocalDate.now())
+                }.getOrNull()
+            }
             if (snapshot == null) showToast(context, R.string.restore_invalid) else onPicked(snapshot)
         }
     }
     return { launcher.launch(arrayOf("application/json", "text/plain", "application/octet-stream", "*/*")) }
+}
+
+/** The whole stream, or null if it is longer than [limit] bytes. */
+private fun InputStream.readAtMost(limit: Int): ByteArray? {
+    val out = ByteArrayOutputStream()
+    val buffer = ByteArray(8 * 1024)
+    while (true) {
+        val n = read(buffer)
+        if (n < 0) return out.toByteArray()
+        out.write(buffer, 0, n)
+        if (out.size() > limit) return null
+    }
 }
 
 /**

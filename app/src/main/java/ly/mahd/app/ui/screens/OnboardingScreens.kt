@@ -51,13 +51,9 @@ fun OnboardingFlow(app: MahdApp) {
     // A mother on a new phone can bring her data back right away. On success the profiles appear
     // and MahdRoot switches to the main screens by itself.
     val pickBackup = rememberBackupPicker { snapshot ->
-        if (snapshot.profiles.isEmpty()) {
-            showToast(context, R.string.restore_invalid)
-        } else {
-            scope.launch {
-                val ok = applyRestore(app, snapshot)
-                showToast(context, if (ok) R.string.restore_done else R.string.restore_failed)
-            }
+        scope.launch {
+            val ok = applyRestore(app, snapshot)
+            showToast(context, if (ok) R.string.restore_done else R.string.restore_failed)
         }
     }
 
