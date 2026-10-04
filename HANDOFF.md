@@ -76,7 +76,7 @@ debug install; not for Play — Play needs a real upload key):
 .\gradlew.bat assembleRelease
 $bt = (Get-ChildItem "$env:LOCALAPPDATA\Android\Sdk\build-tools" | Sort-Object Name | Select-Object -Last 1).FullName
 & "$bt\zipalign.exe" -f -p 4 app\build\outputs\apk\release\app-release-unsigned.apk app\build\aligned.apk
-& "$bt\apksigner.bat" sign --ks "$env:USERPROFILE\.android\debug.keystore" --ks-pass pass:android --key-pass pass:android --out atwar-test.apk app\build\aligned.apk
+& "$bt\apksigner.bat" sign --ks "$env:USERPROFILE\.android\debug.keystore" --ks-pass pass:android --key-pass pass:android --v4-signing-enabled false --out atwar-test.apk app\build\aligned.apk
 ```
 (`*.apk` is git-ignored.) The phone needs "install unknown apps" allowed for the app used to open the file.
 
