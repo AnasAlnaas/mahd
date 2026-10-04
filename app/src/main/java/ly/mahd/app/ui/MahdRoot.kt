@@ -29,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -162,12 +163,15 @@ private fun TabsScaffold(app: MahdApp, nav: Navigator, profiles: List<Profile>, 
         // A soft fade when switching tabs.
         Crossfade(targetState = tab, label = "tab") { current ->
             Box(Modifier.padding(padding).fillMaxSize()) {
-                when (current) {
-                    Routes.HOME -> HomeScreen(app, selected, nav)
-                    Routes.PREGNANCY -> PregnancyScreen(app, selected, nav, initialWeek = null, standalone = false)
-                    Routes.VACCINES -> VaccinesScreen(app, selected)
-                    Routes.GROWTH -> GrowthScreen(app, selected)
-                    Routes.MILESTONES -> MilestonesScreen(app, selected)
+                // A fresh screen for each profile, so nothing of the previous child shows while the new data loads.
+                key(selected.id) {
+                    when (current) {
+                        Routes.HOME -> HomeScreen(app, selected, nav)
+                        Routes.PREGNANCY -> PregnancyScreen(app, selected, nav, initialWeek = null, standalone = false)
+                        Routes.VACCINES -> VaccinesScreen(app, selected)
+                        Routes.GROWTH -> GrowthScreen(app, selected)
+                        Routes.MILESTONES -> MilestonesScreen(app, selected)
+                    }
                 }
             }
         }

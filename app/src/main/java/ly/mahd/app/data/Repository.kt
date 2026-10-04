@@ -68,9 +68,19 @@ class Repository(private val database: MahdDatabase) {
         db.rawQuery("SELECT * FROM growth WHERE profile_id = ? ORDER BY date, id", arrayOf(profileId.toString()))
             .use { c -> c.mapRows { it.toGrowth() } }
 
-    // ---------- Vaccines ----------
+    // ---------- Everything for one child ----------
 
-    fun doses(profileId: Long): Flow<Map<String, LocalDate>> = observe { queryDoses(it, profileId) }
+    /** All of one child's records in a single read, so a screen never mixes old and new data. */
+    fun childRecords(profileId: Long): Flow<ChildRecords> = observe { db ->
+        ChildRecords(
+            doses = queryDoses(db, profileId),
+            skipped = querySkips(db, profileId),
+            answers = queryAnswers(db, profileId),
+            growth = queryGrowth(db, profileId),
+        )
+    }
+
+    // ---------- Vaccines ----------
 
     fun dosesNow(profileId: Long): Map<String, LocalDate> = queryDoses(database.readableDatabase, profileId)
 
@@ -89,8 +99,6 @@ class Repository(private val database: MahdDatabase) {
             db.delete("vaccine_skips", "profile_id = ? AND dose_id = ?", arrayOf(profileId.toString(), doseId))
         }
     }
-
-    fun skippedDoses(profileId: Long): Flow<Set<String>> = observe { querySkips(it, profileId) }
 
     fun skippedDosesNow(profileId: Long): Set<String> = querySkips(database.readableDatabase, profileId)
 
@@ -123,14 +131,15 @@ class Repository(private val database: MahdDatabase) {
 
     // ---------- Milestones ----------
 
-    fun milestoneAnswers(profileId: Long): Flow<Map<String, MilestoneAnswer>> = observe { db ->
+    fun milestoneAnswers(profileId: Long): Flow<Map<String, MilestoneAnswer>> = observe { queryAnswers(it, profileId) }
+
+    private fun queryAnswers(db: SQLiteDatabase, profileId: Long): Map<String, MilestoneAnswer> =
         db.rawQuery("SELECT item_id, answer FROM milestone_answers WHERE profile_id = ?", arrayOf(profileId.toString()))
             .use { c ->
                 c.mapRows { row -> MilestoneAnswer.fromCode(row.getInt(1))?.let { row.getString(0) to it } }
                     .filterNotNull()
                     .toMap()
             }
-    }
 
     suspend fun setMilestoneAnswer(profileId: Long, itemId: String, answer: MilestoneAnswer?) = write { db ->
         if (answer == null) {

@@ -1,6 +1,6 @@
 package ly.mahd.app.ui.components
 
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Box
@@ -10,7 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -22,8 +23,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 /**
- * A circular progress ring that fills smoothly. [progress] is 0..1; whatever is placed in [content]
- * (usually a number) is centred inside the ring. Drawn on a Canvas, so it needs no extra library.
+ * A circular progress ring that fills smoothly: from empty when it first appears, then to each new value.
+ * [progress] is 0..1; whatever is placed in [content] (usually a number) is centred inside the ring.
+ * Drawn on a Canvas, so it needs no extra library.
  */
 @Composable
 fun ProgressRing(
@@ -35,13 +37,13 @@ fun ProgressRing(
     track: Color = MaterialTheme.colorScheme.surfaceVariant,
     content: @Composable ColumnScope.() -> Unit = {},
 ) {
-    val animated by animateFloatAsState(
-        targetValue = progress.coerceIn(0f, 1f),
-        animationSpec = tween(durationMillis = 900),
-        label = "progress-ring",
-    )
+    val fill = remember { Animatable(0f) }
+    LaunchedEffect(progress) {
+        fill.animateTo(progress.coerceIn(0f, 1f), animationSpec = tween(durationMillis = 900))
+    }
     Box(modifier.size(size), contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
+            val animated = fill.value // read while drawing, so the animation only redraws the ring
             val width = stroke.toPx()
             val inset = width / 2
             val arcSize = Size(this.size.width - width, this.size.height - width)

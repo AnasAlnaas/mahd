@@ -58,6 +58,18 @@ data class DoseRecord(
     val givenDate: LocalDate,
 )
 
+/** Everything recorded for one child, read in one go so a screen gets it all at the same moment. */
+data class ChildRecords(
+    /** Dose id -> date given. */
+    val doses: Map<String, LocalDate>,
+    /** Doses marked "skipped / not applicable". */
+    val skipped: Set<String>,
+    /** Milestone item id -> answer. */
+    val answers: Map<String, MilestoneAnswer>,
+    /** Measurements, oldest first. */
+    val growth: List<GrowthEntry>,
+)
+
 enum class MilestoneAnswer(val code: Int) {
     YES(1),
     NOT_YET(0),

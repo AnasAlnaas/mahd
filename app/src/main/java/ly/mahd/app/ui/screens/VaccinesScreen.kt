@@ -68,9 +68,10 @@ fun VaccinesScreen(app: MahdApp, profile: Profile) {
     val today = LocalToday.current
     val birth = profile.birthDate ?: return
     val schedule = app.content.vaccines
-    val doses by remember(profile.id) { app.repository.doses(profile.id) }.collectAsState(initial = emptyMap())
-    val skipped by remember(profile.id) { app.repository.skippedDoses(profile.id) }.collectAsState(initial = emptySet())
-    val plans = VaccinePlanner.plan(schedule, birth, doses, today, skipped)
+    // Null until the database answers, so the timeline never flashes "everything is late" first.
+    val records by remember(profile.id) { app.repository.childRecords(profile.id) }.collectAsState(initial = null)
+    val data = records ?: return
+    val plans = VaccinePlanner.plan(schedule, birth, data.doses, today, data.skipped)
     val summary = VaccinePlanner.summary(plans)
     val firstUpcomingId = plans.firstOrNull { it.status == Status.UPCOMING }?.visit?.id
     val scope = rememberCoroutineScope()

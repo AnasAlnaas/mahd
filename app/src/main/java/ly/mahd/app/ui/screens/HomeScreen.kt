@@ -1,17 +1,19 @@
 package ly.mahd.app.ui.screens
 
+import android.content.res.Resources
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -22,14 +24,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ly.mahd.app.MahdApp
 import ly.mahd.app.R
 import ly.mahd.app.content.GrowthIndicator
+import ly.mahd.app.content.MilestoneGroup
+import ly.mahd.app.data.ChildRecords
+import ly.mahd.app.data.GrowthEntry
 import ly.mahd.app.data.MilestoneAnswer
 import ly.mahd.app.data.Profile
+import ly.mahd.app.data.Sex
 import ly.mahd.app.logic.ChildAge
 import ly.mahd.app.logic.GrowthMath
 import ly.mahd.app.logic.PregnancyMath
@@ -38,43 +46,48 @@ import ly.mahd.app.ui.Navigator
 import ly.mahd.app.ui.Routes
 import ly.mahd.app.ui.components.AppCard
 import ly.mahd.app.ui.components.EmojiBadge
-import ly.mahd.app.ui.components.TrimesterBar
 import ly.mahd.app.ui.components.LocalToday
 import ly.mahd.app.ui.components.ProgressRing
+import ly.mahd.app.ui.components.TrimesterBar
 import ly.mahd.app.ui.components.WarningCard
-import ly.mahd.app.ui.theme.Area
-import ly.mahd.app.ui.theme.accent
 import ly.mahd.app.ui.profileName
+import ly.mahd.app.ui.theme.Area
+import ly.mahd.app.ui.theme.LocalStatusColors
+import ly.mahd.app.ui.theme.accent
 import ly.mahd.app.util.Format
+import java.time.LocalDate
+import java.time.LocalTime
 
 @Composable
 fun HomeScreen(app: MahdApp, profile: Profile, nav: Navigator) {
+    if (profile.isPregnancy) PregnancyHome(app, profile, nav) else ChildHome(app, profile, nav)
+}
+
+@Composable
+private fun HomeList(content: LazyListScope.() -> Unit) {
     LazyColumn(
         Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        if (profile.isPregnancy) {
-            item { PregnancyTodayCard(app, profile, nav) }
-            item {
-                WarningCard(
-                    title = stringResource(R.string.danger_signs_title),
-                    onClick = { nav.push(Routes.DANGER_SIGNS) },
-                ) { Text(stringResource(R.string.danger_signs_teaser), style = MaterialTheme.typography.bodyLarge) }
-            }
-            item { BabyBornCard(profile, nav) }
-        } else if (profile.birthDate != null) {
-            item { ChildAgeCard(profile) }
-            item { TodayStrip(app, profile, nav) }
-            item { NextVaccineCard(app, profile, nav) }
-            item { MilestonesSummaryCard(app, profile, nav) }
-            item { GrowthSummaryCard(app, profile, nav) }
-            item { TipCard(app, profile) }
-        }
-    }
+        content = content,
+    )
 }
 
 // ----- Pregnancy -----
+
+@Composable
+private fun PregnancyHome(app: MahdApp, profile: Profile, nav: Navigator) {
+    HomeList {
+        item { PregnancyTodayCard(app, profile, nav) }
+        item {
+            WarningCard(
+                title = stringResource(R.string.danger_signs_title),
+                onClick = { nav.push(Routes.DANGER_SIGNS) },
+            ) { Text(stringResource(R.string.danger_signs_teaser), style = MaterialTheme.typography.bodyLarge) }
+        }
+        item { BabyBornCard(profile, nav) }
+    }
+}
 
 @Composable
 private fun PregnancyTodayCard(app: MahdApp, profile: Profile, nav: Navigator) {
@@ -141,11 +154,31 @@ private fun BabyBornCard(profile: Profile, nav: Navigator) {
 // ----- Child -----
 
 @Composable
-private fun ChildAgeCard(profile: Profile) {
+private fun ChildHome(app: MahdApp, profile: Profile, nav: Navigator) {
+    val today = LocalToday.current
+    val birth = profile.birthDate ?: return
+    // Everything recorded for this child in one read. Null until the database answers, so the cards never
+    // show a moment of "every vaccine is late" before the real data arrives.
+    val records by remember(profile.id) { app.repository.childRecords(profile.id) }.collectAsState(initial = null)
+    val data = records ?: return
+    val plans = VaccinePlanner.plan(app.content.vaccines, birth, data.doses, today, data.skipped)
+    val group = app.content.milestones.groupForAge(ChildAge.referenceMonths(birth, profile.weeksAtBirth, today))
+
+    HomeList {
+        item { ChildAgeCard(profile, birth) }
+        item { TodayStrip(plans, group, data, nav) }
+        item { NextVaccineCard(plans, nav) }
+        item { MilestonesSummaryCard(group, data.answers, nav) }
+        item { GrowthSummaryCard(app, profile, birth, data.growth, nav) }
+        item { TipCard(group) }
+    }
+}
+
+@Composable
+private fun ChildAgeCard(profile: Profile, birth: LocalDate) {
     val today = LocalToday.current
     val res = LocalContext.current.resources
-    val birth = profile.birthDate ?: return
-    val morning = java.time.LocalTime.now().hour < 12
+    val morning = LocalTime.now().hour < 12
     AppCard(containerColor = MaterialTheme.colorScheme.primaryContainer) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -168,8 +201,8 @@ private fun ChildAgeCard(profile: Profile) {
             }
             EmojiBadge(
                 when (profile.sex) {
-                    ly.mahd.app.data.Sex.BOY -> "👦"
-                    ly.mahd.app.data.Sex.GIRL -> "👧"
+                    Sex.BOY -> "👦"
+                    Sex.GIRL -> "👧"
                     null -> "👶"
                 },
                 size = 84.dp,
@@ -192,19 +225,11 @@ private fun ChildAgeCard(profile: Profile) {
 
 /** Three small tiles with today's most useful numbers: next vaccine, skills seen, last weight. */
 @Composable
-private fun TodayStrip(app: MahdApp, profile: Profile, nav: Navigator) {
-    val today = LocalToday.current
+private fun TodayStrip(plans: List<VaccinePlanner.VisitPlan>, group: MilestoneGroup, data: ChildRecords, nav: Navigator) {
     val res = LocalContext.current.resources
-    val birth = profile.birthDate ?: return
-    val doses by remember(profile.id) { app.repository.doses(profile.id) }.collectAsState(initial = emptyMap())
-    val skipped by remember(profile.id) { app.repository.skippedDoses(profile.id) }.collectAsState(initial = emptySet())
-    val answers by remember(profile.id) { app.repository.milestoneAnswers(profile.id) }.collectAsState(initial = emptyMap())
-    val entries by remember(profile.id) { app.repository.growth(profile.id) }.collectAsState(initial = emptyList())
-
-    val next = VaccinePlanner.next(VaccinePlanner.plan(app.content.vaccines, birth, doses, today, skipped))
-    val group = app.content.milestones.groupForAge(ChildAge.referenceMonths(birth, profile.weeksAtBirth, today))
-    val yes = group.items.count { answers[it.id] == MilestoneAnswer.YES }
-    val lastWeight = entries.lastOrNull { it.weightKg != null }?.weightKg
+    val next = VaccinePlanner.next(plans)
+    val yes = group.items.count { data.answers[it.id] == MilestoneAnswer.YES }
+    val lastWeight = data.growth.lastOrNull { it.weightKg != null }?.weightKg
 
     val vaccineValue: String
     val vaccineLabel: Int
@@ -249,15 +274,15 @@ private fun StatTile(
     emoji: String,
     value: String,
     label: String,
-    accent: androidx.compose.ui.graphics.Color,
+    accent: Color,
     modifier: Modifier = Modifier,
-    valueColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface,
+    valueColor: Color = MaterialTheme.colorScheme.onSurface,
     onClick: () -> Unit,
 ) {
-    androidx.compose.material3.Card(
+    Card(
         onClick = onClick,
         modifier = modifier,
-        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
     ) {
         Column(
             Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 12.dp),
@@ -269,14 +294,14 @@ private fun StatTile(
                 value,
                 style = MaterialTheme.typography.titleMedium,
                 color = valueColor,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                textAlign = TextAlign.Center,
                 maxLines = 2,
             )
             Text(
                 label,
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                textAlign = TextAlign.Center,
                 maxLines = 2,
             )
         }
@@ -284,17 +309,11 @@ private fun StatTile(
 }
 
 @Composable
-private fun NextVaccineCard(app: MahdApp, profile: Profile, nav: Navigator) {
-    val today = LocalToday.current
+private fun NextVaccineCard(plans: List<VaccinePlanner.VisitPlan>, nav: Navigator) {
     val res = LocalContext.current.resources
-    val birth = profile.birthDate ?: return
-    val doses by remember(profile.id) { app.repository.doses(profile.id) }.collectAsState(initial = emptyMap())
-    val skipped by remember(profile.id) { app.repository.skippedDoses(profile.id) }.collectAsState(initial = emptySet())
-    val plans = VaccinePlanner.plan(app.content.vaccines, birth, doses, today, skipped)
     val next = VaccinePlanner.next(plans)
-
     val summary = VaccinePlanner.summary(plans)
-    val status = ly.mahd.app.ui.theme.LocalStatusColors.current
+    val status = LocalStatusColors.current
 
     AppCard(onClick = { nav.selectTab(Routes.VACCINES) }, accent = Area.VACCINES.accent()) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -330,19 +349,14 @@ private fun NextVaccineCard(app: MahdApp, profile: Profile, nav: Navigator) {
     }
 }
 
-fun vaccineWhenText(res: android.content.res.Resources, daysUntilDue: Int): String = when {
+fun vaccineWhenText(res: Resources, daysUntilDue: Int): String = when {
     daysUntilDue > 0 -> res.getString(R.string.vaccine_in_days, Format.days(res, daysUntilDue))
     daysUntilDue == 0 -> res.getString(R.string.vaccine_today)
     else -> res.getString(R.string.vaccine_late_days, Format.days(res, -daysUntilDue))
 }
 
 @Composable
-private fun MilestonesSummaryCard(app: MahdApp, profile: Profile, nav: Navigator) {
-    val today = LocalToday.current
-    val birth = profile.birthDate ?: return
-    val answers by remember(profile.id) { app.repository.milestoneAnswers(profile.id) }.collectAsState(initial = emptyMap())
-    val months = ChildAge.referenceMonths(birth, profile.weeksAtBirth, today)
-    val group = app.content.milestones.groupForAge(months)
+private fun MilestonesSummaryCard(group: MilestoneGroup, answers: Map<String, MilestoneAnswer>, nav: Navigator) {
     val yes = group.items.count { answers[it.id] == MilestoneAnswer.YES }
     val notYet = group.items.count { answers[it.id] == MilestoneAnswer.NOT_YET }
 
@@ -369,31 +383,29 @@ private fun MilestonesSummaryCard(app: MahdApp, profile: Profile, nav: Navigator
 }
 
 @Composable
-private fun GrowthSummaryCard(app: MahdApp, profile: Profile, nav: Navigator) {
-    val birth = profile.birthDate ?: return
-    val entries by remember(profile.id) { app.repository.growth(profile.id) }.collectAsState(initial = emptyList())
-    val lastWeight = entries.lastOrNull { it.weightKg != null }
+private fun GrowthSummaryCard(app: MahdApp, profile: Profile, birth: LocalDate, entries: List<GrowthEntry>, nav: Navigator) {
+    val last = entries.lastOrNull { it.weightKg != null }
+    val weight = last?.weightKg
 
     AppCard(onClick = { nav.selectTab(Routes.GROWTH) }, accent = Area.GROWTH.accent()) {
         Text("📈  " + stringResource(R.string.growth_card_title), style = MaterialTheme.typography.titleMedium)
-        if (lastWeight == null) {
+        if (last == null || weight == null) {
             Text(stringResource(R.string.growth_card_empty), style = MaterialTheme.typography.bodyLarge)
         } else {
             val sex = profile.sex
             Text(
-                stringResource(R.string.last_weight, Format.decimal(lastWeight.weightKg!!, 2), Format.date(lastWeight.date)),
+                stringResource(R.string.last_weight, Format.decimal(weight, 2), Format.date(last.date)),
                 style = MaterialTheme.typography.bodyLarge,
             )
             if (sex != null) {
-                val months = ChildAge.referenceMonths(birth, profile.weeksAtBirth, lastWeight.date)
+                val months = ChildAge.referenceMonths(birth, profile.weeksAtBirth, last.date)
                 // WHO standards are for term babies: no band before a premature baby's original due date.
-                val beforeTerm = ChildAge.isBeforeCorrectedTerm(birth, profile.weeksAtBirth, lastWeight.date)
+                val beforeTerm = ChildAge.isBeforeCorrectedTerm(birth, profile.weeksAtBirth, last.date)
                 val lms = if (beforeTerm) null else app.content.growth.lms(GrowthIndicator.WEIGHT, sex.whoCode, months)
                 if (beforeTerm) {
                     Text(stringResource(R.string.growth_preterm_note_short), style = MaterialTheme.typography.bodyMedium)
                 } else if (lms != null) {
-                    val band = GrowthMath.band(lms.zScore(lastWeight.weightKg))
-                    GrowthBandText(band)
+                    GrowthBandText(GrowthMath.band(lms.zScore(weight)))
                 }
             }
         }
@@ -401,10 +413,8 @@ private fun GrowthSummaryCard(app: MahdApp, profile: Profile, nav: Navigator) {
 }
 
 @Composable
-private fun TipCard(app: MahdApp, profile: Profile) {
+private fun TipCard(group: MilestoneGroup) {
     val today = LocalToday.current
-    val birth = profile.birthDate ?: return
-    val group = app.content.milestones.groupForAge(ChildAge.referenceMonths(birth, profile.weeksAtBirth, today))
     val tip = group.tips.getOrNull(today.dayOfYear % group.tips.size.coerceAtLeast(1)) ?: return
     AppCard(containerColor = MaterialTheme.colorScheme.secondaryContainer) {
         Text("💡  " + stringResource(R.string.tip_of_the_day), style = MaterialTheme.typography.titleMedium)
@@ -414,7 +424,7 @@ private fun TipCard(app: MahdApp, profile: Profile) {
 
 @Composable
 fun GrowthBandText(band: GrowthMath.Band) {
-    val status = ly.mahd.app.ui.theme.LocalStatusColors.current
+    val status = LocalStatusColors.current
     val (text, color) = when (band) {
         GrowthMath.Band.NORMAL -> stringResource(R.string.growth_band_normal) to status.good
         GrowthMath.Band.LOW -> stringResource(R.string.growth_band_low) to status.attention
@@ -422,7 +432,5 @@ fun GrowthBandText(band: GrowthMath.Band) {
         GrowthMath.Band.VERY_LOW -> stringResource(R.string.growth_band_very_low) to MaterialTheme.colorScheme.error
         GrowthMath.Band.VERY_HIGH -> stringResource(R.string.growth_band_very_high) to MaterialTheme.colorScheme.error
     }
-    Column {
-        Text(text, style = MaterialTheme.typography.bodyLarge, color = color)
-    }
+    Text(text, style = MaterialTheme.typography.bodyLarge, color = color)
 }

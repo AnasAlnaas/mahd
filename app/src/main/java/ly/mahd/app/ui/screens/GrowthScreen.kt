@@ -57,7 +57,7 @@ fun GrowthScreen(app: MahdApp, profile: Profile) {
     val today = LocalToday.current
     val birth = profile.birthDate ?: return
     val sex = profile.sex
-    val entries by remember(profile.id) { app.repository.growth(profile.id) }.collectAsState(initial = emptyList())
+    val loaded by remember(profile.id) { app.repository.growth(profile.id) }.collectAsState(initial = null)
     var indicatorCode by rememberSaveable { mutableStateOf(GrowthIndicator.WEIGHT.code) }
     val indicator = GrowthIndicator.entries.first { it.code == indicatorCode }
     var adding by rememberSaveable { mutableStateOf(false) }
@@ -69,6 +69,8 @@ fun GrowthScreen(app: MahdApp, profile: Profile) {
     val allMax = (ceil((ageNow + 2) / 6) * 6).toInt().coerceIn(12, 60)
     // "Recent months" zooms in on the last ~6 months so small changes are easier to see.
     var recentOnly by rememberSaveable { mutableStateOf(false) }
+    // Null until the database answers, so "no measurements yet" does not flash before the real list.
+    val entries = loaded ?: return
     val canZoom = allMax > 12
     val zoomed = recentOnly && canZoom
     val minMonth = if (zoomed) (ageNow - 5).toInt().coerceAtLeast(0) else 0

@@ -64,7 +64,7 @@ fun MilestonesScreen(app: MahdApp, profile: Profile) {
     val res = LocalContext.current.resources
     val birth = profile.birthDate ?: return
     val content = app.content.milestones
-    val answers by remember(profile.id) { app.repository.milestoneAnswers(profile.id) }.collectAsState(initial = emptyMap())
+    val loaded by remember(profile.id) { app.repository.milestoneAnswers(profile.id) }.collectAsState(initial = null)
     val scope = rememberCoroutineScope()
 
     val months = ChildAge.referenceMonths(birth, profile.weeksAtBirth, today)
@@ -72,7 +72,6 @@ fun MilestonesScreen(app: MahdApp, profile: Profile) {
     var groupId by rememberSaveable(profile.id) { mutableStateOf(currentGroup.id) }
     val group = content.groups.firstOrNull { it.id == groupId } ?: currentGroup
     val reached = months + 0.01 >= group.months
-    val notYet = group.items.filter { answers[it.id] == MilestoneAnswer.NOT_YET }
 
     val context = LocalContext.current
     val appName = stringResource(R.string.app_name)
@@ -80,6 +79,10 @@ fun MilestonesScreen(app: MahdApp, profile: Profile) {
     val shareTitle = stringResource(R.string.share_card_title, profileName(profile))
     val chooserTitle = stringResource(R.string.share_chooser)
     val footer = stringResource(R.string.share_card_footer)
+
+    // Null until the database answers, so the checklist does not show as empty for a moment.
+    val answers = loaded ?: return
+    val notYet = group.items.filter { answers[it.id] == MilestoneAnswer.NOT_YET }
     val yesTotal = group.items.count { answers[it.id] == MilestoneAnswer.YES }
     val countLine = stringResource(R.string.milestones_progress, yesTotal.toString(), group.items.size.toString())
 
