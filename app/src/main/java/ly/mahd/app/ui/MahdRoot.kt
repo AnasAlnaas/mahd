@@ -55,9 +55,12 @@ import ly.mahd.app.ui.screens.PregnancyScreen
 import ly.mahd.app.ui.screens.SettingsScreen
 import ly.mahd.app.ui.screens.VaccinesScreen
 
-/** Decides what to show: first-run welcome, or the main app for the selected profile. */
+/**
+ * Decides what to show: first-run welcome, or the main app for the selected profile.
+ * [openRequest] (from a tapped reminder) switches to that profile and tab once, then [onOpenHandled] clears it.
+ */
 @Composable
-fun MahdRoot(app: MahdApp) {
+fun MahdRoot(app: MahdApp, openRequest: OpenRequest?, onOpenHandled: () -> Unit) {
     val profiles by remember { app.repository.profiles }.collectAsState(initial = null)
     val accepted by app.prefs.disclaimerAccepted.collectAsState()
     val selectedId by app.prefs.selectedProfileId.collectAsState()
@@ -69,6 +72,20 @@ fun MahdRoot(app: MahdApp) {
         !accepted || list.isEmpty() -> OnboardingFlow(app)
         else -> {
             val selected = list.firstOrNull { it.id == selectedId } ?: list.first()
+            if (openRequest != null) {
+                // Select the profile first; the tab is opened when this runs again with that profile selected
+                // (otherwise the tab could be checked against the previous profile and dropped).
+                LaunchedEffect(openRequest, selected.id) {
+                    when {
+                        list.none { it.id == openRequest.profileId } -> onOpenHandled() // deleted since the reminder
+                        selected.id != openRequest.profileId -> app.prefs.selectProfile(openRequest.profileId)
+                        else -> {
+                            nav.selectTab(openRequest.route)
+                            onOpenHandled()
+                        }
+                    }
+                }
+            }
             MainNav(app, nav, list, selected)
         }
     }

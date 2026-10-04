@@ -54,6 +54,9 @@ object Routes {
     val TABS = setOf(HOME, PREGNANCY, VACCINES, GROWTH, MILESTONES)
 }
 
+/** Asks the app to show the tab [route] for profile [profileId], e.g. when the mother taps a reminder. */
+data class OpenRequest(val profileId: Long, val route: String)
+
 /** "edit/12" -> "edit" */
 val String.routeName: String get() = substringBefore('/')
 

@@ -11,6 +11,7 @@ import ly.mahd.app.data.Profile
 import ly.mahd.app.logic.PregnancyMath
 import ly.mahd.app.logic.ReminderRules
 import ly.mahd.app.logic.VaccinePlanner
+import ly.mahd.app.ui.Routes
 import ly.mahd.app.util.AppLocale
 import ly.mahd.app.util.Format
 import java.time.LocalDate
@@ -81,7 +82,7 @@ class ReminderReceiver : BroadcastReceiver() {
                 if (last in 0 until week && week in 4..42) {
                     val title = res.getString(R.string.notify_new_week_title, week.toString())
                     val text = res.getString(R.string.notify_new_week_text)
-                    Notifications.post(context, "week:${profile.id}:$week", title, text)
+                    Notifications.post(context, "week:${profile.id}:$week", title, text, profile.id, Routes.PREGNANCY)
                 }
                 if (last != week) prefs.setLastNotifiedWeek(profile.id, week)
             }
@@ -106,7 +107,7 @@ class ReminderReceiver : BroadcastReceiver() {
                     }
                     // Only mark as sent if it was really shown, so a reminder is not lost
                     // when notifications are blocked and later allowed.
-                    if (Notifications.post(context, key, title, text)) prefs.markNotified(key)
+                    if (Notifications.post(context, key, title, text, profile.id, Routes.VACCINES)) prefs.markNotified(key)
                 }
             }
         }

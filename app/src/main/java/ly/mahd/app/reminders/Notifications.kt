@@ -18,6 +18,10 @@ import ly.mahd.app.util.AppLocale
 object Notifications {
     private const val CHANNEL_ID = "reminders"
 
+    /** Extras of the "open the app" intent: which profile and which tab the reminder is about. */
+    const val EXTRA_PROFILE_ID = "ly.mahd.app.extra.PROFILE_ID"
+    const val EXTRA_ROUTE = "ly.mahd.app.extra.ROUTE"
+
     fun createChannel(context: Context) {
         val res = AppLocale.wrap(context).resources
         val channel = NotificationChannel(
@@ -34,13 +38,21 @@ object Notifications {
             PackageManager.PERMISSION_GRANTED) &&
             NotificationManagerCompat.from(context).areNotificationsEnabled()
 
-    /** Returns true if the notification was shown (false when notifications are blocked). */
-    fun post(context: Context, key: String, title: String, text: String): Boolean {
+    /**
+     * Shows a reminder; tapping it opens [route] (a tab) for the profile [profileId].
+     * Returns true if the notification was shown (false when notifications are blocked).
+     */
+    fun post(context: Context, key: String, title: String, text: String, profileId: Long, route: String): Boolean {
         if (!canPost(context)) return false
+        val intent = Intent(context, MainActivity::class.java)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            .putExtra(EXTRA_PROFILE_ID, profileId)
+            .putExtra(EXTRA_ROUTE, route)
+        // One request code per reminder, so each notification keeps its own profile and tab.
         val open = PendingIntent.getActivity(
             context,
-            0,
-            Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
+            key.hashCode(),
+            intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
