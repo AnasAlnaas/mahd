@@ -1,6 +1,7 @@
 package ly.mahd.app.ui.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
@@ -8,11 +9,10 @@ import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -139,13 +139,10 @@ private val AppShapes = Shapes(
 @Composable
 fun MahdTheme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     val colors: ColorScheme = if (dark) Dark else Light
-    androidx.compose.runtime.CompositionLocalProvider(LocalStatusColors provides if (dark) DarkStatus else LightStatus) {
+    CompositionLocalProvider(LocalStatusColors provides if (dark) DarkStatus else LightStatus) {
         MaterialTheme(colorScheme = colors, typography = AppTypography, shapes = AppShapes, content = content)
     }
 }
-
-/** Plain text style helper for small print. */
-val SmallPrint = TextStyle(fontSize = 13.sp, lineHeight = 20.sp)
 
 /** The four areas of the app. Each has its own accent colour so a card is recognised at a glance. */
 enum class Area { VACCINES, GROWTH, MILESTONES, PREGNANCY }

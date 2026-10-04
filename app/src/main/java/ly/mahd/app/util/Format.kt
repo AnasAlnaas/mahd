@@ -31,8 +31,6 @@ object Format {
         return if (text.contains('.')) text.trimEnd('0').trimEnd('.') else text
     }
 
-    fun int(value: Int): String = value.toString()
-
     fun years(res: Resources, n: Int): String = res.getQuantityString(R.plurals.years, n, n.toString())
     fun months(res: Resources, n: Int): String = res.getQuantityString(R.plurals.months, n, n.toString())
     fun weeks(res: Resources, n: Int): String = res.getQuantityString(R.plurals.weeks, n, n.toString())

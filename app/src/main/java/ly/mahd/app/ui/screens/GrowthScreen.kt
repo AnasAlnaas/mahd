@@ -48,6 +48,7 @@ import ly.mahd.app.ui.components.LocalToday
 import ly.mahd.app.ui.theme.Area
 import ly.mahd.app.ui.theme.accent
 import ly.mahd.app.util.Format
+import java.time.LocalDate
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -272,14 +273,14 @@ fun parseNumber(text: String): Double? {
 
 @Composable
 private fun AddMeasurementDialog(
-    birth: java.time.LocalDate,
-    today: java.time.LocalDate,
+    birth: LocalDate,
+    today: LocalDate,
     onDismiss: () -> Unit,
     onSave: (GrowthEntry) -> Unit,
 ) {
     // Kept as text so it survives screen rotation.
     var dateText by rememberSaveable { mutableStateOf(today.toString()) }
-    val date = java.time.LocalDate.parse(dateText)
+    val date = LocalDate.parse(dateText)
     var weight by rememberSaveable { mutableStateOf("") }
     var length by rememberSaveable { mutableStateOf("") }
     var head by rememberSaveable { mutableStateOf("") }

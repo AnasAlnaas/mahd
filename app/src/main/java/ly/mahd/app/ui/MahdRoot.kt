@@ -154,7 +154,7 @@ private fun TabsScaffold(app: MahdApp, nav: Navigator, profiles: List<Profile>, 
                         selected = t == tab,
                         onClick = { nav.selectTab(t) },
                         icon = { AppIcon(tabIcon(t), null) },
-                        label = { Text(stringResource(tabLabel(t, selected)), maxLines = 1) },
+                        label = { Text(stringResource(tabLabel(t)), maxLines = 1) },
                     )
                 }
             }
@@ -186,12 +186,12 @@ private fun tabIcon(tab: String): Int = when (tab) {
     else -> R.drawable.ic_home
 }
 
-private fun tabLabel(tab: String, profile: Profile): Int = when (tab) {
+private fun tabLabel(tab: String): Int = when (tab) {
     Routes.PREGNANCY -> R.string.tab_pregnancy
     Routes.VACCINES -> R.string.tab_vaccines
     Routes.GROWTH -> R.string.tab_growth
     Routes.MILESTONES -> R.string.tab_milestones
-    else -> if (profile.isPregnancy) R.string.tab_home else R.string.tab_home
+    else -> R.string.tab_home
 }
 
 fun profileEmoji(profile: Profile): String = if (profile.isPregnancy) "🤰" else "👶"

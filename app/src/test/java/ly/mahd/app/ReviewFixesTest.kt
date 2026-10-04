@@ -13,6 +13,7 @@ import ly.mahd.app.data.ProfileKind
 import ly.mahd.app.data.Repository
 import ly.mahd.app.data.Sex
 import ly.mahd.app.logic.ChildAge
+import ly.mahd.app.logic.GrowthMath
 import ly.mahd.app.logic.ReminderRules
 import ly.mahd.app.logic.VaccinePlanner
 import org.junit.Assert.assertEquals
@@ -297,13 +298,13 @@ class VaccineSummaryTest {
 class GrowthTrendTest {
     @Test
     fun smallChangesAreSteady() {
-        assertEquals(ly.mahd.app.logic.GrowthMath.Trend.STEADY, ly.mahd.app.logic.GrowthMath.trend(0.2, 0.7))
-        assertEquals(ly.mahd.app.logic.GrowthMath.Trend.STEADY, ly.mahd.app.logic.GrowthMath.trend(-1.0, -1.6))
+        assertEquals(GrowthMath.Trend.STEADY, GrowthMath.trend(0.2, 0.7))
+        assertEquals(GrowthMath.Trend.STEADY, GrowthMath.trend(-1.0, -1.6))
     }
 
     @Test
     fun movingToAnotherCurveIsUpOrDown() {
-        assertEquals(ly.mahd.app.logic.GrowthMath.Trend.UP, ly.mahd.app.logic.GrowthMath.trend(0.0, 0.8))
-        assertEquals(ly.mahd.app.logic.GrowthMath.Trend.DOWN, ly.mahd.app.logic.GrowthMath.trend(0.5, -0.4))
+        assertEquals(GrowthMath.Trend.UP, GrowthMath.trend(0.0, 0.8))
+        assertEquals(GrowthMath.Trend.DOWN, GrowthMath.trend(0.5, -0.4))
     }
 }

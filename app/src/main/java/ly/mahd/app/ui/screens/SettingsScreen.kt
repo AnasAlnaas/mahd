@@ -3,7 +3,6 @@ package ly.mahd.app.ui.screens
 import android.content.Context
 import android.content.Intent
 import android.provider.Settings
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -54,6 +53,7 @@ import ly.mahd.app.ui.profileEmoji
 import ly.mahd.app.ui.profileName
 import ly.mahd.app.util.Format
 import java.io.File
+import java.time.LocalDate
 
 @Composable
 fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
@@ -153,7 +153,7 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     OutlinedButton(
-                        onClick = { saveLauncher.launch("mahd-backup-$today.json") },
+                        onClick = { saveLauncher.launch(backupFileName(today)) },
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text(stringResource(R.string.backup_save)) }
                     OutlinedButton(
@@ -204,12 +204,15 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
 
 private fun toast(context: Context, message: Int) = showToast(context, message)
 
+/** The name the mother sees for her backup file. (Inside, the file still says "app": "mahd" — see BackupFile.) */
+private fun backupFileName(today: LocalDate) = "atwar-backup-$today.json"
+
 /** Writes the backup to the app's cache and opens Android's share sheet (WhatsApp, Drive, email…). */
-private suspend fun shareBackup(context: Context, app: MahdApp, today: java.time.LocalDate) {
+private suspend fun shareBackup(context: Context, app: MahdApp, today: LocalDate) {
     val file = withContext(Dispatchers.IO) {
         val dir = File(context.cacheDir, "backups").apply { mkdirs() }
         dir.listFiles()?.forEach { it.delete() }
-        File(dir, "mahd-backup-$today.json").apply {
+        File(dir, backupFileName(today)).apply {
             writeText(BackupFile.encode(app.repository.snapshot(), today), Charsets.UTF_8)
         }
     }

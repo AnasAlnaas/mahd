@@ -23,10 +23,13 @@ import ly.mahd.app.content.GrowthIndicator
 import ly.mahd.app.content.GrowthStandards
 import ly.mahd.app.ui.theme.LocalStatusColors
 import ly.mahd.app.util.Format
+import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.floor
+import kotlin.math.log10
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.pow
 
 /**
  * A WHO growth chart drawn directly on a Canvas (no chart library).
@@ -135,7 +138,7 @@ fun GrowthChart(
         // A left-to-right mark (‎) keeps the sign in front of the number even in a right-to-left screen.
         listOf(3.0 to "‎+3", 2.0 to "‎+2", 0.0 to "0", -2.0 to "‎−2", -3.0 to "‎−3").forEach { (z, text) ->
             val end = curves.getValue(z).last()
-            val color = if (kotlin.math.abs(z) == 3.0) status.attention else status.chartMedian
+            val color = if (abs(z) == 3.0) status.attention else status.chartMedian
             val label = measurer.measure(text, curveLabelStyle.copy(color = color))
             drawText(label, topLeft = Offset(leftPad + w + 4.dp.toPx(), y(end.second) - label.size.height / 2))
         }
@@ -168,8 +171,8 @@ fun GrowthChart(
 /** 1, 2 or 5 × a power of ten — gives round numbers on the axis. */
 private fun niceStep(raw: Double): Double {
     if (raw <= 0) return 1.0
-    val exp = floor(kotlin.math.log10(raw))
-    val base = Math.pow(10.0, exp)
+    val exp = floor(log10(raw))
+    val base = 10.0.pow(exp)
     val f = raw / base
     return when {
         f <= 1 -> 1.0
