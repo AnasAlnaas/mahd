@@ -30,10 +30,25 @@ Libyan vaccine schedule or Libyan dialect. Plan: MVP first, add features over ti
 - Vaccine schedule: a dose can be given, marked "skipped / not applicable" (table `vaccine_skips`, DB v2), or
   expire automatically via `"maxAgeMonths"` in `vaccines_ly.json` (rotavirus: 8). Such doses are never "late"
   and get no reminders. Reminders are catch-up tolerant (`logic/ReminderRules.kt`).
+- Reminders: the daily alarm is inexact (Android may deliver it up to 18 h late), so never re-set it on every app
+  open — `ReminderScheduler.ensureScheduled()` only adds a missing alarm (BootReceiver re-sets it). When the app is
+  opened and today's check has not run (`ReminderRules.isCheckDue`, `Prefs.lastCheckDate`), the app runs it itself.
+  A tapped reminder opens its profile and tab (`OpenRequest`). Lock screens set to hide sensitive content show only
+  "لديك تذكير من أطوار" (owner's choice: follow the phone's setting, no in-app switch).
+- Notification permission is asked in context: a Home card (`RemindersPrompt`) explains the reminders and asks only
+  when tapped (Android asks at most twice); never auto-prompt at startup.
+- Danger signs: pregnancy (`pregnancy.json`) and children (`child_danger_signs.json`, DRAFT from WHO IMCI + NICE fever
+  rule for under 3 months). A section with `maxAgeMonths` is shown first for a younger child. No "call ambulance"
+  button until a doctor confirms the number (owner's decision).
 - Growth: WHO standards are for term babies, so measurements before a premature baby's original due date
   (negative corrected age) are listed but not charted or classified.
-- Backups: `BackupFile.decode` validates the whole file (orphan/duplicate rows) before restore. Android Auto Backup
-  is ON (database goes to the mother's own Google account); the privacy text says so. Declare it in Play's data-safety form.
+- Backups: `BackupFile.decode(text, today)` validates the whole file before restore: structure (orphan/duplicate rows)
+  and values (at least one profile, known kinds, child has a birth date / pregnancy a due date, dates 1900..today+1y,
+  positive finite measurements). Everything the app can save must keep passing. The picker reads at most 5 MB, off the
+  main thread. Backup file name: `atwar-backup-DATE.json`. Android Auto Backup is ON (database goes to the mother's
+  own Google account); the privacy text says so. Declare it in Play's data-safety form.
+- Screens collect database flows with `initial = null` and draw nothing until loaded (no "everything is late"
+  flash); Home reads one `Repository.childRecords()`; each profile gets a fresh screen (`key(selected.id)`).
 - Content files are covered by `ContentFilesTest`; run `gradlew testDebugUnitTest` after every content edit.
 - App name: "أطوار" (Atwar), from the verse ﴿وَقَدْ خَلَقَكُمْ أَطْوَارًا﴾ (Nuh 71:14) — stages of growth. Decided by the owner.
   The package `ly.mahd.app`, the `Mahd` class/theme names and the backup marker `"app": "mahd"` are still the old working name:
