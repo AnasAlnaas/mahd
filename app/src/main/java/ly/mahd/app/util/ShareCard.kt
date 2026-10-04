@@ -15,6 +15,8 @@ import android.text.StaticLayout
 import android.text.TextPaint
 import android.text.TextUtils
 import androidx.core.content.FileProvider
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 
@@ -102,12 +104,15 @@ object ShareCard {
         return bitmap
     }
 
-    /** Saves the picture and opens Android's share sheet (WhatsApp, Messages, ...). */
-    fun share(context: Context, bitmap: Bitmap, chooserTitle: String) {
-        val dir = File(context.cacheDir, "share").apply { mkdirs() }
-        dir.listFiles()?.forEach { it.delete() }
-        val file = File(dir, "atwar-achievements.png")
-        FileOutputStream(file).use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    /** Saves the picture (off the main thread, so the screen does not stutter) and opens Android's share sheet. */
+    suspend fun share(context: Context, bitmap: Bitmap, chooserTitle: String) {
+        val file = withContext(Dispatchers.IO) {
+            val dir = File(context.cacheDir, "share").apply { mkdirs() }
+            dir.listFiles()?.forEach { it.delete() }
+            File(dir, "atwar-achievements.png").also { file ->
+                FileOutputStream(file).use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            }
+        }
         val uri = FileProvider.getUriForFile(context, "${context.packageName}.files", file)
         val send = Intent(Intent.ACTION_SEND)
             .setType("image/png")

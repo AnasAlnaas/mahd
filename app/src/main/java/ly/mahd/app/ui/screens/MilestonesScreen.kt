@@ -119,17 +119,19 @@ fun MilestonesScreen(app: MahdApp, profile: Profile) {
                 if (yesTotal > 0) {
                     OutlinedButton(onClick = {
                         scope.launch {
-                            val card = ShareCard.Content(
-                                appName = appName,
-                                tagline = tagline,
-                                title = shareTitle,
-                                subtitle = "${Format.age(res, ChildAge.period(birth, today))} · ${group.title}",
-                                achievements = group.items.filter { answers[it.id] == MilestoneAnswer.YES }.map { it.text },
-                                countLine = countLine,
-                                footer = footer,
-                            )
-                            val bitmap = withContext(Dispatchers.Default) { ShareCard.render(card) }
-                            ShareCard.share(context, bitmap, chooserTitle)
+                            runOrToast(context, R.string.share_failed) {
+                                val card = ShareCard.Content(
+                                    appName = appName,
+                                    tagline = tagline,
+                                    title = shareTitle,
+                                    subtitle = "${Format.age(res, ChildAge.period(birth, today))} · ${group.title}",
+                                    achievements = group.items.filter { answers[it.id] == MilestoneAnswer.YES }.map { it.text },
+                                    countLine = countLine,
+                                    footer = footer,
+                                )
+                                val bitmap = withContext(Dispatchers.Default) { ShareCard.render(card) }
+                                ShareCard.share(context, bitmap, chooserTitle)
+                            }
                         }
                     }) { Text("📤  " + stringResource(R.string.share_achievements)) }
                 }

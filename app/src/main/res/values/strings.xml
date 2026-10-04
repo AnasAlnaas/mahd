@@ -289,6 +289,7 @@
     <string name="share_card_title">إنجازات %1$s</string>
     <string name="share_card_tagline">رحلة النمو من الحمل حتى عمر 4 سنوات</string>
     <string name="share_card_footer">تابعي أطوار طفلك مع تطبيق أطوار</string>
+    <string name="share_failed">تعذّرت المشاركة، حاولي مرة أخرى</string>
     <string name="answer_yes">نعم</string>
     <string name="answer_not_yet">ليس بعد</string>
     <string name="answer_not_sure">غير متأكدة</string>

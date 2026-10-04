@@ -1,12 +1,14 @@
 package ly.mahd.app.ui.screens
 
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -55,4 +57,19 @@ suspend fun applyRestore(app: MahdApp, snapshot: Repository.Snapshot): Boolean {
 
 fun showToast(context: Context, message: Int) {
     Toast.makeText(context, message, Toast.LENGTH_LONG).show()
+}
+
+/**
+ * Runs [block]; if it fails (full storage, no app to share with…) shows [failedMessage] instead of
+ * crashing the app. Leaving the screen (cancellation) is not a failure and shows nothing.
+ */
+suspend fun runOrToast(context: Context, failedMessage: Int, block: suspend () -> Unit) {
+    try {
+        block()
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Log.w("Mahd", "Action failed", e)
+        showToast(context, failedMessage)
+    }
 }

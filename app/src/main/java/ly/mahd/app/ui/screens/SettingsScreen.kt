@@ -151,7 +151,7 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text(stringResource(R.string.backup_save)) }
                     OutlinedButton(
-                        onClick = { scope.launch { shareBackup(context, app, today) } },
+                        onClick = { scope.launch { runOrToast(context, R.string.share_failed) { shareBackup(context, app, today) } } },
                         modifier = Modifier.fillMaxWidth(),
                     ) { Text(stringResource(R.string.backup_share)) }
                     OutlinedButton(
