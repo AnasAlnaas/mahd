@@ -2,12 +2,14 @@ package ly.mahd.app.ui.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -141,39 +143,42 @@ private fun Feature(emoji: String, text: String) {
 @Composable
 private fun ChooseStartScreen(onPregnant: () -> Unit, onChild: () -> Unit, onRestore: () -> Unit) {
     Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-        Column(
-            Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .navigationBarsPadding()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
-        ) {
-            Text(
-                stringResource(R.string.choose_title),
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-            )
-            BigChoice("🤰", stringResource(R.string.choose_pregnant), stringResource(R.string.choose_pregnant_hint), onPregnant)
-            BigChoice("👶", stringResource(R.string.choose_child), stringResource(R.string.choose_child_hint), onChild)
-            AppCard(onClick = onRestore) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("📂", style = MaterialTheme.typography.headlineSmall)
-                    Spacer(Modifier.width(16.dp))
-                    Column {
-                        Text(stringResource(R.string.choose_restore), style = MaterialTheme.typography.titleMedium)
-                        Text(stringResource(R.string.choose_restore_hint), style = MaterialTheme.typography.bodyMedium)
+        // Centred when everything fits; scrolls on a small phone or with a large font instead of cutting off the end.
+        BoxWithConstraints(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .heightIn(min = maxHeight)
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+            ) {
+                Text(
+                    stringResource(R.string.choose_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                )
+                BigChoice("🤰", stringResource(R.string.choose_pregnant), stringResource(R.string.choose_pregnant_hint), onPregnant)
+                BigChoice("👶", stringResource(R.string.choose_child), stringResource(R.string.choose_child_hint), onChild)
+                AppCard(onClick = onRestore) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("📂", style = MaterialTheme.typography.headlineSmall)
+                        Spacer(Modifier.width(16.dp))
+                        Column {
+                            Text(stringResource(R.string.choose_restore), style = MaterialTheme.typography.titleMedium)
+                            Text(stringResource(R.string.choose_restore_hint), style = MaterialTheme.typography.bodyMedium)
+                        }
                     }
                 }
+                Text(
+                    stringResource(R.string.choose_more_later),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                )
             }
-            Text(
-                stringResource(R.string.choose_more_later),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-            )
         }
     }
 }
