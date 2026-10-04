@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -30,6 +31,13 @@ object Notifications {
             NotificationManager.IMPORTANCE_DEFAULT,
         ).apply { description = res.getString(R.string.notification_channel_description) }
         context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+    }
+
+    /** Opens this app's notification settings, where the mother can turn reminders on herself. */
+    fun openSettings(context: Context) {
+        context.startActivity(
+            Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName),
+        )
     }
 
     fun canPost(context: Context): Boolean =

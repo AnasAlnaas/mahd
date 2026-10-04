@@ -1,11 +1,7 @@
 package ly.mahd.app.ui
 
-import android.Manifest
-import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -100,8 +96,6 @@ private fun tabsFor(profile: Profile): List<String> =
 private fun MainNav(app: MahdApp, nav: Navigator, profiles: List<Profile>, selected: Profile) {
     BackHandler(enabled = nav.canGoBack) { nav.back() }
     BackHandler(enabled = !nav.canGoBack && nav.current != Routes.HOME) { nav.selectTab(Routes.HOME) }
-
-    AskForNotificationsOnce(app)
 
     val route = nav.current
     val arg = route.routeArg
@@ -240,19 +234,6 @@ private fun ProfileSwitcher(app: MahdApp, nav: Navigator, profiles: List<Profile
                 leadingIcon = { AppIcon(R.drawable.ic_add, null) },
                 onClick = { open = false; nav.push(Routes.ADD_CHILD) },
             )
-        }
-    }
-}
-
-/** On Android 13+, asks once for permission to show reminders, after the first profile exists. */
-@Composable
-private fun AskForNotificationsOnce(app: MahdApp) {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
-    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
-    LaunchedEffect(Unit) {
-        if (!app.prefs.notificationPermissionAsked) {
-            app.prefs.notificationPermissionAsked = true
-            launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 }

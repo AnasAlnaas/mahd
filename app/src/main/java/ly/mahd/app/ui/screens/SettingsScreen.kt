@@ -2,7 +2,6 @@ package ly.mahd.app.ui.screens
 
 import android.content.Context
 import android.content.Intent
-import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -40,6 +39,7 @@ import ly.mahd.app.R
 import ly.mahd.app.data.BackupFile
 import ly.mahd.app.data.Profile
 import ly.mahd.app.data.Repository
+import ly.mahd.app.reminders.Notifications
 import ly.mahd.app.ui.Navigator
 import ly.mahd.app.ui.Routes
 import ly.mahd.app.ui.components.AppCard
@@ -132,12 +132,9 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.error,
                         )
-                        TextButton(onClick = {
-                            context.startActivity(
-                                Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                                    .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName),
-                            )
-                        }) { Text(stringResource(R.string.open_notification_settings)) }
+                        TextButton(onClick = { Notifications.openSettings(context) }) {
+                            Text(stringResource(R.string.open_notification_settings))
+                        }
                     }
                 }
             }

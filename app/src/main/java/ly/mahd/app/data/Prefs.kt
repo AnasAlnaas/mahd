@@ -39,6 +39,15 @@ class Prefs(context: Context) {
         get() = sp.getBoolean(KEY_PERMISSION_ASKED, false)
         set(value) = sp.edit { putBoolean(KEY_PERMISSION_ASKED, value) }
 
+    /** The mother tapped "not now" on the Home card that asks to turn reminders on. */
+    private val _reminderPromptDismissed = MutableStateFlow(sp.getBoolean(KEY_REMINDER_PROMPT_DISMISSED, false))
+    val reminderPromptDismissed: StateFlow<Boolean> = _reminderPromptDismissed.asStateFlow()
+
+    fun dismissReminderPrompt() {
+        sp.edit { putBoolean(KEY_REMINDER_PROMPT_DISMISSED, true) }
+        _reminderPromptDismissed.value = true
+    }
+
     // ----- Bookkeeping so each reminder is sent only once -----
 
     fun wasNotified(key: String): Boolean = sp.getBoolean("$NOTIFIED_PREFIX$key", false)
@@ -69,6 +78,7 @@ class Prefs(context: Context) {
         const val KEY_DISCLAIMER = "disclaimer_accepted"
         const val KEY_REMINDERS = "reminders_enabled"
         const val KEY_PERMISSION_ASKED = "notification_permission_asked"
+        const val KEY_REMINDER_PROMPT_DISMISSED = "reminder_prompt_dismissed"
         const val KEY_LAST_CHECK = "last_reminder_check"
         const val NOTIFIED_PREFIX = "notified:"
         const val WEEK_PREFIX = "pregnancy_week:"

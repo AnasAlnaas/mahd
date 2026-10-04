@@ -77,8 +77,10 @@ private fun HomeList(content: LazyListScope.() -> Unit) {
 
 @Composable
 private fun PregnancyHome(app: MahdApp, profile: Profile, nav: Navigator) {
+    val askForReminders = shouldAskForReminders(app)
     HomeList {
         item { PregnancyTodayCard(app, profile, nav) }
+        if (askForReminders) item { RemindersPrompt(app, profile) }
         item {
             WarningCard(
                 title = stringResource(R.string.danger_signs_title),
@@ -163,9 +165,11 @@ private fun ChildHome(app: MahdApp, profile: Profile, nav: Navigator) {
     val data = records ?: return
     val plans = VaccinePlanner.plan(app.content.vaccines, birth, data.doses, today, data.skipped)
     val group = app.content.milestones.groupForAge(ChildAge.referenceMonths(birth, profile.weeksAtBirth, today))
+    val askForReminders = shouldAskForReminders(app)
 
     HomeList {
         item { ChildAgeCard(profile, birth) }
+        if (askForReminders) item { RemindersPrompt(app, profile) }
         item { TodayStrip(plans, group, data, nav) }
         item { NextVaccineCard(plans, nav) }
         item { MilestonesSummaryCard(group, data.answers, nav) }

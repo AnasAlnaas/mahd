@@ -301,6 +301,11 @@
     <string name="reminders_battery_hint">إذا لم تصلك التذكيرات في مواعيدها، تأكدي أن هاتفك لا يوقف التطبيق في الخلفية (في إعدادات البطارية، اسمحي لأطوار بالعمل في الخلفية).</string>
     <string name="notifications_blocked">الإشعارات متوقفة لهذا التطبيق في إعدادات الهاتف، فلن تصلك التذكيرات.</string>
     <string name="open_notification_settings">فتح إعدادات الإشعارات</string>
+    <string name="reminders_prompt_title">فعّلي التذكيرات</string>
+    <string name="reminders_prompt_child">نذكّرك قبل موعد كل تطعيمة بثلاثة أيام، وفي يوم الموعد، وإذا فات الموعد. لهذا نحتاج إذنك بإرسال الإشعارات.</string>
+    <string name="reminders_prompt_pregnancy">نرسل لك رسالة قصيرة مع بداية كل أسبوع جديد من حملك. لهذا نحتاج إذنك بإرسال الإشعارات.</string>
+    <string name="reminders_prompt_allow">تفعيل التذكيرات</string>
+    <string name="reminders_prompt_later">ليس الآن</string>
     <string name="settings_backup">النسخة الاحتياطية</string>
     <string name="backup_explain">بياناتك محفوظة على هذا الهاتف. قد يحفظ أندرويد نسخة منها في حسابك على جوجل، لكن الأضمن أن تحفظي نسخة بنفسك من وقت لآخر (مثلًا أرسليها لنفسك على واتساب)، حتى تستعيديها إذا ضاع الهاتف أو تغيّر.</string>
     <string name="backup_save">حفظ نسخة في ملف</string>
