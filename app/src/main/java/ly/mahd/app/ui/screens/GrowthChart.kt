@@ -76,9 +76,12 @@ fun GrowthChart(
         val low = curves.getValue(-3.0)
         val high = curves.getValue(3.0)
         if (low.isEmpty() || high.isEmpty()) return@Canvas
+        // Only the measurements in the shown age range set the height of the chart, so an early value
+        // (such as the birth weight) does not squash the recent months when the chart is zoomed in.
+        val visible = points.filter { it.first >= minMonth && it.first <= maxMonth }.sortedBy { it.first }
         var yMin = low.minOf { it.second }
         var yMax = high.maxOf { it.second }
-        points.forEach { (_, v) -> yMin = min(yMin, v); yMax = max(yMax, v) }
+        visible.forEach { (_, v) -> yMin = min(yMin, v); yMax = max(yMax, v) }
         val step = niceStep((yMax - yMin) / 6)
         yMin = floor(yMin / step) * step
         yMax = ceil(yMax / step) * step
@@ -138,7 +141,6 @@ fun GrowthChart(
         }
 
         // The child's measurements
-        val visible = points.filter { it.first >= minMonth && it.first <= maxMonth }.sortedBy { it.first }
         if (visible.size > 1) drawPath(line(visible), colors.primary, style = Stroke(width = 2.5.dp.toPx()))
         visible.forEach { (a, value) ->
             drawCircle(colors.surface, radius = 6.dp.toPx(), center = Offset(x(a), y(value)))
