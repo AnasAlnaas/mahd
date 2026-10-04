@@ -23,6 +23,18 @@ object GrowthMath {
         else -> Band.VERY_HIGH
     }
 
+    enum class Trend { UP, STEADY, DOWN }
+
+    /** About one major percentile line (e.g. 50th to 75th) on the WHO charts is 0.67 z-score units. */
+    const val TREND_THRESHOLD = 0.67
+
+    /** Did the child move to a higher or lower curve between two measurements, or stay on the same one? */
+    fun trend(zBefore: Double, zNow: Double): Trend = when {
+        zNow - zBefore > TREND_THRESHOLD -> Trend.UP
+        zNow - zBefore < -TREND_THRESHOLD -> Trend.DOWN
+        else -> Trend.STEADY
+    }
+
     /** Percentile (0–100): how many children out of 100 of the same age measure less. */
     fun percentile(z: Double): Double = 100.0 * normalCdf(z)
 

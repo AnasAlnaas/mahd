@@ -1,5 +1,6 @@
 package ly.mahd.app.ui.screens
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -35,6 +36,8 @@ import ly.mahd.app.ui.components.AppCard
 import ly.mahd.app.ui.components.AppIcon
 import ly.mahd.app.ui.components.BulletList
 import ly.mahd.app.ui.components.DraftNotice
+import ly.mahd.app.ui.components.EmojiBadge
+import ly.mahd.app.ui.components.TrimesterBar
 import ly.mahd.app.ui.components.LocalToday
 import ly.mahd.app.ui.components.SubScreen
 import ly.mahd.app.ui.components.WarningCard
@@ -68,8 +71,9 @@ fun PregnancyScreen(app: MahdApp, profile: Profile, nav: Navigator, initialWeek:
                     onToday = { week = currentWeek },
                 )
             }
+            item { TrimesterBar(weeks = week.toFloat()) }
             if (!content.reviewed) item { DraftNotice() }
-            item { WeekDetail(content.week(week)) }
+            item { Crossfade(targetState = week, label = "week") { wk -> WeekDetail(content.week(wk)) } }
             item {
                 WarningCard(
                     title = stringResource(R.string.danger_signs_title),
@@ -125,7 +129,7 @@ private fun WeekDetail(w: PregnancyWeek) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         AppCard(containerColor = MaterialTheme.colorScheme.primaryContainer) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(w.emoji, style = MaterialTheme.typography.displayMedium)
+                EmojiBadge(w.emoji, 80.dp)
                 Spacer(Modifier.width(16.dp))
                 Column {
                     Text(stringResource(R.string.baby_size_now, w.size), style = MaterialTheme.typography.titleLarge)

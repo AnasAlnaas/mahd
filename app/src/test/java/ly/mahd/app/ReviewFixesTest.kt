@@ -236,3 +236,17 @@ class VaccineSummaryTest {
         assertEquals(1f, s.progress, 1e-6f)
     }
 }
+
+class GrowthTrendTest {
+    @Test
+    fun smallChangesAreSteady() {
+        assertEquals(ly.mahd.app.logic.GrowthMath.Trend.STEADY, ly.mahd.app.logic.GrowthMath.trend(0.2, 0.7))
+        assertEquals(ly.mahd.app.logic.GrowthMath.Trend.STEADY, ly.mahd.app.logic.GrowthMath.trend(-1.0, -1.6))
+    }
+
+    @Test
+    fun movingToAnotherCurveIsUpOrDown() {
+        assertEquals(ly.mahd.app.logic.GrowthMath.Trend.UP, ly.mahd.app.logic.GrowthMath.trend(0.0, 0.8))
+        assertEquals(ly.mahd.app.logic.GrowthMath.Trend.DOWN, ly.mahd.app.logic.GrowthMath.trend(0.5, -0.4))
+    }
+}

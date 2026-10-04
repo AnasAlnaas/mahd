@@ -146,3 +146,22 @@ fun MahdTheme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> 
 
 /** Plain text style helper for small print. */
 val SmallPrint = TextStyle(fontSize = 13.sp, lineHeight = 20.sp)
+
+/** The four areas of the app. Each has its own accent colour so a card is recognised at a glance. */
+enum class Area { VACCINES, GROWTH, MILESTONES, PREGNANCY }
+
+@Composable
+fun Area.accent(): Color = when (this) {
+    Area.VACCINES, Area.PREGNANCY -> MaterialTheme.colorScheme.primary
+    Area.GROWTH -> MaterialTheme.colorScheme.secondary
+    Area.MILESTONES -> MaterialTheme.colorScheme.tertiary
+}
+
+/** Accent for a milestone domain (social, language, cognitive, movement). */
+@Composable
+fun domainAccent(domainId: String): Color = when (domainId) {
+    "social" -> MaterialTheme.colorScheme.primary
+    "language" -> MaterialTheme.colorScheme.secondary
+    "cognitive" -> MaterialTheme.colorScheme.tertiary
+    else -> LocalStatusColors.current.good
+}

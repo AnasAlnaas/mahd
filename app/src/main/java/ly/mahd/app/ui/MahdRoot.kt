@@ -3,6 +3,7 @@ package ly.mahd.app.ui
 import android.Manifest
 import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.Crossfade
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -141,13 +142,16 @@ private fun TabsScaffold(app: MahdApp, nav: Navigator, profiles: List<Profile>, 
             }
         },
     ) { padding ->
-        Box(Modifier.padding(padding).fillMaxSize()) {
-            when (tab) {
-                Routes.HOME -> HomeScreen(app, selected, nav)
-                Routes.PREGNANCY -> PregnancyScreen(app, selected, nav, initialWeek = null, standalone = false)
-                Routes.VACCINES -> VaccinesScreen(app, selected)
-                Routes.GROWTH -> GrowthScreen(app, selected)
-                Routes.MILESTONES -> MilestonesScreen(app, selected)
+        // A soft fade when switching tabs.
+        Crossfade(targetState = tab, label = "tab") { current ->
+            Box(Modifier.padding(padding).fillMaxSize()) {
+                when (current) {
+                    Routes.HOME -> HomeScreen(app, selected, nav)
+                    Routes.PREGNANCY -> PregnancyScreen(app, selected, nav, initialWeek = null, standalone = false)
+                    Routes.VACCINES -> VaccinesScreen(app, selected)
+                    Routes.GROWTH -> GrowthScreen(app, selected)
+                    Routes.MILESTONES -> MilestonesScreen(app, selected)
+                }
             }
         }
     }

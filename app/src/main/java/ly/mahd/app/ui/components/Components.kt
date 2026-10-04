@@ -38,6 +38,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -90,11 +94,18 @@ fun AppCard(
     modifier: Modifier = Modifier,
     containerColor: Color = MaterialTheme.colorScheme.surfaceContainerLow,
     onClick: (() -> Unit)? = null,
+    /** A thin coloured bar on the start edge, to tell the areas of the app apart. */
+    accent: Color? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val colors = CardDefaults.cardColors(containerColor = containerColor)
     val inner: @Composable ColumnScope.() -> Unit = {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
+        val accentBar = if (accent == null) Modifier else Modifier.drawBehind {
+            val barWidth = 5.dp.toPx()
+            val left = if (layoutDirection == LayoutDirection.Rtl) size.width - barWidth else 0f
+            drawRect(accent, Offset(left, 0f), Size(barWidth, size.height))
+        }
+        Column(accentBar.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
     }
     if (onClick != null) {
         Card(onClick = onClick, modifier = modifier.fillMaxWidth(), colors = colors, content = inner)

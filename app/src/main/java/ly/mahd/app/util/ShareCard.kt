@@ -1,0 +1,185 @@
+package ly.mahd.app.util
+
+import android.content.Context
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.LinearGradient
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.RectF
+import android.graphics.Shader
+import android.graphics.Typeface
+import android.text.Layout
+import android.text.StaticLayout
+import android.text.TextPaint
+import android.text.TextUtils
+import androidx.core.content.FileProvider
+import java.io.File
+import java.io.FileOutputStream
+
+/**
+ * A picture the mother can send on WhatsApp: the child's name, age and the skills they have reached.
+ * Drawn with Android's own Canvas (no library). Text goes through [StaticLayout], which shapes Arabic
+ * correctly and lays right-to-left text out from the right.
+ */
+object ShareCard {
+    private const val WIDTH = 1080
+    private const val HEIGHT = 1350
+    private const val MARGIN = 72
+    private const val BRAND = 0xFFA23B5B.toInt()
+    private const val INK = 0xFF22191B.toInt()
+    private const val SOFT_INK = 0xFF524346.toInt()
+
+    class Content(
+        val appName: String,
+        val tagline: String,
+        /** e.g. "إنجازات Omar" */
+        val title: String,
+        /** e.g. "10 أشهر · مهارات عمر 9 أشهر" */
+        val subtitle: String,
+        val achievements: List<String>,
+        /** e.g. "ظهرت 5 من أصل 13" */
+        val countLine: String,
+        val footer: String,
+    )
+
+    fun render(content: Content): Bitmap {
+        val bitmap = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val inner = WIDTH - MARGIN * 2
+
+        // Soft rose background
+        val background = Paint().apply {
+            shader = LinearGradient(0f, 0f, 0f, HEIGHT.toFloat(), 0xFFFFF4F5.toInt(), 0xFFFFD3DC.toInt(), Shader.TileMode.CLAMP)
+        }
+        canvas.drawRect(0f, 0f, WIDTH.toFloat(), HEIGHT.toFloat(), background)
+
+        // Brand mark: three moons, crescent to full (the "stages")
+        drawMoons(canvas, centerY = 150f)
+
+        // Lay everything out first, so the whole block can be centred between the moons and the footer.
+        val lines = content.achievements.take(5).map { "✓  $it" }
+        val textWidth = inner - 80
+        val layouts = lines.map { layout(it, 38f, INK, false, textWidth, Layout.Alignment.ALIGN_NORMAL, maxLines = 2) }
+        val countLayout = layout(content.countLine, 36f, BRAND, true, textWidth, Layout.Alignment.ALIGN_CENTER, maxLines = 1)
+        val gap = 26f
+        val panelHeight = 48f + layouts.sumOf { it.height.toDouble() }.toFloat() + gap * layouts.size + countLayout.height + 40f
+
+        val nameH = layout(content.appName, 84f, BRAND, true, inner, Layout.Alignment.ALIGN_CENTER, 3).height
+        val tagH = layout(content.tagline, 32f, SOFT_INK, false, inner, Layout.Alignment.ALIGN_CENTER, 3).height
+        val titleH = layout(content.title, 68f, INK, true, inner, Layout.Alignment.ALIGN_CENTER, 1).height
+        val subH = layout(content.subtitle, 38f, BRAND, true, inner, Layout.Alignment.ALIGN_CENTER, 2).height
+        val block = nameH + 6f + tagH + 52f + titleH + 10f + subH + 40f + panelHeight
+        val areaTop = 230f
+        val areaBottom = HEIGHT - 150f
+        var y = areaTop + ((areaBottom - areaTop - block) / 2f).coerceAtLeast(0f)
+
+        y += drawText(canvas, content.appName, size = 84f, color = BRAND, bold = true, width = inner, top = y) + 6f
+        y += drawText(canvas, content.tagline, size = 32f, color = SOFT_INK, bold = false, width = inner, top = y) + 52f
+        y += drawText(canvas, content.title, size = 68f, color = INK, bold = true, width = inner, top = y, maxLines = 1) + 10f
+        y += drawText(canvas, content.subtitle, size = 38f, color = BRAND, bold = true, width = inner, top = y, maxLines = 2) + 40f
+
+        // White panel with the achievements
+        val panelTop = y
+        val panelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFFFFFFF.toInt() }
+        canvas.drawRoundRect(RectF(MARGIN.toFloat(), panelTop, (WIDTH - MARGIN).toFloat(), panelTop + panelHeight), 44f, 44f, panelPaint)
+        var py = panelTop + 48f
+        layouts.forEach { l ->
+            canvas.save()
+            canvas.translate((MARGIN + 40).toFloat(), py)
+            l.draw(canvas)
+            canvas.restore()
+            py += l.height + gap
+        }
+        canvas.save()
+        canvas.translate((MARGIN + 40).toFloat(), py)
+        countLayout.draw(canvas)
+        canvas.restore()
+
+        // Footer
+        drawText(canvas, content.footer, size = 32f, color = SOFT_INK, bold = false, width = inner, top = HEIGHT - 110f)
+        return bitmap
+    }
+
+    /** Saves the picture and opens Android's share sheet (WhatsApp, Messages, ...). */
+    fun share(context: Context, bitmap: Bitmap, chooserTitle: String) {
+        val dir = File(context.cacheDir, "share").apply { mkdirs() }
+        dir.listFiles()?.forEach { it.delete() }
+        val file = File(dir, "atwar-achievements.png")
+        FileOutputStream(file).use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        val uri = FileProvider.getUriForFile(context, "${context.packageName}.files", file)
+        val send = Intent(Intent.ACTION_SEND)
+            .setType("image/png")
+            .putExtra(Intent.EXTRA_STREAM, uri)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        context.startActivity(Intent.createChooser(send, chooserTitle))
+    }
+
+    private fun drawMoons(canvas: Canvas, centerY: Float) {
+        val radius = 34f
+        val centers = floatArrayOf(WIDTH / 2f - 110f, WIDTH / 2f, WIDTH / 2f + 110f)
+        val outline = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = BRAND; alpha = 70 }
+        val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = BRAND }
+        centers.forEach { cx -> canvas.drawCircle(cx, centerY, radius, outline) }
+
+        // crescent = disc minus a shifted disc
+        val crescent = Path().apply {
+            addCircle(centers[0], centerY, radius, Path.Direction.CW)
+            val cut = Path().apply { addCircle(centers[0] - radius * 0.55f, centerY, radius * 0.95f, Path.Direction.CW) }
+            op(cut, Path.Op.DIFFERENCE)
+        }
+        canvas.drawPath(crescent, fill)
+
+        // half = right half of the disc
+        val half = Path().apply {
+            addCircle(centers[1], centerY, radius, Path.Direction.CW)
+            val rightHalf = Path().apply { addRect(centers[1], centerY - radius, centers[1] + radius, centerY + radius, Path.Direction.CW) }
+            op(rightHalf, Path.Op.INTERSECT)
+        }
+        canvas.drawPath(half, fill)
+
+        canvas.drawCircle(centers[2], centerY, radius, fill)
+    }
+
+    private fun layout(
+        text: String,
+        size: Float,
+        color: Int,
+        bold: Boolean,
+        width: Int,
+        alignment: Layout.Alignment,
+        maxLines: Int = Int.MAX_VALUE,
+    ): StaticLayout {
+        val paint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            textSize = size
+            this.color = color
+            typeface = if (bold) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+        }
+        return StaticLayout.Builder.obtain(text, 0, text.length, paint, width)
+            .setAlignment(alignment)
+            .setLineSpacing(0f, 1.15f)
+            .setMaxLines(maxLines)
+            .setEllipsize(TextUtils.TruncateAt.END)
+            .build()
+    }
+
+    /** Draws centred text starting at [top]; returns its height. */
+    private fun drawText(
+        canvas: Canvas,
+        text: String,
+        size: Float,
+        color: Int,
+        bold: Boolean,
+        width: Int,
+        top: Float,
+        maxLines: Int = 3,
+    ): Float {
+        val l = layout(text, size, color, bold, width, Layout.Alignment.ALIGN_CENTER, maxLines)
+        canvas.save()
+        canvas.translate(MARGIN.toFloat(), top)
+        l.draw(canvas)
+        canvas.restore()
+        return l.height.toFloat()
+    }
+}

@@ -45,6 +45,8 @@ import ly.mahd.app.ui.components.ConfirmDialog
 import ly.mahd.app.ui.components.DateField
 import ly.mahd.app.ui.components.EmptyState
 import ly.mahd.app.ui.components.LocalToday
+import ly.mahd.app.ui.theme.Area
+import ly.mahd.app.ui.theme.accent
 import ly.mahd.app.util.Format
 import kotlin.math.ceil
 import kotlin.math.roundToInt
@@ -64,7 +66,13 @@ fun GrowthScreen(app: MahdApp, profile: Profile) {
 
     val ageNow = ChildAge.referenceMonths(birth, profile.weeksAtBirth, today)
     // Show at least the first year; then round up to the next half-year, max 5 years.
-    val maxMonth = (ceil((ageNow + 2) / 6) * 6).toInt().coerceIn(12, 60)
+    val allMax = (ceil((ageNow + 2) / 6) * 6).toInt().coerceIn(12, 60)
+    // "Recent months" zooms in on the last ~6 months so small changes are easier to see.
+    var recentOnly by rememberSaveable { mutableStateOf(false) }
+    val canZoom = allMax > 12
+    val zoomed = recentOnly && canZoom
+    val minMonth = if (zoomed) (ageNow - 5).toInt().coerceAtLeast(0) else 0
+    val maxMonth = if (zoomed) maxOf(minMonth + 6, ceil(ageNow + 1).toInt()).coerceAtMost(60).coerceAtLeast(minMonth + 1) else allMax
 
     fun valueOf(e: GrowthEntry): Double? = when (indicator) {
         GrowthIndicator.WEIGHT -> e.weightKg
@@ -97,13 +105,29 @@ fun GrowthScreen(app: MahdApp, profile: Profile) {
                 }
             }
         }
+        if (canZoom) {
+            item {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(selected = !recentOnly, onClick = { recentOnly = false }, label = { Text(stringResource(R.string.chart_range_all)) })
+                    FilterChip(selected = recentOnly, onClick = { recentOnly = true }, label = { Text(stringResource(R.string.chart_range_recent)) })
+                }
+            }
+        }
         item {
-            AppCard {
+            AppCard(accent = Area.GROWTH.accent()) {
                 Text(stringResource(indicatorTitle(indicator)), style = MaterialTheme.typography.titleMedium)
                 if (sex == null) {
                     Text(stringResource(R.string.growth_need_sex), style = MaterialTheme.typography.bodyLarge)
                 } else {
-                    GrowthChart(app.content.growth, indicator, sex.whoCode, points, maxMonth)
+                    GrowthChart(
+                        standards = app.content.growth,
+                        indicator = indicator,
+                        sexCode = sex.whoCode,
+                        points = points,
+                        minMonth = minMonth,
+                        maxMonth = maxMonth,
+                        valueLabel = { Format.decimal(it, if (indicator == GrowthIndicator.WEIGHT) 2 else 1) },
+                    )
                     Text(
                         stringResource(R.string.chart_axis_hint, stringResource(indicatorUnit(indicator))),
                         style = MaterialTheme.typography.bodyMedium,
@@ -149,6 +173,20 @@ fun GrowthScreen(app: MahdApp, profile: Profile) {
                         )
                         if (GrowthMath.band(z) != GrowthMath.Band.NORMAL) {
                             Text(stringResource(R.string.growth_see_doctor), style = MaterialTheme.typography.bodyMedium)
+                        }
+                        // Compare with the measurement before this one (same indicator, both on the WHO charts).
+                        val usable = entries.filter { valueOf(it) != null && !beforeTerm(it) }
+                        val before = usable.getOrNull(usable.size - 2)
+                        if (before != null && usable.last() == latest) {
+                            val beforeLms = app.content.growth.lms(indicator, sex.whoCode, ChildAge.referenceMonths(birth, profile.weeksAtBirth, before.date))
+                            if (beforeLms != null) {
+                                val trendText = when (GrowthMath.trend(beforeLms.zScore(valueOf(before)!!), z)) {
+                                    GrowthMath.Trend.UP -> R.string.trend_up
+                                    GrowthMath.Trend.STEADY -> R.string.trend_steady
+                                    GrowthMath.Trend.DOWN -> R.string.trend_down
+                                }
+                                Text(stringResource(trendText), style = MaterialTheme.typography.bodyMedium)
+                            }
                         }
                     } else {
                         Text(stringResource(R.string.growth_out_of_range), style = MaterialTheme.typography.bodyMedium)

@@ -3,16 +3,32 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Cradle (crescent) -->
+    <!--
+        "Atwar" = stages. Three moons growing from a crescent to a full disc: the phases of the moon
+        and the stages of a child's growth. Faint outlines show the full disc of each stage.
+        Everything sits inside the 66dp safe zone of the adaptive icon.
+    -->
+    <!-- Faint full discs -->
+    <path
+        android:fillColor="#40FFFFFF"
+        android:pathData="M23,54a9,9 0,1 0,18 0a9,9 0,1 0,-18 0z" />
+    <path
+        android:fillColor="#40FFFFFF"
+        android:pathData="M45,54a9,9 0,1 0,18 0a9,9 0,1 0,-18 0z" />
+    <!-- Stage 1: crescent (lit part on the right) -->
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M32.07,40.25A24,24 0,1 0,75.93 40.25A22,22 0,1 1,32.07 40.25Z" />
-    <!-- Baby -->
+        android:pathData="M32,45A9,9 0,0 1,32 63A4.5,9 0,0 0,32 45Z" />
+    <!-- Stage 2: half -->
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M47,52a7,7 0,1 0,14 0a7,7 0,1 0,-14 0z" />
-    <!-- Star -->
+        android:pathData="M54,45A9,9 0,0 1,54 63Z" />
+    <!-- Stage 3: full -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M67,54a9,9 0,1 0,18 0a9,9 0,1 0,-18 0z" />
+    <!-- Star (a small spark above the full moon) -->
     <path
         android:fillColor="#FFFFE7A3"
-        android:pathData="M64,24L66,28L70,30L66,32L64,36L62,32L58,30L62,28Z" />
+        android:pathData="M76,30L77.8,34.2L82,36L77.8,37.8L76,42L74.2,37.8L70,36L74.2,34.2Z" />
 </vector>

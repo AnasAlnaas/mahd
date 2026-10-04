@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
@@ -36,9 +37,13 @@ import ly.mahd.app.logic.VaccinePlanner
 import ly.mahd.app.ui.Navigator
 import ly.mahd.app.ui.Routes
 import ly.mahd.app.ui.components.AppCard
+import ly.mahd.app.ui.components.EmojiBadge
+import ly.mahd.app.ui.components.TrimesterBar
 import ly.mahd.app.ui.components.LocalToday
 import ly.mahd.app.ui.components.ProgressRing
 import ly.mahd.app.ui.components.WarningCard
+import ly.mahd.app.ui.theme.Area
+import ly.mahd.app.ui.theme.accent
 import ly.mahd.app.ui.profileName
 import ly.mahd.app.util.Format
 
@@ -60,6 +65,7 @@ fun HomeScreen(app: MahdApp, profile: Profile, nav: Navigator) {
             item { BabyBornCard(profile, nav) }
         } else if (profile.birthDate != null) {
             item { ChildAgeCard(profile) }
+            item { TodayStrip(app, profile, nav) }
             item { NextVaccineCard(app, profile, nav) }
             item { MilestonesSummaryCard(app, profile, nav) }
             item { GrowthSummaryCard(app, profile, nav) }
@@ -80,18 +86,23 @@ private fun PregnancyTodayCard(app: MahdApp, profile: Profile, nav: Navigator) {
     val daysLeft = PregnancyMath.daysUntilDue(due, today)
 
     AppCard(containerColor = MaterialTheme.colorScheme.primaryContainer, onClick = { nav.selectTab(Routes.PREGNANCY) }) {
-        Text(
-            stringResource(R.string.pregnancy_week_number, ga.weeks.toString()),
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
-        )
-        Text(
-            stringResource(R.string.pregnancy_exact_age, Format.gestationalAge(res, ga.weeks, ga.days)),
-            style = MaterialTheme.typography.bodyLarge,
-        )
-        LinearProgressIndicator(
-            progress = { PregnancyMath.progress(ga) },
-            modifier = Modifier.fillMaxWidth().height(8.dp),
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    stringResource(R.string.pregnancy_week_number, ga.weeks.toString()),
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+                Text(
+                    stringResource(R.string.pregnancy_exact_age, Format.gestationalAge(res, ga.weeks, ga.days)),
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            }
+            EmojiBadge(week.emoji, 76.dp)
+        }
+        TrimesterBar(
+            weeks = ga.weeks + ga.days / 7f,
+            track = MaterialTheme.colorScheme.surface.copy(alpha = 0.6f),
         )
         Text(
             when {
@@ -101,15 +112,7 @@ private fun PregnancyTodayCard(app: MahdApp, profile: Profile, nav: Navigator) {
             },
             style = MaterialTheme.typography.bodyLarge,
         )
-        Text(
-            stringResource(R.string.trimester_label, stringResource(trimesterName(PregnancyMath.trimester(ga.weeks)))),
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(week.emoji, style = MaterialTheme.typography.displaySmall)
-            Spacer(Modifier.width(12.dp))
-            Text(stringResource(R.string.baby_size_now, week.size), style = MaterialTheme.typography.titleMedium)
-        }
+        Text(stringResource(R.string.baby_size_now, week.size), style = MaterialTheme.typography.titleMedium)
         Button(onClick = { nav.selectTab(Routes.PREGNANCY) }) { Text(stringResource(R.string.read_this_week)) }
     }
 }
@@ -142,18 +145,36 @@ private fun ChildAgeCard(profile: Profile) {
     val today = LocalToday.current
     val res = LocalContext.current.resources
     val birth = profile.birthDate ?: return
+    val morning = java.time.LocalTime.now().hour < 12
     AppCard(containerColor = MaterialTheme.colorScheme.primaryContainer) {
-        Text(
-            stringResource(R.string.child_age_title, profileName(profile)),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
-        )
-        Text(
-            Format.age(res, ChildAge.period(birth, today)),
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onPrimaryContainer,
-        )
-        Text(stringResource(R.string.born_on, Format.date(birth)), style = MaterialTheme.typography.bodyMedium)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    stringResource(if (morning) R.string.greeting_morning else R.string.greeting_evening),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
+                )
+                Text(
+                    stringResource(R.string.child_age_title, profileName(profile)),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+                Text(
+                    Format.age(res, ChildAge.period(birth, today)),
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                )
+                Text(stringResource(R.string.born_on, Format.date(birth)), style = MaterialTheme.typography.bodyMedium)
+            }
+            EmojiBadge(
+                when (profile.sex) {
+                    ly.mahd.app.data.Sex.BOY -> "👦"
+                    ly.mahd.app.data.Sex.GIRL -> "👧"
+                    null -> "👶"
+                },
+                size = 84.dp,
+            )
+        }
         if (ChildAge.usesCorrectedAge(birth, profile.weeksAtBirth, today)) {
             val correctedBirth = ChildAge.correctedBirthDate(birth, profile.weeksAtBirth)
             Text(
@@ -164,6 +185,99 @@ private fun ChildAgeCard(profile: Profile) {
                     stringResource(R.string.corrected_age_line, Format.age(res, ChildAge.period(correctedBirth, today)))
                 },
                 style = MaterialTheme.typography.bodyLarge,
+            )
+        }
+    }
+}
+
+/** Three small tiles with today's most useful numbers: next vaccine, skills seen, last weight. */
+@Composable
+private fun TodayStrip(app: MahdApp, profile: Profile, nav: Navigator) {
+    val today = LocalToday.current
+    val res = LocalContext.current.resources
+    val birth = profile.birthDate ?: return
+    val doses by remember(profile.id) { app.repository.doses(profile.id) }.collectAsState(initial = emptyMap())
+    val skipped by remember(profile.id) { app.repository.skippedDoses(profile.id) }.collectAsState(initial = emptySet())
+    val answers by remember(profile.id) { app.repository.milestoneAnswers(profile.id) }.collectAsState(initial = emptyMap())
+    val entries by remember(profile.id) { app.repository.growth(profile.id) }.collectAsState(initial = emptyList())
+
+    val next = VaccinePlanner.next(VaccinePlanner.plan(app.content.vaccines, birth, doses, today, skipped))
+    val group = app.content.milestones.groupForAge(ChildAge.referenceMonths(birth, profile.weeksAtBirth, today))
+    val yes = group.items.count { answers[it.id] == MilestoneAnswer.YES }
+    val lastWeight = entries.lastOrNull { it.weightKg != null }?.weightKg
+
+    val vaccineValue: String
+    val vaccineLabel: Int
+    when {
+        next == null -> { vaccineValue = stringResource(R.string.tile_vaccine_done_value); vaccineLabel = R.string.tile_vaccine_done_label }
+        next.daysUntilDue > 0 -> { vaccineValue = Format.days(res, next.daysUntilDue); vaccineLabel = R.string.tile_vaccine_in }
+        next.daysUntilDue == 0 -> { vaccineValue = stringResource(R.string.tile_vaccine_today_value); vaccineLabel = R.string.tile_vaccine_today_label }
+        else -> { vaccineValue = Format.days(res, -next.daysUntilDue); vaccineLabel = R.string.tile_vaccine_late }
+    }
+
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        StatTile(
+            emoji = "💉",
+            value = vaccineValue,
+            label = stringResource(vaccineLabel),
+            accent = Area.VACCINES.accent(),
+            valueColor = if (next != null && next.daysUntilDue < 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+            onClick = { nav.selectTab(Routes.VACCINES) },
+        )
+        StatTile(
+            emoji = "⭐",
+            value = "$yes/${group.items.size}",
+            label = stringResource(R.string.tile_milestones_label),
+            accent = Area.MILESTONES.accent(),
+            modifier = Modifier.weight(1f),
+            onClick = { nav.selectTab(Routes.MILESTONES) },
+        )
+        StatTile(
+            emoji = "⚖️",
+            value = lastWeight?.let { stringResource(R.string.tile_weight_value, Format.decimal(it, 2)) } ?: "—",
+            label = stringResource(if (lastWeight != null) R.string.tile_weight_label else R.string.tile_weight_none),
+            accent = Area.GROWTH.accent(),
+            modifier = Modifier.weight(1f),
+            onClick = { nav.selectTab(Routes.GROWTH) },
+        )
+    }
+}
+
+@Composable
+private fun StatTile(
+    emoji: String,
+    value: String,
+    label: String,
+    accent: androidx.compose.ui.graphics.Color,
+    modifier: Modifier = Modifier,
+    valueColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface,
+    onClick: () -> Unit,
+) {
+    androidx.compose.material3.Card(
+        onClick = onClick,
+        modifier = modifier,
+        colors = androidx.compose.material3.CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+    ) {
+        Column(
+            Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            EmojiBadge(emoji, size = 40.dp, container = accent.copy(alpha = 0.18f))
+            Text(
+                value,
+                style = MaterialTheme.typography.titleMedium,
+                color = valueColor,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                maxLines = 2,
+            )
+            Text(
+                label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                maxLines = 2,
             )
         }
     }
@@ -182,7 +296,7 @@ private fun NextVaccineCard(app: MahdApp, profile: Profile, nav: Navigator) {
     val summary = VaccinePlanner.summary(plans)
     val status = ly.mahd.app.ui.theme.LocalStatusColors.current
 
-    AppCard(onClick = { nav.selectTab(Routes.VACCINES) }) {
+    AppCard(onClick = { nav.selectTab(Routes.VACCINES) }, accent = Area.VACCINES.accent()) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("💉  " + stringResource(R.string.next_vaccine_title), style = MaterialTheme.typography.titleMedium)
@@ -232,11 +346,13 @@ private fun MilestonesSummaryCard(app: MahdApp, profile: Profile, nav: Navigator
     val yes = group.items.count { answers[it.id] == MilestoneAnswer.YES }
     val notYet = group.items.count { answers[it.id] == MilestoneAnswer.NOT_YET }
 
-    AppCard(onClick = { nav.selectTab(Routes.MILESTONES) }) {
+    AppCard(onClick = { nav.selectTab(Routes.MILESTONES) }, accent = Area.MILESTONES.accent()) {
         Text("⭐  " + stringResource(R.string.milestones_card_title, group.title), style = MaterialTheme.typography.titleMedium)
         LinearProgressIndicator(
             progress = { if (group.items.isEmpty()) 0f else yes / group.items.size.toFloat() },
             modifier = Modifier.fillMaxWidth().height(8.dp),
+            color = MaterialTheme.colorScheme.tertiary,
+            trackColor = MaterialTheme.colorScheme.surfaceVariant,
         )
         Text(
             stringResource(R.string.milestones_progress, yes.toString(), group.items.size.toString()),
@@ -258,7 +374,7 @@ private fun GrowthSummaryCard(app: MahdApp, profile: Profile, nav: Navigator) {
     val entries by remember(profile.id) { app.repository.growth(profile.id) }.collectAsState(initial = emptyList())
     val lastWeight = entries.lastOrNull { it.weightKg != null }
 
-    AppCard(onClick = { nav.selectTab(Routes.GROWTH) }) {
+    AppCard(onClick = { nav.selectTab(Routes.GROWTH) }, accent = Area.GROWTH.accent()) {
         Text("📈  " + stringResource(R.string.growth_card_title), style = MaterialTheme.typography.titleMedium)
         if (lastWeight == null) {
             Text(stringResource(R.string.growth_card_empty), style = MaterialTheme.typography.bodyLarge)

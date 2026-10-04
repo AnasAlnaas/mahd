@@ -72,9 +72,10 @@ fun VaccinesScreen(app: MahdApp, profile: Profile) {
     val skipped by remember(profile.id) { app.repository.skippedDoses(profile.id) }.collectAsState(initial = emptySet())
     val plans = VaccinePlanner.plan(schedule, birth, doses, today, skipped)
     val summary = VaccinePlanner.summary(plans)
+    val firstUpcomingId = plans.firstOrNull { it.status == Status.UPCOMING }?.visit?.id
     val scope = rememberCoroutineScope()
 
-    // Which finished visits the mother has opened to see their doses.
+    // Which folded visits the mother has opened to see their doses.
     var expanded by remember(profile.id) { mutableStateOf(setOf<String>()) }
 
     // Which doses the date picker is for (one dose, or all remaining doses of a visit).
@@ -94,7 +95,9 @@ fun VaccinesScreen(app: MahdApp, profile: Profile) {
         }
         itemsIndexed(plans, key = { _, plan -> plan.visit.id }) { index, plan ->
             val hasEarlierGap = plans.take(index).any { !it.isComplete }
-            val collapsed = plan.isComplete && plan.visit.id !in expanded
+            // Finished visits and far-away future visits fold into one line; only the next future visit stays open.
+            val folds = plan.isComplete || (plan.status == Status.UPCOMING && plan.visit.id != firstUpcomingId)
+            val collapsed = folds && plan.visit.id !in expanded
             TimelineRow(plan.status, isFirst = index == 0, isLast = index == plans.lastIndex) {
                 VisitCard(
                     plan = plan,
@@ -351,7 +354,7 @@ private fun VisitCard(
     val colors = MaterialTheme.colorScheme
     val highlight = plan.status == Status.OVERDUE || plan.status == Status.DUE_TODAY || plan.status == Status.PARTLY_DONE
 
-    // A finished visit folds into a single tappable line.
+    // A folded visit shows as a single tappable line.
     if (collapsed) {
         AppCard(onClick = onToggle) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -368,7 +371,7 @@ private fun VisitCard(
 
     AppCard(containerColor = if (highlight) colors.errorContainer.copy(alpha = 0.45f) else colors.surfaceContainerLow) {
         Row(
-            Modifier.fillMaxWidth().clickable(enabled = plan.isComplete, onClick = onToggle),
+            Modifier.fillMaxWidth().clickable(enabled = plan.isComplete || plan.status == Status.UPCOMING, onClick = onToggle),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(Modifier.weight(1f)) {

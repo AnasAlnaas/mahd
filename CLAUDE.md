@@ -58,3 +58,15 @@ content updates, web version, clinic directory.
 ## Build
 `gradlew assembleDebug` and `gradlew testDebugUnitTest`. Needs JDK 17+ (Android Studio's bundled
 JBR works). Keep the project outside OneDrive.
+
+## Visual language (added with the visual polish)
+- Area colours: vaccines = rose (`primary`), growth = teal (`secondary`), milestones = gold (`tertiary`);
+  `AppCard(accent = Area.X.accent())` draws a thin bar on the start edge. Milestone domains use `domainAccent(id)`.
+- Reusable pieces: `ProgressRing` (vaccines + milestone domains), `TrimesterBar` (pregnancy), `EmojiBadge`.
+- Vaccines screen is a timeline: finished visits and all future visits except the next one fold into one line.
+- Growth chart labels its curves (+3 … −3, with a left-to-right mark so the sign stays in front in Arabic),
+  tags the latest value, can zoom to the recent months, and shows a trend line (`GrowthMath.trend`).
+- Milestone "share" draws a PNG with Android Canvas (`util/ShareCard.kt`); text goes through `StaticLayout` for correct Arabic.
+- Launcher icon: three moons from crescent to full (phases of the moon = stages of growth).
+- Gotcha: never edit Arabic files with perl one-liners (it double-encodes UTF-8); use the editor tool.
+- Gotcha: Kotlin compiles in-process (`gradle.properties`) because the Kotlin daemon was unreachable on this PC.
