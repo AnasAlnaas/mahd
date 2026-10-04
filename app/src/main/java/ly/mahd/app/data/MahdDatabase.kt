@@ -63,15 +63,30 @@ class MahdDatabase(context: Context) : SQLiteOpenHelper(context, NAME, null, VER
             )
             """.trimIndent()
         )
+        createVaccineSkips(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // Version 1 is the first release. Future migrations go here, e.g.:
-        // if (oldVersion < 2) db.execSQL("ALTER TABLE profiles ADD COLUMN photo TEXT")
+        // Future migrations go here, e.g.:
+        // if (oldVersion < 3) db.execSQL("ALTER TABLE profiles ADD COLUMN photo TEXT")
+        if (oldVersion < 2) createVaccineSkips(db)
+    }
+
+    /** Doses the mother marked "not applicable / skipped" (so they stop counting as late). */
+    private fun createVaccineSkips(db: SQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS vaccine_skips (
+                profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+                dose_id TEXT NOT NULL,
+                PRIMARY KEY (profile_id, dose_id)
+            )
+            """.trimIndent()
+        )
     }
 
     companion object {
         const val NAME = "mahd.db"
-        const val VERSION = 1
+        const val VERSION = 2
     }
 }

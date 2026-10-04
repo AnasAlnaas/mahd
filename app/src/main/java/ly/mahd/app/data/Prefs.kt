@@ -48,6 +48,13 @@ class Prefs(context: Context) {
 
     fun setLastNotifiedWeek(profileId: Long, week: Int) = sp.edit { putInt("$WEEK_PREFIX$profileId", week) }
 
+    /** After a restore, profile ids may point at different children, so old "already sent" marks are void. */
+    fun resetReminderBookkeeping() = sp.edit {
+        sp.all.keys
+            .filter { it.startsWith(NOTIFIED_PREFIX) || it.startsWith(WEEK_PREFIX) }
+            .forEach { remove(it) }
+    }
+
     private companion object {
         const val KEY_SELECTED = "selected_profile"
         const val KEY_DISCLAIMER = "disclaimer_accepted"

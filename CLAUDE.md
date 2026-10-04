@@ -15,7 +15,7 @@ Libyan vaccine schedule or Libyan dialect. Plan: MVP first, add features over ti
   JSON = built-in `org.json`. Navigation = tiny custom `Navigator` (no navigation library).
   Icons = hand-written vector drawables (no icon library). Charts = Compose `Canvas`.
 - AGP 9.x with built-in Kotlin: do NOT apply `org.jetbrains.kotlin.android`. Only the Compose
-  compiler plugin is applied. minSdk 26, target/compile 36.
+  compiler plugin is applied. minSdk 26, target 36, compile 37.
 - Arabic-only UI, forced RTL via `AppLocale.wrap()` in `MainActivity.attachBaseContext`.
   Numbers are always 0–9: pass numbers to string resources as `%1$s` text, never `%d`.
   Arabic plurals (zero/one/two/few/many/other) in `strings.xml`; watch grammatical case
@@ -27,6 +27,14 @@ Libyan vaccine schedule or Libyan dialect. Plan: MVP first, add features over ti
 - Vaccine schedule (`vaccines_ly.json`) is a DRAFT: doses marked `"verify": true` are guesses.
   Confirmed from public sources: birth BCG + HepB + OPV; DTaP 2/4/6/18 m; rotavirus 2/4/6 m
   (not after 8 m); varicella + hepatitis A at 15 m (added 2023).
+- Vaccine schedule: a dose can be given, marked "skipped / not applicable" (table `vaccine_skips`, DB v2), or
+  expire automatically via `"maxAgeMonths"` in `vaccines_ly.json` (rotavirus: 8). Such doses are never "late"
+  and get no reminders. Reminders are catch-up tolerant (`logic/ReminderRules.kt`).
+- Growth: WHO standards are for term babies, so measurements before a premature baby's original due date
+  (negative corrected age) are listed but not charted or classified.
+- Backups: `BackupFile.decode` validates the whole file (orphan/duplicate rows) before restore. Android Auto Backup
+  is ON (database goes to the mother's own Google account); the privacy text says so. Declare it in Play's data-safety form.
+- Content files are covered by `ContentFilesTest`; run `gradlew testDebugUnitTest` after every content edit.
 - Working name "مهد / Mahd", package `ly.mahd.app` — both placeholders, easy to change.
 
 ## MVP scope (v1.0)

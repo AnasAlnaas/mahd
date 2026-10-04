@@ -2,6 +2,7 @@ package ly.mahd.app
 
 import android.app.Application
 import android.content.Context
+import android.util.Log
 import ly.mahd.app.content.ContentRepository
 import ly.mahd.app.data.MahdDatabase
 import ly.mahd.app.data.Prefs
@@ -29,7 +30,15 @@ class MahdApp : Application() {
         content = ContentRepository(assets)
         prefs = Prefs(this)
 
-        thread(name = "content-preload") { content.preload() }
+        // A broken content file must not kill the app from a background thread; the unit tests
+        // (ContentFilesTest) catch broken files before release, and screens report the error when used.
+        thread(name = "content-preload") {
+            try {
+                content.preload()
+            } catch (e: Exception) {
+                Log.e("Mahd", "Content preload failed", e)
+            }
+        }
 
         Notifications.createChannel(this)
         ReminderScheduler.schedule(this)

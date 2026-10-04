@@ -74,16 +74,44 @@ class Repository(private val database: MahdDatabase) {
 
     fun dosesNow(profileId: Long): Map<String, LocalDate> = queryDoses(database.readableDatabase, profileId)
 
-    suspend fun setDosesGiven(profileId: Long, doseIds: Collection<String>, date: LocalDate) = write { db ->
-        doseIds.forEach { doseId ->
+    suspend fun setDosesGiven(profileId: Long, doseIds: Collection<String>, date: LocalDate) =
+        setDosesGivenOn(profileId, doseIds.associateWith { date })
+
+    /** Records each dose with its own date. A dose that was marked "skipped" stops being skipped. */
+    suspend fun setDosesGivenOn(profileId: Long, doses: Map<String, LocalDate>) = write { db ->
+        doses.forEach { (doseId, date) ->
             val values = ContentValues().apply {
                 put("profile_id", profileId)
                 put("dose_id", doseId)
                 put("given_date", date.toString())
             }
             db.insertWithOnConflict("vaccine_doses", null, values, SQLiteDatabase.CONFLICT_REPLACE)
+            db.delete("vaccine_skips", "profile_id = ? AND dose_id = ?", arrayOf(profileId.toString(), doseId))
         }
     }
+
+    fun skippedDoses(profileId: Long): Flow<Set<String>> = observe { querySkips(it, profileId) }
+
+    fun skippedDosesNow(profileId: Long): Set<String> = querySkips(database.readableDatabase, profileId)
+
+    /** Marks doses "not applicable / skipped". Skipped doses are not counted as late and get no reminders. */
+    suspend fun setDosesSkipped(profileId: Long, doseIds: Collection<String>) = write { db ->
+        doseIds.forEach { doseId ->
+            val values = ContentValues().apply {
+                put("profile_id", profileId)
+                put("dose_id", doseId)
+            }
+            db.insertWithOnConflict("vaccine_skips", null, values, SQLiteDatabase.CONFLICT_REPLACE)
+        }
+    }
+
+    suspend fun clearSkip(profileId: Long, doseId: String) = write {
+        it.delete("vaccine_skips", "profile_id = ? AND dose_id = ?", arrayOf(profileId.toString(), doseId))
+    }
+
+    private fun querySkips(db: SQLiteDatabase, profileId: Long): Set<String> =
+        db.rawQuery("SELECT dose_id FROM vaccine_skips WHERE profile_id = ?", arrayOf(profileId.toString()))
+            .use { c -> c.mapRows { it.getString(0) }.toSet() }
 
     suspend fun clearDose(profileId: Long, doseId: String) = write {
         it.delete("vaccine_doses", "profile_id = ? AND dose_id = ?", arrayOf(profileId.toString(), doseId))
@@ -137,12 +165,16 @@ class Repository(private val database: MahdDatabase) {
             milestones = db.rawQuery("SELECT * FROM milestone_answers", null).use { c ->
                 c.mapRows { Triple(it.long("profile_id"), it.string("item_id")!!, it.int("answer")) }
             },
+            skipped = db.rawQuery("SELECT * FROM vaccine_skips", null).use { c ->
+                c.mapRows { it.long("profile_id") to it.string("dose_id")!! }
+            },
         )
     }
 
     /** Replaces ALL data with the snapshot (used when restoring a backup). */
     suspend fun replaceAll(snapshot: Snapshot) = write { db ->
         db.delete("milestone_answers", null, null)
+        db.delete("vaccine_skips", null, null)
         db.delete("vaccine_doses", null, null)
         db.delete("growth", null, null)
         db.delete("profiles", null, null)
@@ -166,6 +198,12 @@ class Repository(private val database: MahdDatabase) {
                 put("answer", answer)
             })
         }
+        snapshot.skipped.forEach { (profileId, doseId) ->
+            db.insertOrThrow("vaccine_skips", null, ContentValues().apply {
+                put("profile_id", profileId)
+                put("dose_id", doseId)
+            })
+        }
     }
 
     data class Snapshot(
@@ -174,6 +212,8 @@ class Repository(private val database: MahdDatabase) {
         val doses: List<DoseRecord>,
         /** (profileId, itemId, answer code) */
         val milestones: List<Triple<Long, String, Int>>,
+        /** (profileId, doseId) of doses marked "skipped / not applicable" */
+        val skipped: List<Pair<Long, String>> = emptyList(),
     )
 }
 

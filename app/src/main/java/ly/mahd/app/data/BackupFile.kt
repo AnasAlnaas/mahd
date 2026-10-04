@@ -56,16 +56,31 @@ object BackupFile {
                         .put("answer", answer))
                 }
             })
+            .put("skippedDoses", JSONArray().apply {
+                snapshot.skipped.forEach { (profileId, doseId) ->
+                    put(JSONObject()
+                        .put("profileId", profileId)
+                        .put("doseId", doseId))
+                }
+            })
         return root.toString(2)
     }
 
-    /** Throws [IllegalArgumentException] when the file is not a valid backup of this app. */
-    fun decode(text: String): Repository.Snapshot {
-        val root = try {
-            JSONObject(text)
-        } catch (e: Exception) {
-            throw IllegalArgumentException("not json", e)
-        }
+    /**
+     * Throws [IllegalArgumentException] when the file is not a valid, consistent backup of this app
+     * (bad JSON, bad dates, rows pointing at a profile that is not in the file, duplicate rows).
+     * Checking everything here means restoring can never fail half-way through.
+     */
+    fun decode(text: String): Repository.Snapshot = try {
+        parse(text)
+    } catch (e: IllegalArgumentException) {
+        throw e
+    } catch (e: Exception) {
+        throw IllegalArgumentException("invalid backup", e)
+    }
+
+    private fun parse(text: String): Repository.Snapshot {
+        val root = JSONObject(text)
         require(root.optString("app") == APP) { "not a backup of this app" }
         require(root.optInt("format") in 1..FORMAT) { "backup made by a newer version" }
 
@@ -100,7 +115,23 @@ object BackupFile {
         val milestones = root.optJSONArray("milestones").objects().map { o ->
             Triple(o.getLong("profileId"), o.getString("itemId"), o.getInt("answer"))
         }
-        return Repository.Snapshot(profiles, growth, doses, milestones)
+        val givenKeys = doses.map { it.profileId to it.doseId }.toSet()
+        val skipped = root.optJSONArray("skippedDoses").objects()
+            .map { o -> o.getLong("profileId") to o.getString("doseId") }
+            .filter { it !in givenKeys }
+
+        val profileIds = profiles.map { it.id }.toSet()
+        require(profileIds.size == profiles.size) { "duplicate profile ids" }
+        require(growth.all { it.profileId in profileIds }) { "growth entry without a profile" }
+        require(growth.map { it.id }.toSet().size == growth.size) { "duplicate growth ids" }
+        require(doses.all { it.profileId in profileIds }) { "dose without a profile" }
+        require(givenKeys.size == doses.size) { "duplicate dose records" }
+        require(milestones.all { it.first in profileIds }) { "milestone without a profile" }
+        require(milestones.map { it.first to it.second }.toSet().size == milestones.size) { "duplicate milestones" }
+        require(skipped.all { it.first in profileIds }) { "skipped dose without a profile" }
+        require(skipped.toSet().size == skipped.size) { "duplicate skipped doses" }
+
+        return Repository.Snapshot(profiles, growth, doses, milestones, skipped)
     }
 
     private fun JSONArray?.objects(): List<JSONObject> =

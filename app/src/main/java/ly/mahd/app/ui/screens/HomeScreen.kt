@@ -121,9 +121,15 @@ fun trimesterName(t: Int): Int = when (t) {
 
 @Composable
 private fun BabyBornCard(profile: Profile, nav: Navigator) {
-    AppCard {
+    val today = LocalToday.current
+    // A week or more after the due date, make it obvious that the profile can be turned into a child.
+    val overdue = profile.dueDate?.let { PregnancyMath.daysUntilDue(it, today) < -7 } == true
+    AppCard(containerColor = if (overdue) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerLow) {
         Text(stringResource(R.string.baby_born_question), style = MaterialTheme.typography.titleMedium)
-        Text(stringResource(R.string.baby_born_hint), style = MaterialTheme.typography.bodyMedium)
+        Text(
+            stringResource(if (overdue) R.string.baby_born_overdue_hint else R.string.baby_born_hint),
+            style = MaterialTheme.typography.bodyMedium,
+        )
         OutlinedButton(onClick = { nav.push(Routes.born(profile.id)) }) { Text(stringResource(R.string.baby_born_button)) }
     }
 }
@@ -163,7 +169,8 @@ private fun NextVaccineCard(app: MahdApp, profile: Profile, nav: Navigator) {
     val res = LocalContext.current.resources
     val birth = profile.birthDate ?: return
     val doses by remember(profile.id) { app.repository.doses(profile.id) }.collectAsState(initial = emptyMap())
-    val plans = VaccinePlanner.plan(app.content.vaccines, birth, doses, today)
+    val skipped by remember(profile.id) { app.repository.skippedDoses(profile.id) }.collectAsState(initial = emptySet())
+    val plans = VaccinePlanner.plan(app.content.vaccines, birth, doses, today, skipped)
     val next = VaccinePlanner.next(plans)
 
     AppCard(onClick = { nav.selectTab(Routes.VACCINES) }) {
@@ -178,7 +185,7 @@ private fun NextVaccineCard(app: MahdApp, profile: Profile, nav: Navigator) {
                 style = MaterialTheme.typography.bodyLarge,
                 color = if (next.daysUntilDue < 0) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
             )
-            Text(next.visit.doses.joinToString("، ") { it.name }, style = MaterialTheme.typography.bodyMedium)
+            Text(next.remainingDoses.joinToString("، ") { it.name }, style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
@@ -237,8 +244,12 @@ private fun GrowthSummaryCard(app: MahdApp, profile: Profile, nav: Navigator) {
             )
             if (sex != null) {
                 val months = ChildAge.referenceMonths(birth, profile.weeksAtBirth, lastWeight.date)
-                val lms = app.content.growth.lms(GrowthIndicator.WEIGHT, sex.whoCode, months)
-                if (lms != null) {
+                // WHO standards are for term babies: no band before a premature baby's original due date.
+                val beforeTerm = ChildAge.isBeforeCorrectedTerm(birth, profile.weeksAtBirth, lastWeight.date)
+                val lms = if (beforeTerm) null else app.content.growth.lms(GrowthIndicator.WEIGHT, sex.whoCode, months)
+                if (beforeTerm) {
+                    Text(stringResource(R.string.growth_preterm_note_short), style = MaterialTheme.typography.bodyMedium)
+                } else if (lms != null) {
                     val band = GrowthMath.band(lms.zScore(lastWeight.weightKg))
                     GrowthBandText(band)
                 }

@@ -57,4 +57,5 @@ app/src/test/                unit tests for the logic (run: gradlew testDebugUni
 - [ ] Confirm the full vaccine schedule with the National Centre for Disease Control (NCDC)
 - [ ] Set `"reviewed": true` in each file once signed off (removes the draft notices)
 - [ ] Final app name, icon and `applicationId`
+- [ ] Play data-safety form: mention Android Auto Backup (database is backed up to the user's own Google account)
 - [ ] Privacy policy page, Play Console account, 14-day closed test with 12+ testers

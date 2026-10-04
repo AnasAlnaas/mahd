@@ -34,8 +34,9 @@ object Notifications {
             PackageManager.PERMISSION_GRANTED) &&
             NotificationManagerCompat.from(context).areNotificationsEnabled()
 
-    fun post(context: Context, key: String, title: String, text: String) {
-        if (!canPost(context)) return
+    /** Returns true if the notification was shown (false when notifications are blocked). */
+    fun post(context: Context, key: String, title: String, text: String): Boolean {
+        if (!canPost(context)) return false
         val open = PendingIntent.getActivity(
             context,
             0,
@@ -50,10 +51,12 @@ object Notifications {
             .setContentIntent(open)
             .setAutoCancel(true)
             .build()
-        try {
+        return try {
             NotificationManagerCompat.from(context).notify(key.hashCode(), notification)
+            true
         } catch (_: SecurityException) {
             // Permission was revoked between the check and the call; nothing to do.
+            false
         }
     }
 }

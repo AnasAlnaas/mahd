@@ -59,7 +59,7 @@
     <string name="tab_growth">النمو</string>
     <string name="tab_milestones">المهارات</string>
     <string name="settings_title">الإعدادات</string>
-    <string name="switch_profile">تغيير الملف</string>
+    <string name="switch_profile">تغيير الطفل أو الحمل</string>
     <string name="add_pregnancy">إضافة حمل</string>
     <string name="add_child">إضافة طفل</string>
     <string name="default_pregnancy_name">حملي</string>
@@ -95,8 +95,8 @@
     <string name="computed_current_week">عمر الحمل اليوم: %1$s</string>
     <string name="due_date_not_plausible">هذا التاريخ لا يناسب حملاً جاريًا. تأكدي من التاريخ.</string>
     <string name="due_date_hint">إذا حدّد الطبيب موعد الولادة بالسونار، فاختاري «موعد الولادة» وأدخلي التاريخ الذي حدّده.</string>
-    <string name="delete_profile">حذف هذا الملف</string>
-    <string name="delete_profile_title">حذف الملف؟</string>
+    <string name="delete_profile">حذف هذه المتابعة</string>
+    <string name="delete_profile_title">حذف المتابعة؟</string>
     <string name="delete_profile_text">سيتم حذف كل البيانات المسجلة في هذا الملف نهائيًا من الهاتف.</string>
 
     <!-- Child form -->
@@ -114,11 +114,12 @@
     <!-- Baby born -->
     <string name="baby_born_title">وصل طفلي</string>
     <string name="baby_born_congrats">ألف مبروك!</string>
-    <string name="baby_born_text">أدخلي بيانات طفلك ليتحوّل هذا الملف من متابعة الحمل إلى متابعة الطفل: التطعيمات والنمو والمهارات.</string>
+    <string name="baby_born_text">أدخلي بيانات طفلك لتتحوّل هذه المتابعة من متابعة الحمل إلى متابعة الطفل: التطعيمات والنمو والمهارات.</string>
     <string name="baby_born_weeks">وُلد في الأسبوع %1$s من الحمل.</string>
     <string name="baby_born_premature_note">بما أنه وُلد قبل الأسبوع 37، سنستخدم «العمر المصحَّح» للمهارات والنمو حتى عمر سنتين.</string>
     <string name="baby_born_question">هل وصل طفلك؟</string>
-    <string name="baby_born_hint">عند الولادة، انقلي هذا الملف إلى متابعة الطفل.</string>
+    <string name="baby_born_hint">عند الولادة، انقلي هذه المتابعة إلى متابعة الطفل.</string>
+    <string name="baby_born_overdue_hint">مضى على موعد الولادة المتوقع أكثر من أسبوع. إذا وصل طفلك، سجّلي ذلك هنا لتبدأ متابعة التطعيمات والنمو والمهارات.</string>
     <string name="baby_born_button">نعم، وصل طفلي</string>
 
     <!-- Home: pregnancy -->
@@ -189,6 +190,20 @@
     <string name="status_today">اليوم</string>
     <string name="status_soon">قريبًا</string>
     <string name="status_upcoming">لاحقًا</string>
+    <string name="status_skipped">لا ينطبق</string>
+    <string name="dose_skipped">سُجّلت «لا ينطبق»: لن نذكّرك بها.</string>
+    <string name="dose_expired">فات الوقت المسموح لها (بعد عمر %1$s لا تُعطى).</string>
+    <string name="dose_skipped_dialog_text">سُجّلت هذه الجرعة «لا ينطبق»، فلا تُحسب متأخرة ولا نذكّرك بها.</string>
+    <string name="record_as_given">سجّلتها كمُعطاة</string>
+    <string name="undo_skip">إلغاء التخطّي</string>
+    <string name="skip_remaining">لا ينطبق / تخطّي الباقي</string>
+    <string name="skip_confirm_title">تخطّي الجرعات المتبقية؟</string>
+    <string name="skip_confirm_text">ستُسجَّل هذه الجرعات «لا ينطبق» ولن نذكّرك بها. اختاري هذا فقط إذا قال الطبيب إنها لم تعد مطلوبة، أو فات وقتها. يمكنك التراجع في أي وقت.</string>
+    <string name="skip_confirm_button">تخطّي</string>
+    <string name="mark_upto_given">سجّلي كل التطعيمات حتى هذه التطعيمة كمُعطاة</string>
+    <string name="upto_confirm_title">تسجيل كل التطعيمات السابقة؟</string>
+    <string name="upto_confirm_text">سنسجّل كل التطعيمات غير المسجّلة حتى «%1$s» كأنها أُعطيت في موعدها، وهي تواريخ تقريبية. يمكنك تعديل أي تاريخ بعد ذلك.</string>
+    <string name="upto_confirm_button">سجّلي الكل</string>
 
     <!-- Growth -->
     <string name="indicator_weight">الوزن</string>
@@ -204,7 +219,9 @@
     <string name="chart_legend">المنطقة الخضراء هي المعدل الطبيعي لمعظم الأطفال (95 من كل 100 طفل). الخط المتقطع في الوسط هو المتوسط.</string>
     <string name="chart_corrected_note">النقاط مرسومة حسب العمر المصحَّح لأن الطفل وُلد مبكرًا.</string>
     <string name="latest_measurement">آخر قياس: %1$s %2$s (%3$s)</string>
-    <string name="percentile_plain">من كل 100 طفل في نفس العمر، حوالي %1$s قياسهم أقل من طفلك.</string>
+    <string name="percentile_plain">قياس طفلك أكبر من قياس حوالي %1$s%% من الأطفال في نفس العمر.</string>
+    <string name="growth_preterm_note">أُخذ هذا القياس قبل الموعد المتوقع للولادة، ولا تنطبق عليه منحنيات منظمة الصحة العالمية (فهي للأطفال المولودين في موعدهم). اسألي طبيب الأطفال، فهناك منحنيات خاصة بالخُدّج.</string>
+    <string name="growth_preterm_note_short">القياس قبل الموعد المتوقع للولادة: اسألي الطبيب عن منحنى الخُدّج.</string>
     <string name="growth_see_doctor">ناقشي هذا القياس مع طبيب الأطفال في الزيارة القادمة. قياس واحد لا يكفي للحكم، والمهم هو اتجاه النمو مع الوقت.</string>
     <string name="growth_out_of_range">هذا العمر خارج نطاق المنحنيات (من الولادة إلى 5 سنوات).</string>
     <string name="add_measurement">إضافة قياس</string>
@@ -236,13 +253,14 @@
     <string name="answer_not_sure">غير متأكدة</string>
 
     <!-- Settings -->
-    <string name="settings_profiles">الملفات</string>
+    <string name="settings_profiles">الأطفال والحمل</string>
     <string name="settings_reminders">التذكيرات</string>
     <string name="reminders_switch">تذكير بمواعيد التطعيمات وببداية كل أسبوع حمل</string>
+    <string name="reminders_battery_hint">إذا لم تصلك التذكيرات في مواعيدها، تأكدي أن هاتفك لا يوقف التطبيق في الخلفية (في إعدادات البطارية، اسمحي لمهد بالعمل في الخلفية).</string>
     <string name="notifications_blocked">الإشعارات متوقفة لهذا التطبيق في إعدادات الهاتف، فلن تصلك التذكيرات.</string>
     <string name="open_notification_settings">فتح إعدادات الإشعارات</string>
     <string name="settings_backup">النسخة الاحتياطية</string>
-    <string name="backup_explain">بياناتك محفوظة على هذا الهاتف فقط. احفظي نسخة احتياطية من وقت لآخر (مثلًا أرسليها لنفسك على واتساب)، حتى تستعيديها إذا ضاع الهاتف أو تغيّر.</string>
+    <string name="backup_explain">بياناتك محفوظة على هذا الهاتف. قد يحفظ أندرويد نسخة منها في حسابك على جوجل، لكن الأضمن أن تحفظي نسخة بنفسك من وقت لآخر (مثلًا أرسليها لنفسك على واتساب)، حتى تستعيديها إذا ضاع الهاتف أو تغيّر.</string>
     <string name="backup_save">حفظ نسخة في ملف</string>
     <string name="backup_share">إرسال النسخة (واتساب، درايف…)</string>
     <string name="backup_restore">استعادة من نسخة</string>
@@ -250,7 +268,8 @@
     <string name="backup_failed">تعذّر حفظ النسخة، حاولي مرة أخرى</string>
     <string name="restore_invalid">هذا الملف ليس نسخة احتياطية من تطبيق مهد</string>
     <string name="restore_confirm_title">استعادة النسخة؟</string>
-    <string name="restore_confirm_text">ستُستبدل كل البيانات الحالية في التطبيق بالبيانات الموجودة في النسخة (عدد الملفات فيها: %1$s). لا يمكن التراجع عن ذلك.</string>
+    <string name="restore_confirm_text">ستُستبدل كل البيانات الحالية في التطبيق بالبيانات الموجودة في النسخة (عدد الأطفال والحمل المسجّلين فيها: %1$s). لا يمكن التراجع عن ذلك.</string>
+    <string name="restore_failed">تعذّرت استعادة النسخة. لم يتغيّر شيء في بياناتك الحالية.</string>
     <string name="restore_confirm_button">استعادة</string>
     <string name="restore_done">تمت استعادة النسخة</string>
     <string name="settings_about">عن التطبيق</string>
@@ -258,7 +277,7 @@
     <string name="version_label">الإصدار %1$s</string>
     <string name="about_mission">مهد تطبيق عربي يرافق الأم الليبية والعربية من الحمل حتى عمر 4 سنوات: الحمل أسبوعًا بأسبوع، والتطعيمات، والنمو، والمهارات، بلغة بسيطة وبدون إنترنت.</string>
     <string name="privacy_title">خصوصيتك</string>
-    <string name="privacy_text">لا يطلب التطبيق إذن الاتصال بالإنترنت، ولا يرسل بياناتك لأي جهة. كل ما تسجلينه يبقى على هاتفك، وفي النسخة الاحتياطية التي تحفظينها أنتِ. لا إعلانات ولا تتبّع.</string>
+    <string name="privacy_text">لا يطلب التطبيق إذن الاتصال بالإنترنت، ولا يرسل بياناتك لأي جهة. كل ما تسجلينه يبقى على هاتفك، وفي النسخة الاحتياطية التي تحفظينها أنتِ. وإذا كان النسخ الاحتياطي مفعّلًا في أندرويد على هاتفك، فقد يحفظ النظام نسخة في حسابك الخاص على جوجل لتستعيديها على هاتف جديد؛ هذا من أندرويد وليس من التطبيق، ويمكنك إيقافه من إعدادات الهاتف. لا إعلانات ولا تتبّع.</string>
     <string name="sources_title">مصادر المعلومات</string>
     <string name="sources_text">• منحنيات النمو: معايير نمو الطفل من منظمة الصحة العالمية (WHO).\n• المهارات: قوائم CDC «تعرّفوا على العلامات، تصرّفوا مبكرًا» (2022)، مبسّطة.\n• التطعيمات: البرنامج الوطني للتطعيم، المركز الوطني لمكافحة الأمراض – ليبيا.\n• محتوى الحمل: كُتب للتطبيق وسيراجعه طبيب نساء وتوليد.</string>
     <string name="review_title">المراجعة الطبية</string>

@@ -131,6 +131,11 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
                         Text(stringResource(R.string.reminders_switch), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
                         Switch(checked = reminders, onCheckedChange = { app.prefs.setRemindersEnabled(it) })
                     }
+                    Text(
+                        stringResource(R.string.reminders_battery_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                     if (reminders && !Notifications.canPost(context)) {
                         Text(
                             stringResource(R.string.notifications_blocked),
@@ -192,10 +197,14 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
             destructive = true,
             onConfirm = {
                 scope.launch {
-                    app.repository.replaceAll(snapshot)
-                    app.prefs.selectProfile(snapshot.profiles.firstOrNull()?.id)
-                    toast(context, R.string.restore_done)
-                    nav.selectTab(Routes.HOME)
+                    // The write is one transaction, so on failure the old data is left untouched.
+                    val ok = runCatching { app.repository.replaceAll(snapshot) }.isSuccess
+                    if (ok) {
+                        app.prefs.selectProfile(snapshot.profiles.firstOrNull()?.id)
+                        app.prefs.resetReminderBookkeeping()
+                        nav.selectTab(Routes.HOME)
+                    }
+                    toast(context, if (ok) R.string.restore_done else R.string.restore_failed)
                 }
             },
             onDismiss = { pendingRestore = null },

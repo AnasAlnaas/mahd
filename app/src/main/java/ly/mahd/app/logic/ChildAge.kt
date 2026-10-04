@@ -30,6 +30,21 @@ object ChildAge {
     fun usesCorrectedAge(birth: LocalDate, weeksAtBirth: Int?, on: LocalDate): Boolean =
         weeksAtBirth != null && weeksAtBirth < 37 && months(birth, on) < CORRECT_UNTIL_MONTHS
 
+    /**
+     * Like [referenceMonths], but negative while a premature baby has not yet reached the age of
+     * the original due date (corrected age < 0). WHO growth standards (term babies) do not apply then.
+     */
+    fun referenceMonthsSigned(birth: LocalDate, weeksAtBirth: Int?, on: LocalDate): Double =
+        if (usesCorrectedAge(birth, weeksAtBirth, on)) {
+            ChronoUnit.DAYS.between(correctedBirthDate(birth, weeksAtBirth), on) / DAYS_PER_MONTH
+        } else {
+            months(birth, on)
+        }
+
+    /** True for a premature baby measured before the original due date. */
+    fun isBeforeCorrectedTerm(birth: LocalDate, weeksAtBirth: Int?, on: LocalDate): Boolean =
+        referenceMonthsSigned(birth, weeksAtBirth, on) < 0
+
     /** The age (in months) to use for milestones and growth charts. */
     fun referenceMonths(birth: LocalDate, weeksAtBirth: Int?, on: LocalDate): Double =
         if (usesCorrectedAge(birth, weeksAtBirth, on)) months(correctedBirthDate(birth, weeksAtBirth), on)

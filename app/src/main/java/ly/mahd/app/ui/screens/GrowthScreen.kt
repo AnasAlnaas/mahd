@@ -72,8 +72,13 @@ fun GrowthScreen(app: MahdApp, profile: Profile) {
         GrowthIndicator.HEAD -> e.headCm
     }
 
+    // WHO standards describe term babies, so measurements taken before a premature baby's original
+    // due date (negative corrected age) are listed but not drawn or classified.
+    fun beforeTerm(e: GrowthEntry) = ChildAge.isBeforeCorrectedTerm(birth, profile.weeksAtBirth, e.date)
+
     val points = entries.mapNotNull { e ->
-        valueOf(e)?.let { ChildAge.referenceMonths(birth, profile.weeksAtBirth, e.date) to it }
+        if (beforeTerm(e)) null
+        else valueOf(e)?.let { ChildAge.referenceMonths(birth, profile.weeksAtBirth, e.date) to it }
     }
 
     LazyColumn(
@@ -120,7 +125,8 @@ fun GrowthScreen(app: MahdApp, profile: Profile) {
             item {
                 val value = valueOf(latest)!!
                 val months = ChildAge.referenceMonths(birth, profile.weeksAtBirth, latest.date)
-                val lms = app.content.growth.lms(indicator, sex.whoCode, months)
+                val latestBeforeTerm = beforeTerm(latest)
+                val lms = if (latestBeforeTerm) null else app.content.growth.lms(indicator, sex.whoCode, months)
                 AppCard(containerColor = MaterialTheme.colorScheme.secondaryContainer) {
                     Text(
                         stringResource(
@@ -131,7 +137,9 @@ fun GrowthScreen(app: MahdApp, profile: Profile) {
                         ),
                         style = MaterialTheme.typography.titleMedium,
                     )
-                    if (lms != null) {
+                    if (latestBeforeTerm) {
+                        Text(stringResource(R.string.growth_preterm_note), style = MaterialTheme.typography.bodyMedium)
+                    } else if (lms != null) {
                         val z = lms.zScore(value)
                         GrowthBandText(GrowthMath.band(z))
                         val pct = GrowthMath.percentile(z).roundToInt().coerceIn(1, 99)
@@ -229,7 +237,9 @@ private fun AddMeasurementDialog(
     onDismiss: () -> Unit,
     onSave: (GrowthEntry) -> Unit,
 ) {
-    var date by remember { mutableStateOf(today) }
+    // Kept as text so it survives screen rotation.
+    var dateText by rememberSaveable { mutableStateOf(today.toString()) }
+    val date = java.time.LocalDate.parse(dateText)
     var weight by rememberSaveable { mutableStateOf("") }
     var length by rememberSaveable { mutableStateOf("") }
     var head by rememberSaveable { mutableStateOf("") }
@@ -248,7 +258,7 @@ private fun AddMeasurementDialog(
         title = { Text(stringResource(R.string.add_measurement)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                DateField(stringResource(R.string.measurement_date), date, birth, today, { date = it })
+                DateField(stringResource(R.string.measurement_date), date, birth, today, { dateText = it.toString() })
                 NumberField(weight, { weight = it }, stringResource(R.string.weight_label), weightOk)
                 NumberField(length, { length = it }, stringResource(R.string.length_label), lengthOk)
                 NumberField(head, { head = it }, stringResource(R.string.head_label), headOk)

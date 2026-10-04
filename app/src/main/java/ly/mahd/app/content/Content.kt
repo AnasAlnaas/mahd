@@ -3,6 +3,7 @@ package ly.mahd.app.content
 import android.content.res.AssetManager
 import org.json.JSONArray
 import org.json.JSONObject
+import java.io.InputStream
 
 /*
  * Medical and educational content lives in plain files under app/src/main/assets/content/,
@@ -63,6 +64,8 @@ data class VaccineDose(
     val name: String,
     val description: String,
     val note: String?,
+    /** Oldest age (in months) at which the dose may still be given, e.g. rotavirus 8. Null = no limit. */
+    val maxAgeMonths: Int? = null,
 )
 
 data class VaccineVisit(
@@ -79,13 +82,16 @@ data class VaccineSchedule(
     val visits: List<VaccineVisit>,
 )
 
-class ContentRepository(private val assets: AssetManager) {
+/** [opener] returns the stream of a file under assets/ (a function, so unit tests can read the files directly). */
+class ContentRepository(private val opener: (String) -> InputStream) {
+
+    constructor(assets: AssetManager) : this({ path -> assets.open(path) })
 
     val pregnancy: PregnancyContent by lazy { parsePregnancy(readJson("content/pregnancy.json")) }
     val milestones: MilestoneContent by lazy { parseMilestones(readJson("content/milestones.json")) }
     val vaccines: VaccineSchedule by lazy { parseVaccines(readJson("content/vaccines_ly.json")) }
     val growth: GrowthStandards by lazy {
-        GrowthStandards.parseCsv(assets.open("content/growth_who.csv").bufferedReader().use { it.readText() })
+        GrowthStandards.parseCsv(opener("content/growth_who.csv").bufferedReader().use { it.readText() })
     }
 
     /** Parse everything once in the background so screens open instantly. */
@@ -97,7 +103,7 @@ class ContentRepository(private val assets: AssetManager) {
     }
 
     private fun readJson(path: String): JSONObject =
-        JSONObject(assets.open(path).bufferedReader(Charsets.UTF_8).use { it.readText() })
+        JSONObject(opener(path).bufferedReader(Charsets.UTF_8).use { it.readText() })
 
     private fun parsePregnancy(o: JSONObject) = PregnancyContent(
         reviewed = o.optBoolean("reviewed", false),
@@ -149,6 +155,7 @@ class ContentRepository(private val assets: AssetManager) {
                         name = d.getString("name"),
                         description = d.optString("description"),
                         note = if (d.has("note") && !d.isNull("note")) d.getString("note") else null,
+                        maxAgeMonths = if (d.has("maxAgeMonths") && !d.isNull("maxAgeMonths")) d.getInt("maxAgeMonths") else null,
                     )
                 },
             )
