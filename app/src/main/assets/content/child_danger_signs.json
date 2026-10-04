@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "reviewed": false,
+  "reviewNote": "DRAFT written for the app in simple Arabic. Sources: WHO IMCI Chart Booklet (2014): general danger signs (2 months to 5 years) and signs of very severe disease in young infants (fast breathing 60/min or more, severe chest indrawing, temperature below 35.5 C, movement only when stimulated, not feeding well, jaundice in the first 24 hours or reaching the palms and soles, umbilical redness extending to the skin). The fever rule for babies under 3 months (38 C or more) follows NICE NG143. Every sign, every number and the wording must be reviewed by a Libyan paediatrician before release. Sections with maxAgeMonths are shown first for a child younger than that.",
+  "sections": [
+    {
+      "id": "any_age",
+      "title": "في أي عمر",
+      "signs": [
+        "لا يستطيع الرضاعة أو الشرب أبدًا.",
+        "يتقيأ كل شيء يأكله أو يشربه.",
+        "تشنّج (رجفة أو تيبّس في الجسم مع غياب عن الوعي)، الآن أو منذ قليل.",
+        "نعسان جدًا ويصعب إيقاظه، أو لا يستجيب لك، أو بكاؤه ضعيف أو حادّ على غير عادته.",
+        "صعوبة في التنفس: تنفّس سريع، أو انسحاب أسفل الصدر إلى الداخل مع كل نفَس، أو صوت غريب مع التنفس.",
+        "ازرقاق الشفتين أو اللسان أو الوجه.",
+        "علامات جفاف: لم يتبوّل (حفاض جاف) منذ 8 ساعات أو أكثر، أو يبكي بلا دموع، أو فمه جاف جدًا، أو عيناه غائرتان.",
+        "طفح على شكل نقاط حمراء أو بنفسجية لا تختفي عند الضغط عليها بكأس زجاجي.",
+        "تيبّس الرقبة، أو انتفاخ اليافوخ (المنطقة الطرية في رأس الرضيع).",
+        "إصابة قوية في الرأس، خاصة مع قيء أو نعاس أو إغماء.",
+        "بلع دواء أو مادة سامة (مثل الكلور أو الكيروسين) أو بطارية صغيرة، حتى لو بدا بخير."
+      ]
+    },
+    {
+      "id": "young_infant",
+      "title": "إذا كان عمر طفلك أقل من 3 أشهر",
+      "maxAgeMonths": 3,
+      "signs": [
+        "حرارة (سخانة) 38 درجة أو أكثر، حتى لو بدا بحالة جيدة.",
+        "برودة الجسم: حرارة أقل من 35.5 درجة.",
+        "يرفض الرضاعة أو يرضع بضعف شديد.",
+        "لا يتحرك إلا إذا لمستِه، أو لا يتحرك أبدًا.",
+        "يتنفس بسرعة كبيرة (60 نفَسًا أو أكثر في الدقيقة)، أو ينسحب صدره إلى الداخل بقوة مع كل نفَس.",
+        "اصفرار الجلد في أول يوم بعد الولادة، أو اصفرار يصل إلى الكفّين وباطن القدمين.",
+        "احمرار حول السُّرّة يمتد إلى الجلد حولها."
+      ]
+    }
+  ]
+}

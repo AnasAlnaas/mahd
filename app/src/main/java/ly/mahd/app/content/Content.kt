@@ -34,6 +34,19 @@ data class PregnancyContent(
     val lastWeek: Int get() = weeks.last().week
 }
 
+/** A list of "go to the hospital now" signs, with an optional heading (e.g. "under 3 months"). */
+data class DangerSignSection(
+    val title: String?,
+    val signs: List<String>,
+    /** The section is about children younger than this (in months); null = any age. */
+    val maxAgeMonths: Int? = null,
+)
+
+data class ChildDangerSigns(
+    val reviewed: Boolean,
+    val sections: List<DangerSignSection>,
+)
+
 data class MilestoneDomain(val id: String, val title: String, val emoji: String)
 
 data class MilestoneItem(val id: String, val domain: String, val text: String)
@@ -90,6 +103,7 @@ class ContentRepository(private val opener: (String) -> InputStream) {
     val pregnancy: PregnancyContent by lazy { parsePregnancy(readJson("content/pregnancy.json")) }
     val milestones: MilestoneContent by lazy { parseMilestones(readJson("content/milestones.json")) }
     val vaccines: VaccineSchedule by lazy { parseVaccines(readJson("content/vaccines_ly.json")) }
+    val childDangerSigns: ChildDangerSigns by lazy { parseChildDangerSigns(readJson("content/child_danger_signs.json")) }
     val growth: GrowthStandards by lazy {
         GrowthStandards.parseCsv(opener("content/growth_who.csv").bufferedReader().use { it.readText() })
     }
@@ -99,6 +113,7 @@ class ContentRepository(private val opener: (String) -> InputStream) {
         pregnancy
         milestones
         vaccines
+        childDangerSigns
         growth
     }
 
@@ -139,6 +154,17 @@ class ContentRepository(private val opener: (String) -> InputStream) {
             )
         }.sortedBy { it.months },
         warnings = o.getJSONArray("warnings").strings(),
+    )
+
+    private fun parseChildDangerSigns(o: JSONObject) = ChildDangerSigns(
+        reviewed = o.optBoolean("reviewed", false),
+        sections = o.getJSONArray("sections").objects().map { s ->
+            DangerSignSection(
+                title = s.getString("title"),
+                signs = s.getJSONArray("signs").strings(),
+                maxAgeMonths = if (s.has("maxAgeMonths") && !s.isNull("maxAgeMonths")) s.getInt("maxAgeMonths") else null,
+            )
+        },
     )
 
     private fun parseVaccines(o: JSONObject) = VaccineSchedule(

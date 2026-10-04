@@ -70,6 +70,17 @@ class ContentFilesTest {
     fun growthTablesLoad() {
         assertNotNull(content.growth.lms(GrowthIndicator.WEIGHT, 1, 0.0))
     }
+
+    @Test
+    fun childDangerSignsAreFilledIn() {
+        val sections = content.childDangerSigns.sections
+        assertTrue(sections.isNotEmpty())
+        sections.forEach { s ->
+            assertTrue("a section has no title", !s.title.isNullOrBlank())
+            assertTrue("section '${s.title}' has an empty sign", s.signs.isNotEmpty() && s.signs.all { it.isNotBlank() })
+            assertTrue("section '${s.title}' has a bad age limit", s.maxAgeMonths?.let { it > 0 } != false)
+        }
+    }
 }
 
 class VaccineSkipTest {

@@ -44,6 +44,7 @@ object Routes {
     const val ADD_PREGNANCY = "add_pregnancy"
     const val ADD_CHILD = "add_child"
     const val DANGER_SIGNS = "danger_signs"
+    const val CHILD_DANGER_SIGNS = "child_danger_signs"
     const val SETTINGS = "settings"
     const val ABOUT = "about"
 

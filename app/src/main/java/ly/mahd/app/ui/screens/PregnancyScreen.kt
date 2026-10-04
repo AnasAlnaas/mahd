@@ -23,7 +23,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ly.mahd.app.MahdApp
 import ly.mahd.app.R
@@ -34,7 +33,6 @@ import ly.mahd.app.ui.Navigator
 import ly.mahd.app.ui.Routes
 import ly.mahd.app.ui.components.AppCard
 import ly.mahd.app.ui.components.AppIcon
-import ly.mahd.app.ui.components.BulletList
 import ly.mahd.app.ui.components.DraftNotice
 import ly.mahd.app.ui.components.EmojiBadge
 import ly.mahd.app.ui.components.TrimesterBar
@@ -157,39 +155,6 @@ private fun WeekDetail(w: PregnancyWeek) {
         AppCard(containerColor = MaterialTheme.colorScheme.secondaryContainer) {
             Text("💡  " + stringResource(R.string.section_tip), style = MaterialTheme.typography.titleMedium)
             Text(w.tip, style = MaterialTheme.typography.bodyLarge)
-        }
-    }
-}
-
-/** "Go to the hospital now if…" — always one tap away. */
-@Composable
-fun DangerSignsScreen(app: MahdApp, onBack: () -> Unit) {
-    val content = app.content.pregnancy
-    SubScreen(title = stringResource(R.string.danger_signs_title), onBack = onBack) { padding ->
-        LazyColumn(
-            Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            item {
-                WarningCard(title = stringResource(R.string.danger_signs_intro_title)) {
-                    Text(stringResource(R.string.danger_signs_intro), style = MaterialTheme.typography.bodyLarge)
-                }
-            }
-            item {
-                AppCard {
-                    BulletList(content.dangerSigns)
-                }
-            }
-            item {
-                Text(
-                    stringResource(R.string.danger_signs_footer),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Start,
-                )
-            }
-            if (!content.reviewed) item { DraftNotice() }
         }
     }
 }

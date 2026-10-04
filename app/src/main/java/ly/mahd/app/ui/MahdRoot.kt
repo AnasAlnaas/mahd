@@ -41,6 +41,7 @@ import ly.mahd.app.data.Profile
 import ly.mahd.app.ui.components.AppIcon
 import ly.mahd.app.ui.screens.AboutScreen
 import ly.mahd.app.ui.screens.BabyBornScreen
+import ly.mahd.app.ui.screens.ChildDangerSignsScreen
 import ly.mahd.app.ui.screens.ChildFormScreen
 import ly.mahd.app.ui.screens.DangerSignsScreen
 import ly.mahd.app.ui.screens.GrowthScreen
@@ -118,6 +119,7 @@ private fun MainNav(app: MahdApp, nav: Navigator, profiles: List<Profile>, selec
         }
         "week" -> PregnancyScreen(app, selected, nav, initialWeek = arg?.toIntOrNull(), standalone = true)
         Routes.DANGER_SIGNS -> DangerSignsScreen(app, onBack = nav::back)
+        Routes.CHILD_DANGER_SIGNS -> ChildDangerSignsScreen(app, selected, onBack = nav::back)
         Routes.SETTINGS -> SettingsScreen(app, nav, profiles)
         Routes.ABOUT -> AboutScreen(app, onBack = nav::back)
         else -> LaunchedEffect(route) { nav.selectTab(Routes.HOME) }

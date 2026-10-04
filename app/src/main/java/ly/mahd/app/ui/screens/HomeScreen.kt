@@ -171,6 +171,12 @@ private fun ChildHome(app: MahdApp, profile: Profile, nav: Navigator) {
         item { ChildAgeCard(profile, birth) }
         if (askForReminders) item { RemindersPrompt(app, profile) }
         item { TodayStrip(plans, group, data, nav) }
+        item {
+            WarningCard(
+                title = stringResource(R.string.child_danger_signs_title),
+                onClick = { nav.push(Routes.CHILD_DANGER_SIGNS) },
+            ) { Text(stringResource(R.string.child_danger_signs_teaser), style = MaterialTheme.typography.bodyLarge) }
+        }
         item { NextVaccineCard(plans, nav) }
         item { MilestonesSummaryCard(group, data.answers, nav) }
         item { GrowthSummaryCard(app, profile, birth, data.growth, nav) }

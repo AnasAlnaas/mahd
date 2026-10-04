@@ -38,6 +38,7 @@ app/src/main/
 │   ├── pregnancy.json       weeks 1–42 + danger signs
 │   ├── milestones.json      2 months → 4 years (adapted from CDC 2022)
 │   ├── vaccines_ly.json     Libyan schedule — DRAFT, verify with NCDC
+│   ├── child_danger_signs.json  when to go to the emergency room (WHO IMCI) — DRAFT
 │   └── growth_who.csv       WHO growth standards, 0–60 months
 ├── java/ly/mahd/app/
 │   ├── data/                SQLite database, repository, backup file, settings
@@ -52,7 +53,7 @@ app/src/test/                unit tests for the logic (run: gradlew testDebugUni
 
 ## Before a public release
 
-- [ ] Paediatrician reviews `milestones.json` and `vaccines_ly.json`
+- [ ] Paediatrician reviews `milestones.json`, `vaccines_ly.json` and `child_danger_signs.json`
 - [ ] Obstetrician reviews `pregnancy.json` (weeks + danger signs)
 - [ ] Confirm the full vaccine schedule with the National Centre for Disease Control (NCDC)
 - [ ] Set `"reviewed": true` in each file once signed off (removes the draft notices)
