@@ -5,6 +5,7 @@ import androidx.core.content.edit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.time.LocalDate
 
 /** Small settings, kept in Android's built-in SharedPreferences. */
 class Prefs(context: Context) {
@@ -48,10 +49,18 @@ class Prefs(context: Context) {
 
     fun setLastNotifiedWeek(profileId: Long, week: Int) = sp.edit { putInt("$WEEK_PREFIX$profileId", week) }
 
-    /** After a restore, profile ids may point at different children, so old "already sent" marks are void. */
+    /** The day the daily reminder check last ran, so the app can run it itself if the alarm did not. */
+    var lastCheckDate: LocalDate?
+        get() = sp.getString(KEY_LAST_CHECK, null)?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+        set(value) = sp.edit { if (value == null) remove(KEY_LAST_CHECK) else putString(KEY_LAST_CHECK, value.toString()) }
+
+    /**
+     * After a restore, profile ids may point at different children, so old "already sent" marks are void,
+     * and the daily check should run again for the restored profiles.
+     */
     fun resetReminderBookkeeping() = sp.edit {
         sp.all.keys
-            .filter { it.startsWith(NOTIFIED_PREFIX) || it.startsWith(WEEK_PREFIX) }
+            .filter { it.startsWith(NOTIFIED_PREFIX) || it.startsWith(WEEK_PREFIX) || it == KEY_LAST_CHECK }
             .forEach { remove(it) }
     }
 
@@ -60,6 +69,7 @@ class Prefs(context: Context) {
         const val KEY_DISCLAIMER = "disclaimer_accepted"
         const val KEY_REMINDERS = "reminders_enabled"
         const val KEY_PERMISSION_ASKED = "notification_permission_asked"
+        const val KEY_LAST_CHECK = "last_reminder_check"
         const val NOTIFIED_PREFIX = "notified:"
         const val WEEK_PREFIX = "pregnancy_week:"
     }

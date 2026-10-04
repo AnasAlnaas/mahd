@@ -41,7 +41,7 @@ class MahdApp : Application() {
         }
 
         Notifications.createChannel(this)
-        ReminderScheduler.schedule(this)
+        ReminderScheduler.ensureScheduled(this)
     }
 }
 

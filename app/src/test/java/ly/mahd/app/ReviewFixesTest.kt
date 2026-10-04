@@ -24,6 +24,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 /** Parses the real content files, so a typo made while editing them is caught before release. */
 class ContentFilesTest {
@@ -153,6 +154,21 @@ class ReminderRulesTest {
         assertNull(ReminderRules.vaccineThreshold(-6))
         assertNull(ReminderRules.vaccineThreshold(-17))
         assertNull(ReminderRules.vaccineThreshold(-200))
+    }
+
+    @Test
+    fun appRunsTheDailyCheckItselfWhenTheAlarmHasNotRunToday() {
+        val yesterday = LocalDate.of(2026, 10, 3)
+        val noon = LocalDateTime.of(2026, 10, 4, 12, 0)
+        assertTrue(ReminderRules.isCheckDue(yesterday, noon)) // alarm late or stopped
+        assertTrue(ReminderRules.isCheckDue(null, noon)) // never ran (new install)
+        assertTrue(ReminderRules.isCheckDue(yesterday, LocalDateTime.of(2026, 10, 4, 10, 0)))
+    }
+
+    @Test
+    fun appLeavesTheCheckToTheAlarmBeforeItsTimeOrAfterItRan() {
+        assertFalse(ReminderRules.isCheckDue(LocalDate.of(2026, 10, 3), LocalDateTime.of(2026, 10, 4, 9, 59)))
+        assertFalse(ReminderRules.isCheckDue(LocalDate.of(2026, 10, 4), LocalDateTime.of(2026, 10, 4, 18, 0)))
     }
 }
 

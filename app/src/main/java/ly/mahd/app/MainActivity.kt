@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
+import ly.mahd.app.reminders.ReminderReceiver
 import ly.mahd.app.reminders.ReminderScheduler
 import ly.mahd.app.ui.MahdRoot
 import ly.mahd.app.ui.components.LocalToday
@@ -38,6 +39,8 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         today.value = LocalDate.now()
-        ReminderScheduler.schedule(this)
+        ReminderScheduler.ensureScheduled(this)
+        // If today's reminder check has not run yet (late or missing alarm), run it now.
+        ReminderReceiver.runIfDue(this)
     }
 }
