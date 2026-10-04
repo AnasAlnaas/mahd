@@ -299,15 +299,17 @@ private fun TimelineRow(status: Status, isFirst: Boolean, isLast: Boolean, conte
 @Composable
 private fun TimelineNode(status: Status, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
-    val good = LocalStatusColors.current.good
+    val health = LocalStatusColors.current
     val base = modifier.size(NODE_SIZE)
+    // Each fill has its matching "on" colour, so the mark stays readable in dark mode as well
+    // (white on the light green of the dark theme was hard to see).
     when (status) {
-        Status.DONE -> NodeCircle(base.background(good, CircleShape), R.drawable.ic_check, Color.White)
+        Status.DONE -> NodeCircle(base.background(health.good, CircleShape), R.drawable.ic_check, health.onGood)
         Status.OVERDUE, Status.PARTLY_DONE -> NodeCircle(base.background(colors.error, CircleShape), R.drawable.ic_warning, colors.onError)
         Status.DUE_TODAY -> NodeCircle(base.background(colors.primary, CircleShape), R.drawable.ic_vaccine, colors.onPrimary)
         Status.DUE_SOON -> NodeCircle(base.background(colors.tertiary, CircleShape), R.drawable.ic_vaccine, colors.onTertiary)
         Status.SKIPPED -> Box(base.background(colors.outline, CircleShape), contentAlignment = Alignment.Center) {
-            Box(Modifier.size(12.dp, 2.dp).background(Color.White))
+            Box(Modifier.size(12.dp, 2.dp).background(colors.surface))
         }
         // Hollow: the background colour hides the rail behind the circle.
         Status.UPCOMING -> Box(base.background(colors.background, CircleShape).border(2.dp, colors.outline, CircleShape))
@@ -396,7 +398,8 @@ private fun VisitCard(
                 Modifier.fillMaxWidth().clickable { onDoseClick(dose) }.padding(vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Checkbox(checked = given != null, onCheckedChange = { onDoseClick(dose) })
+                // The whole row is the button; the checkbox only shows the state (one target for TalkBack).
+                Checkbox(checked = given != null, onCheckedChange = null)
                 Column(Modifier.weight(1f)) {
                     val muted = isSkipped || isExpired
                     Text(
