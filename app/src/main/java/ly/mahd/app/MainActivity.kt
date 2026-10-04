@@ -7,6 +7,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import ly.mahd.app.reminders.Notifications
 import ly.mahd.app.reminders.ReminderReceiver
@@ -14,6 +15,7 @@ import ly.mahd.app.reminders.ReminderScheduler
 import ly.mahd.app.ui.MahdRoot
 import ly.mahd.app.ui.OpenRequest
 import ly.mahd.app.ui.Routes
+import ly.mahd.app.ui.components.LocalResumeCount
 import ly.mahd.app.ui.components.LocalToday
 import ly.mahd.app.ui.theme.MahdTheme
 import ly.mahd.app.util.AppLocale
@@ -23,6 +25,9 @@ class MainActivity : ComponentActivity() {
 
     /** Refreshed in onResume, so "today" is right even if the app stayed open overnight. */
     private val today = mutableStateOf(LocalDate.now())
+
+    /** Counts returns to the screen (see LocalResumeCount). */
+    private val resumeCount = mutableIntStateOf(0)
 
     /** Set when the app is opened from a reminder; MahdRoot shows that profile and tab, then clears it. */
     private val openRequest = mutableStateOf<OpenRequest?>(null)
@@ -38,7 +43,7 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) openFromReminder(intent)
         setContent {
             MahdTheme {
-                CompositionLocalProvider(LocalToday provides today.value) {
+                CompositionLocalProvider(LocalToday provides today.value, LocalResumeCount provides resumeCount.intValue) {
                     MahdRoot(app, openRequest.value, onOpenHandled = { openRequest.value = null })
                 }
             }
@@ -55,6 +60,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         today.value = LocalDate.now()
+        resumeCount.intValue++
         ReminderScheduler.ensureScheduled(this)
         // If today's reminder check has not run yet (late or missing alarm), run it now.
         ReminderReceiver.runIfDue(this)

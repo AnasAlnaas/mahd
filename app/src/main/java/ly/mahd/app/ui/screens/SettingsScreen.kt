@@ -41,7 +41,6 @@ import ly.mahd.app.R
 import ly.mahd.app.data.BackupFile
 import ly.mahd.app.data.Profile
 import ly.mahd.app.data.Repository
-import ly.mahd.app.reminders.Notifications
 import ly.mahd.app.ui.Navigator
 import ly.mahd.app.ui.Routes
 import ly.mahd.app.ui.components.AppCard
@@ -50,6 +49,7 @@ import ly.mahd.app.ui.components.ConfirmDialog
 import ly.mahd.app.ui.components.LocalToday
 import ly.mahd.app.ui.components.SectionTitle
 import ly.mahd.app.ui.components.SubScreen
+import ly.mahd.app.ui.components.rememberCanPostNotifications
 import ly.mahd.app.ui.profileEmoji
 import ly.mahd.app.ui.profileName
 import ly.mahd.app.util.Format
@@ -61,6 +61,7 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
     val today = LocalToday.current
     val scope = rememberCoroutineScope()
     val reminders by app.prefs.remindersEnabled.collectAsState()
+    val canPost = rememberCanPostNotifications()
     var pendingRestore by remember { mutableStateOf<Repository.Snapshot?>(null) }
 
     val saveLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
@@ -125,7 +126,7 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    if (reminders && !Notifications.canPost(context)) {
+                    if (reminders && !canPost) {
                         Text(
                             stringResource(R.string.notifications_blocked),
                             style = MaterialTheme.typography.bodyMedium,

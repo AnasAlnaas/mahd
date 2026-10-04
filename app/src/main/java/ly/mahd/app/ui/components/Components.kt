@@ -43,11 +43,13 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ly.mahd.app.R
+import ly.mahd.app.reminders.Notifications
 import ly.mahd.app.util.Format
 import java.time.Instant
 import java.time.LocalDate
@@ -55,6 +57,20 @@ import java.time.ZoneOffset
 
 /** Today's date. Provided by MainActivity and refreshed whenever the app comes back to the screen. */
 val LocalToday = compositionLocalOf<LocalDate> { LocalDate.now() }
+
+/**
+ * Goes up each time the app comes back to the screen (provided by MainActivity), so anything the mother
+ * may have changed in the phone's settings meanwhile, such as notifications, is checked again.
+ */
+val LocalResumeCount = compositionLocalOf { 0 }
+
+/** Whether reminders can be shown right now; checked again whenever the app comes back to the screen. */
+@Composable
+fun rememberCanPostNotifications(): Boolean {
+    val context = LocalContext.current
+    val resumes = LocalResumeCount.current
+    return remember(resumes) { Notifications.canPost(context) }
+}
 
 @Composable
 fun AppIcon(@DrawableRes id: Int, contentDescription: String?, modifier: Modifier = Modifier, tint: Color = Color.Unspecified) {
