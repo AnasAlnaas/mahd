@@ -334,6 +334,7 @@
     <string name="notify_new_week_title">بدأ الأسبوع %1$s من حملك 🌸</string>
     <string name="notify_new_week_text">اكتشفي ما الجديد عند طفلك هذا الأسبوع.</string>
     <string name="notify_vaccine_title">تطعيمة %1$s</string>
+    <string name="notify_private_title">لديك تذكير من أطوار</string>
     <string name="notify_vaccine_soon">%1$s: باقي %2$s على الموعد.</string>
     <string name="notify_vaccine_today">%1$s: موعدها اليوم.</string>
     <string name="notify_vaccine_late">%1$s: مضى على موعدها %2$s. إذا أخذها طفلك، سجّليها في التطبيق.</string>

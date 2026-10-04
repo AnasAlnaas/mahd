@@ -55,6 +55,12 @@ object Notifications {
             intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
+        // What a locked phone shows when it is set to hide sensitive notifications: no child's name and
+        // no pregnancy week, which could reveal a pregnancy to anyone glancing at the phone.
+        val lockScreenVersion = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(AppLocale.wrap(context).resources.getString(R.string.notify_private_title))
+            .build()
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
@@ -62,6 +68,8 @@ object Notifications {
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
             .setContentIntent(open)
             .setAutoCancel(true)
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+            .setPublicVersion(lockScreenVersion)
             .build()
         return try {
             NotificationManagerCompat.from(context).notify(key.hashCode(), notification)
