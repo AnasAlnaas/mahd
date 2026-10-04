@@ -26,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -49,10 +50,14 @@ import ly.mahd.app.ui.components.SubScreen
 import ly.mahd.app.util.Format
 import java.time.LocalDate
 
-private val dateSaver = androidx.compose.runtime.saveable.Saver<LocalDate?, String>(
+private val dateSaver = Saver<LocalDate?, String>(
     save = { it?.toString() ?: "" },
     restore = { if (it.isEmpty()) null else LocalDate.parse(it) },
 )
+
+/** [limit], or [saved] when that is earlier, so a calendar can still show a date saved long ago. */
+private fun earliest(limit: LocalDate, saved: LocalDate?): LocalDate =
+    if (saved != null && saved.isBefore(limit)) saved else limit
 
 @Composable
 private fun FormColumn(padding: PaddingValues, content: @Composable () -> Unit) {
@@ -84,7 +89,12 @@ fun PregnancyFormScreen(app: MahdApp, existing: Profile?, onClose: () -> Unit) {
     var confirmDelete by rememberSaveable { mutableStateOf(false) }
 
     val computedDue: LocalDate? = if (useLastPeriod) lastPeriod?.let(PregnancyMath::dueDateFromLastPeriod) else dueDate
-    val valid = computedDue != null && PregnancyMath.isPlausibleDueDate(computedDue, today)
+    val plausible = computedDue != null && PregnancyMath.isPlausibleDueDate(computedDue, today)
+    // A saved pregnancy may keep its due date even when it is long past (to rename it, for example);
+    // only a newly chosen date has to fit an ongoing pregnancy.
+    val keepsPastDate = computedDue != null && computedDue == existing?.dueDate && computedDue.isBefore(today)
+    val valid = plausible || keepsPastDate
+    val res = LocalContext.current.resources
 
     SubScreen(
         title = stringResource(if (existing == null) R.string.add_pregnancy else R.string.edit_pregnancy),
@@ -115,11 +125,13 @@ fun PregnancyFormScreen(app: MahdApp, existing: Profile?, onClose: () -> Unit) {
                 )
             }
 
+            // The calendars also reach back to the saved date when it is older than the usual limit.
+            val savedDue = existing?.dueDate
             if (useLastPeriod) {
                 DateField(
                     label = stringResource(R.string.last_period_label),
                     date = lastPeriod,
-                    min = today.minusWeeks(44),
+                    min = earliest(today.minusWeeks(44), savedDue?.let(PregnancyMath::lastPeriodFromDueDate)),
                     max = today,
                     onDate = { lastPeriod = it },
                 )
@@ -127,7 +139,7 @@ fun PregnancyFormScreen(app: MahdApp, existing: Profile?, onClose: () -> Unit) {
                 DateField(
                     label = stringResource(R.string.due_date_label),
                     date = dueDate,
-                    min = today.minusWeeks(4),
+                    min = earliest(today.minusWeeks(4), savedDue),
                     max = today.plusWeeks(42),
                     onDate = { dueDate = it },
                 )
@@ -135,17 +147,23 @@ fun PregnancyFormScreen(app: MahdApp, existing: Profile?, onClose: () -> Unit) {
 
             if (computedDue != null) {
                 AppCard(containerColor = MaterialTheme.colorScheme.secondaryContainer) {
-                    if (valid) {
+                    if (plausible) {
                         val ga = PregnancyMath.gestationalAge(computedDue, today)
                         Text(
                             stringResource(R.string.computed_due_date, Format.date(computedDue)),
                             style = MaterialTheme.typography.titleMedium,
                         )
                         Text(
-                            stringResource(
-                                R.string.computed_current_week,
-                                Format.gestationalAge(LocalContext.current.resources, ga.weeks, ga.days),
-                            ),
+                            stringResource(R.string.computed_current_week, Format.gestationalAge(res, ga.weeks, ga.days)),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                    } else if (keepsPastDate) {
+                        Text(
+                            stringResource(R.string.computed_due_date, Format.date(computedDue)),
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Text(
+                            stringResource(R.string.past_due, Format.days(res, -PregnancyMath.daysUntilDue(computedDue, today))),
                             style = MaterialTheme.typography.bodyLarge,
                         )
                     } else {
