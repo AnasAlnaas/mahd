@@ -35,6 +35,15 @@ class Prefs(context: Context) {
         _remindersEnabled.value = enabled
     }
 
+    /** The twice-a-week notification with a verse or hadith (part of the reminders; off when they are off). */
+    private val _adviceNotifications = MutableStateFlow(sp.getBoolean(KEY_ADVICE_NOTIFICATIONS, true))
+    val adviceNotifications: StateFlow<Boolean> = _adviceNotifications.asStateFlow()
+
+    fun setAdviceNotifications(enabled: Boolean) {
+        sp.edit { putBoolean(KEY_ADVICE_NOTIFICATIONS, enabled) }
+        _adviceNotifications.value = enabled
+    }
+
     var notificationPermissionAsked: Boolean
         get() = sp.getBoolean(KEY_PERMISSION_ASKED, false)
         set(value) = sp.edit { putBoolean(KEY_PERMISSION_ASKED, value) }
@@ -77,6 +86,7 @@ class Prefs(context: Context) {
         const val KEY_SELECTED = "selected_profile"
         const val KEY_DISCLAIMER = "disclaimer_accepted"
         const val KEY_REMINDERS = "reminders_enabled"
+        const val KEY_ADVICE_NOTIFICATIONS = "advice_notifications"
         const val KEY_PERMISSION_ASKED = "notification_permission_asked"
         const val KEY_REMINDER_PROMPT_DISMISSED = "reminder_prompt_dismissed"
         const val KEY_LAST_CHECK = "last_reminder_check"

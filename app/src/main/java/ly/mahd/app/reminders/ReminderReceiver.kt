@@ -7,7 +7,9 @@ import android.content.res.Resources
 import android.util.Log
 import ly.mahd.app.R
 import ly.mahd.app.app
+import ly.mahd.app.content.AdviceKind
 import ly.mahd.app.data.Profile
+import ly.mahd.app.logic.AdviceRules
 import ly.mahd.app.logic.PregnancyMath
 import ly.mahd.app.logic.ReminderRules
 import ly.mahd.app.logic.VaccinePlanner
@@ -18,7 +20,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.concurrent.thread
 
-/** Runs once a day: vaccine reminders and "a new pregnancy week has started". */
+/** Runs once a day: vaccine reminders, "a new pregnancy week has started", and twice a week a verse or hadith. */
 class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val pending = goAsync()
@@ -68,8 +70,30 @@ class ReminderReceiver : BroadcastReceiver() {
                         Log.e(TAG, "Reminder check failed for profile ${profile.id}", e)
                     }
                 }
+                try {
+                    sendAdvice(context, res, today)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Advice notification failed", e)
+                }
                 app.prefs.lastCheckDate = today
             }
+        }
+
+        /**
+         * Twice a week, a verse or hadith for the profile she is following (the same one Home shows today).
+         * Missed days are not caught up: unlike a vaccine reminder, nothing is lost if one is skipped.
+         */
+        private fun sendAdvice(context: Context, res: Resources, today: LocalDate) {
+            val app = context.app
+            if (!app.prefs.adviceNotifications.value || !AdviceRules.isNotificationDay(today)) return
+            val key = "advice:$today"
+            if (app.prefs.wasNotified(key)) return
+            val profiles = app.repository.profilesNow()
+            val profile = profiles.firstOrNull { it.id == app.prefs.selectedProfileId.value } ?: profiles.firstOrNull() ?: return
+            val item = AdviceRules.forDay(app.content.advice.items, profile, today) ?: return
+            val title = res.getString(if (item.kind == AdviceKind.QURAN) R.string.advice_title_quran else R.string.advice_title_hadith)
+            val text = "${item.displayText}\n${item.source}"
+            if (Notifications.post(context, key, title, text, profile.id, Routes.HOME)) app.prefs.markNotified(key)
         }
 
         private fun checkProfile(context: Context, res: Resources, profile: Profile, today: LocalDate) {

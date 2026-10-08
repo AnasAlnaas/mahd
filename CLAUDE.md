@@ -53,6 +53,14 @@ Libyan vaccine schedule or Libyan dialect. Plan: MVP first, add features over ti
   permissions. Photos are NOT in Auto Backup (it stops above 25 MB) nor in the backup file; "save to gallery" copies them
   to Pictures/Atwar (storage permission only on Android ≤ 9). A restore keeps the photos of a child the backup
   describes the same way (`Profile.isSameChildAs`); delete profiles via `MahdApp.deleteProfile` (removes the files).
+- Islamic advice (owner's request, 2026-10-08): `assets/content/islamic_advice.json` holds Qur'an verses and hadith
+  from Sahih al-Bukhari / Sahih Muslim ONLY, each with its exact source (Bukhari numbers = Fath al-Bari, Muslim =
+  Abd al-Baqi). Never add weak/disputed narrations, nor texts that clash with medical safety (tahnik with a chewed date,
+  honey under one year). Items are tagged by stage (`for`, weeks/months, `sex`); `AdviceRules.forDay` rotates one per
+  day per profile. Shown as a card high on Home (danger-signs card moved to the end: owner's choice) and as a
+  notification on Tuesdays and Fridays (Settings switch, part of the reminders). Owner chose "sources only, no draft
+  note" in the UI — but the texts (and the items marked `"verify": true`) must still be checked against printed
+  sources by a qualified person before release. Ornate brackets ﴿ ﴾ are drawn in the system font (Readex lacks them).
 - Screens collect database flows with `initial = null` and draw nothing until loaded (no "everything is late"
   flash); Home reads one `Repository.childRecords()`; each profile gets a fresh screen (`key(selected.id)`).
 - Content files are covered by `ContentFilesTest`; run `gradlew testDebugUnitTest` after every content edit.

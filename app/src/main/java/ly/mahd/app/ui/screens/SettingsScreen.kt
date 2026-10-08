@@ -26,6 +26,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -66,6 +67,7 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
     val today = LocalToday.current
     val scope = rememberCoroutineScope()
     val reminders by app.prefs.remindersEnabled.collectAsState()
+    val advice by app.prefs.adviceNotifications.collectAsState()
     val canPost = rememberCanPostNotifications()
     var pendingRestore by remember { mutableStateOf<Repository.Snapshot?>(null) }
 
@@ -131,6 +133,23 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
                         }
                         Text(
                             stringResource(R.string.reminders_battery_hint),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    // Rides on the reminders' daily check, so it is off (and greyed out) while they are off.
+                    GroupRow(onClick = if (reminders) ({ app.prefs.setAdviceNotifications(!advice) }) else null) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                stringResource(R.string.advice_switch),
+                                Modifier.weight(1f),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = if (reminders) Color.Unspecified else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                            Switch(checked = reminders && advice, onCheckedChange = null, enabled = reminders)
+                        }
+                        Text(
+                            stringResource(R.string.advice_switch_hint),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

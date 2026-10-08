@@ -187,6 +187,10 @@
     <string name="greeting_evening">مساء الخير</string>
     <string name="count_of_total">%1$s من %2$s</string>
     <string name="milestones_now">الآن</string>
+    <string name="advice_title_quran">من هدي القرآن</string>
+    <string name="advice_title_hadith">من هدي النبي ﷺ</string>
+    <string name="advice_switch">آية أو حديث مرتين في الأسبوع</string>
+    <string name="advice_switch_hint">نصيحة من القرآن الكريم أو من صحيحي البخاري ومسلم، تناسب حملكِ أو عمر طفلكِ.</string>
     <string name="latest_measurement_on">آخر قياس (%1$s)</string>
     <string name="tile_vaccine_in">للتطعيمة القادمة</string>
     <string name="tile_vaccine_today_value">اليوم</string>

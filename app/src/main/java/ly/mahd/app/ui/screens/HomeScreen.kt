@@ -98,6 +98,7 @@ private fun greeting(): String =
 @Composable
 private fun PregnancyHome(app: MahdApp, profile: Profile, nav: Navigator) {
     val askForReminders = shouldAskForReminders(app)
+    val advice = rememberTodaysAdvice(app, profile)
     val today = LocalToday.current
     val res = LocalContext.current.resources
     val due = profile.dueDate ?: return
@@ -125,6 +126,7 @@ private fun PregnancyHome(app: MahdApp, profile: Profile, nav: Navigator) {
             }
         }
         if (askForReminders) item { RemindersPrompt(app, profile) }
+        advice?.let { item { AdviceCard(it) } }
         item {
             ListGroup {
                 GroupItem(
@@ -136,13 +138,14 @@ private fun PregnancyHome(app: MahdApp, profile: Profile, nav: Navigator) {
                 )
             }
         }
+        item { BabyBornCard(profile, nav) }
+        // Last on the page (the owner's choice); it stays one tap away on the pregnancy tab too.
         item {
             WarningCard(
                 title = stringResource(R.string.danger_signs_title),
                 onClick = { nav.push(Routes.DANGER_SIGNS) },
             ) { Text(stringResource(R.string.danger_signs_teaser), style = MaterialTheme.typography.bodyLarge) }
         }
-        item { BabyBornCard(profile, nav) }
     }
 }
 
@@ -185,6 +188,7 @@ private fun ChildHome(app: MahdApp, profile: Profile, nav: Navigator) {
     val plans = VaccinePlanner.plan(app.content.vaccines, birth, data.doses, today, data.skipped)
     val group = app.content.milestones.groupForAge(ChildAge.referenceMonths(birth, profile.weeksAtBirth, today))
     val askForReminders = shouldAskForReminders(app)
+    val advice = rememberTodaysAdvice(app, profile)
 
     val lines = buildList {
         add(stringResource(R.string.born_on, Format.date(birth)))
@@ -211,6 +215,7 @@ private fun ChildHome(app: MahdApp, profile: Profile, nav: Navigator) {
             )
         }
         if (askForReminders) item { RemindersPrompt(app, profile) }
+        advice?.let { item { AdviceCard(it) } }
         item {
             ListGroup {
                 NextVaccineRow(plans, nav)
@@ -218,13 +223,14 @@ private fun ChildHome(app: MahdApp, profile: Profile, nav: Navigator) {
                 GrowthRow(app, profile, birth, data.growth, nav)
             }
         }
+        item { TipBlock(group) }
+        // Last on the page (the owner's choice).
         item {
             WarningCard(
                 title = stringResource(R.string.child_danger_signs_title),
                 onClick = { nav.push(Routes.CHILD_DANGER_SIGNS) },
             ) { Text(stringResource(R.string.child_danger_signs_teaser), style = MaterialTheme.typography.bodyLarge) }
         }
-        item { TipBlock(group) }
     }
 }
 

@@ -104,6 +104,7 @@ class ContentRepository(private val opener: (String) -> InputStream) {
     val milestones: MilestoneContent by lazy { parseMilestones(readJson("content/milestones.json")) }
     val vaccines: VaccineSchedule by lazy { parseVaccines(readJson("content/vaccines_ly.json")) }
     val childDangerSigns: ChildDangerSigns by lazy { parseChildDangerSigns(readJson("content/child_danger_signs.json")) }
+    val advice: AdviceContent by lazy { parseAdvice(readJson("content/islamic_advice.json")) }
     val growth: GrowthStandards by lazy {
         GrowthStandards.parseCsv(opener("content/growth_who.csv").bufferedReader().use { it.readText() })
     }
@@ -114,6 +115,7 @@ class ContentRepository(private val opener: (String) -> InputStream) {
         milestones
         vaccines
         childDangerSigns
+        advice
         growth
     }
 
@@ -167,6 +169,25 @@ class ContentRepository(private val opener: (String) -> InputStream) {
         },
     )
 
+    private fun parseAdvice(o: JSONObject) = AdviceContent(
+        reviewed = o.optBoolean("reviewed", false),
+        items = o.getJSONArray("items").objects().map { a ->
+            AdviceItem(
+                id = a.getString("id"),
+                kind = AdviceKind.valueOf(a.getString("kind").uppercase()),
+                audience = AdviceAudience.valueOf(a.getString("for").uppercase()),
+                text = a.getString("text"),
+                source = a.getString("source"),
+                advice = a.getString("advice"),
+                minWeeks = a.optIntOrNull("minWeeks"),
+                maxWeeks = a.optIntOrNull("maxWeeks"),
+                minMonths = a.optIntOrNull("minMonths"),
+                maxMonths = a.optIntOrNull("maxMonths"),
+                sex = if (a.has("sex") && !a.isNull("sex")) a.getString("sex") else null,
+            )
+        },
+    )
+
     private fun parseVaccines(o: JSONObject) = VaccineSchedule(
         reviewed = o.optBoolean("reviewed", false),
         source = o.optString("source"),
@@ -195,3 +216,36 @@ private fun JSONArray.strings(): List<String> = (0 until length()).map { getStri
 
 private fun JSONObject.optNumber(key: String): Double? =
     if (has(key) && !isNull(key)) getDouble(key) else null
+
+// ---------- Islamic advice (Qur'an and authentic hadith) ----------
+
+enum class AdviceKind { QURAN, HADITH }
+
+/** Who an advice item is for (see "for" in islamic_advice.json). */
+enum class AdviceAudience { PREGNANCY, CHILD, ALL }
+
+data class AdviceItem(
+    val id: String,
+    val kind: AdviceKind,
+    val audience: AdviceAudience,
+    /** The exact text: a verse (shown between ﴿ ﴾) or a hadith. */
+    val text: String,
+    /** Where it comes from: "سورة لقمان: 14", "متفق عليه: البخاري (5971) ومسلم (2548)". */
+    val source: String,
+    /** A short reflection for the mother, in simple Arabic. */
+    val advice: String,
+    val minWeeks: Int? = null,
+    val maxWeeks: Int? = null,
+    val minMonths: Int? = null,
+    val maxMonths: Int? = null,
+    /** "boy" or "girl" when the item is about sons or daughters only. */
+    val sex: String? = null,
+) {
+    /** The text as shown: a verse between the Qur'anic brackets ﴿ ﴾, a hadith as written. */
+    val displayText: String get() = if (kind == AdviceKind.QURAN) "﴿$text﴾" else text
+}
+
+data class AdviceContent(val reviewed: Boolean, val items: List<AdviceItem>)
+
+private fun JSONObject.optIntOrNull(key: String): Int? =
+    if (has(key) && !isNull(key)) getInt(key) else null
