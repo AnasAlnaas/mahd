@@ -41,7 +41,24 @@ data class Profile(
 
     /** Babies born before 37 weeks use "corrected age" for milestones and growth until age 2. */
     val isPremature get() = weeksAtBirth != null && weeksAtBirth < 37
+
+    /**
+     * True when [other] describes the same child: same id, kind, name and birth date. Backup files hold no
+     * photos, so after a restore a child keeps its photos only if the backup describes it the same way.
+     */
+    fun isSameChildAs(other: Profile): Boolean =
+        id == other.id && kind == other.kind && name == other.name && birthDate == other.birthDate
 }
+
+/** A photo of a child. The picture itself is a file in the app's private folder (see [PhotoStore]). */
+data class Photo(
+    val id: Long,
+    val profileId: Long,
+    /** The day the photo was taken (the child's age is worked out from it). */
+    val date: LocalDate,
+    /** File name inside the photo folder. */
+    val file: String,
+)
 
 data class GrowthEntry(
     val id: Long,

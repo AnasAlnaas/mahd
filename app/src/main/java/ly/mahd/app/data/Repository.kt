@@ -154,6 +154,40 @@ class Repository(private val database: MahdDatabase) {
         }
     }
 
+    // ---------- Photos ----------
+
+    /** One child's photos, oldest first. */
+    fun photos(profileId: Long): Flow<List<Photo>> = observe { queryPhotos(it, profileId) }
+
+    fun photo(id: Long): Flow<Photo?> = observe { db ->
+        db.rawQuery("SELECT * FROM photos WHERE id = ?", arrayOf(id.toString())).use { c -> c.mapRows { it.toPhoto() }.firstOrNull() }
+    }
+
+    suspend fun addPhotos(photos: List<Photo>) = write { db ->
+        photos.forEach { db.insertOrThrow("photos", null, it.toValues()) }
+    }
+
+    suspend fun setPhotoDate(id: Long, date: LocalDate) = write {
+        it.update("photos", ContentValues().apply { put("date", date.toString()) }, "id = ?", arrayOf(id.toString()))
+    }
+
+    /** Deletes the photo's row and returns its file name, so the caller can delete the file. */
+    suspend fun deletePhoto(id: Long): String? = write { db ->
+        val file = db.rawQuery("SELECT file FROM photos WHERE id = ?", arrayOf(id.toString()))
+            .use { c -> c.mapRows { it.getString(0) }.firstOrNull() }
+        db.delete("photos", "id = ?", arrayOf(id.toString()))
+        file
+    }
+
+    /** Every photo file the database still points at; any other file in the photo folder can be deleted. */
+    suspend fun photoFiles(): Set<String> = withContext(Dispatchers.IO) {
+        database.readableDatabase.rawQuery("SELECT file FROM photos", null).use { c -> c.mapRows { it.getString(0) }.toSet() }
+    }
+
+    private fun queryPhotos(db: SQLiteDatabase, profileId: Long): List<Photo> =
+        db.rawQuery("SELECT * FROM photos WHERE profile_id = ? ORDER BY date, id", arrayOf(profileId.toString()))
+            .use { c -> c.mapRows { it.toPhoto() } }
+
     // ---------- Backup ----------
 
     /** Everything the mother has entered, as a plain snapshot (used for backup files). */
@@ -180,8 +214,18 @@ class Repository(private val database: MahdDatabase) {
         )
     }
 
-    /** Replaces ALL data with the snapshot (used when restoring a backup). */
+    /**
+     * Replaces ALL data with the snapshot (used when restoring a backup). Backup files hold no photos: a child the
+     * backup describes the same way ([Profile.isSameChildAs]) keeps its photos, the others' photo rows are dropped
+     * (the caller then deletes the files nobody points at any more).
+     */
     suspend fun replaceAll(snapshot: Snapshot) = write { db ->
+        val current = queryProfiles(db).associateBy { it.id }
+        val sameChildren = snapshot.profiles.filter { p -> current[p.id]?.isSameChildAs(p) == true }.map { it.id }.toSet()
+        val keptPhotos = db.rawQuery("SELECT * FROM photos", null)
+            .use { c -> c.mapRows { it.toPhoto() } }
+            .filter { it.profileId in sameChildren }
+        db.delete("photos", null, null)
         db.delete("milestone_answers", null, null)
         db.delete("vaccine_skips", null, null)
         db.delete("vaccine_doses", null, null)
@@ -213,6 +257,7 @@ class Repository(private val database: MahdDatabase) {
                 put("dose_id", doseId)
             })
         }
+        keptPhotos.forEach { p -> db.insertOrThrow("photos", null, p.toValues().apply { put("id", p.id) }) }
     }
 
     data class Snapshot(
@@ -267,6 +312,19 @@ private fun Cursor.toGrowth() = GrowthEntry(
     lengthCm = doubleOrNull("length_cm"),
     headCm = doubleOrNull("head_cm"),
 )
+
+private fun Cursor.toPhoto() = Photo(
+    id = long("id"),
+    profileId = long("profile_id"),
+    date = date("date")!!,
+    file = string("file")!!,
+)
+
+private fun Photo.toValues() = ContentValues().apply {
+    put("profile_id", profileId)
+    put("date", date.toString())
+    put("file", file)
+}
 
 private fun Profile.toValues() = ContentValues().apply {
     put("kind", kind.code)

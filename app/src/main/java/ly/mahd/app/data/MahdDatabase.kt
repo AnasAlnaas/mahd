@@ -64,12 +64,29 @@ class MahdDatabase(context: Context) : SQLiteOpenHelper(context, NAME, null, VER
             """.trimIndent()
         )
         createVaccineSkips(db)
+        createPhotos(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         // Future migrations go here, e.g.:
-        // if (oldVersion < 3) db.execSQL("ALTER TABLE profiles ADD COLUMN photo TEXT")
+        // if (oldVersion < 4) db.execSQL("ALTER TABLE profiles ADD COLUMN note TEXT")
         if (oldVersion < 2) createVaccineSkips(db)
+        if (oldVersion < 3) createPhotos(db)
+    }
+
+    /** The children's photos; the pictures themselves are files (see PhotoStore), this table says whose and when. */
+    private fun createPhotos(db: SQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS photos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+                date TEXT NOT NULL,
+                file TEXT NOT NULL
+            )
+            """.trimIndent()
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS photos_profile ON photos(profile_id, date)")
     }
 
     /** Doses the mother marked "not applicable / skipped" (so they stop counting as late). */
@@ -87,6 +104,6 @@ class MahdDatabase(context: Context) : SQLiteOpenHelper(context, NAME, null, VER
 
     companion object {
         const val NAME = "mahd.db"
-        const val VERSION = 2
+        const val VERSION = 3
     }
 }

@@ -61,14 +61,16 @@ private fun InputStream.readAtMost(limit: Int): ByteArray? {
 
 /**
  * Replaces all data with [snapshot]. The write is one transaction, so on failure the old data is untouched.
- * On success the first profile is selected and old "reminder already sent" marks are cleared
- * (profile ids may now belong to different children). Returns true on success.
+ * On success the first profile is selected, old "reminder already sent" marks are cleared (profile ids may now
+ * belong to different children), and photos of children that are not in the backup are deleted (backups hold no
+ * photos; see Repository.replaceAll). Returns true on success.
  */
 suspend fun applyRestore(app: MahdApp, snapshot: Repository.Snapshot): Boolean {
     val ok = runCatching { app.repository.replaceAll(snapshot) }.isSuccess
     if (ok) {
         app.prefs.selectProfile(snapshot.profiles.firstOrNull()?.id)
         app.prefs.resetReminderBookkeeping()
+        runCatching { withContext(Dispatchers.IO) { app.photos.deleteAllExcept(app.repository.photoFiles()) } }
     }
     return ok
 }

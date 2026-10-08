@@ -213,7 +213,7 @@ fun PregnancyFormScreen(app: MahdApp, existing: Profile?, onClose: () -> Unit) {
             destructive = true,
             onConfirm = {
                 scope.launch {
-                    app.repository.deleteProfile(existing.id)
+                    app.deleteProfile(existing.id)
                     app.prefs.selectProfile(null)
                     onClose()
                 }
@@ -304,7 +304,7 @@ fun ChildFormScreen(app: MahdApp, existing: Profile?, onClose: () -> Unit) {
             destructive = true,
             onConfirm = {
                 scope.launch {
-                    app.repository.deleteProfile(existing.id)
+                    app.deleteProfile(existing.id)
                     app.prefs.selectProfile(null)
                     onClose()
                 }
