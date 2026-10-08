@@ -2,4 +2,8 @@
 <paths>
     <cache-path name="backups" path="backups/" />
     <cache-path name="share" path="share/" />
+    <!-- The camera app writes a new photo here; it is then copied into the album and deleted. -->
+    <cache-path name="camera" path="camera/" />
+    <!-- The children's photos, shared one at a time when the mother asks. -->
+    <files-path name="photos" path="photos/" />
 </paths>

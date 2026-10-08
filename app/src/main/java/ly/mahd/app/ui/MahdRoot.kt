@@ -43,11 +43,14 @@ import ly.mahd.app.ui.screens.AboutScreen
 import ly.mahd.app.ui.screens.BabyBornScreen
 import ly.mahd.app.ui.screens.ChildDangerSignsScreen
 import ly.mahd.app.ui.screens.ChildFormScreen
+import ly.mahd.app.ui.screens.CompareScreen
 import ly.mahd.app.ui.screens.DangerSignsScreen
 import ly.mahd.app.ui.screens.GrowthScreen
 import ly.mahd.app.ui.screens.HomeScreen
 import ly.mahd.app.ui.screens.MilestonesScreen
 import ly.mahd.app.ui.screens.OnboardingFlow
+import ly.mahd.app.ui.screens.PhotoScreen
+import ly.mahd.app.ui.screens.PhotosScreen
 import ly.mahd.app.ui.screens.PregnancyFormScreen
 import ly.mahd.app.ui.screens.PregnancyScreen
 import ly.mahd.app.ui.screens.SettingsScreen
@@ -91,7 +94,7 @@ fun MahdRoot(app: MahdApp, openRequest: OpenRequest?, onOpenHandled: () -> Unit)
 
 private fun tabsFor(profile: Profile): List<String> =
     if (profile.isPregnancy) listOf(Routes.HOME, Routes.PREGNANCY)
-    else listOf(Routes.HOME, Routes.VACCINES, Routes.GROWTH, Routes.MILESTONES)
+    else listOf(Routes.HOME, Routes.VACCINES, Routes.GROWTH, Routes.MILESTONES, Routes.PHOTOS)
 
 @Composable
 private fun MainNav(app: MahdApp, nav: Navigator, profiles: List<Profile>, selected: Profile) {
@@ -120,6 +123,11 @@ private fun MainNav(app: MahdApp, nav: Navigator, profiles: List<Profile>, selec
         "week" -> PregnancyScreen(app, selected, nav, initialWeek = arg?.toIntOrNull(), standalone = true)
         Routes.DANGER_SIGNS -> DangerSignsScreen(app, onBack = nav::back)
         Routes.CHILD_DANGER_SIGNS -> ChildDangerSignsScreen(app, selected, onBack = nav::back)
+        "photo" -> {
+            val id = arg?.toLongOrNull()
+            if (id == null) LaunchedEffect(route) { nav.back() } else PhotoScreen(app, selected, id, nav)
+        }
+        "compare" -> CompareScreen(app, selected, firstId = arg?.toLongOrNull()?.takeIf { it > 0 }, onBack = nav::back)
         Routes.SETTINGS -> SettingsScreen(app, nav, profiles)
         Routes.ABOUT -> AboutScreen(app, onBack = nav::back)
         else -> LaunchedEffect(route) { nav.selectTab(Routes.HOME) }
@@ -167,6 +175,7 @@ private fun TabsScaffold(app: MahdApp, nav: Navigator, profiles: List<Profile>, 
                         Routes.VACCINES -> VaccinesScreen(app, selected)
                         Routes.GROWTH -> GrowthScreen(app, selected)
                         Routes.MILESTONES -> MilestonesScreen(app, selected)
+                        Routes.PHOTOS -> PhotosScreen(app, selected, nav)
                     }
                 }
             }
@@ -179,6 +188,7 @@ private fun tabIcon(tab: String): Int = when (tab) {
     Routes.VACCINES -> R.drawable.ic_vaccine
     Routes.GROWTH -> R.drawable.ic_growth
     Routes.MILESTONES -> R.drawable.ic_milestones
+    Routes.PHOTOS -> R.drawable.ic_photos
     else -> R.drawable.ic_home
 }
 
@@ -187,6 +197,7 @@ private fun tabLabel(tab: String): Int = when (tab) {
     Routes.VACCINES -> R.string.tab_vaccines
     Routes.GROWTH -> R.string.tab_growth
     Routes.MILESTONES -> R.string.tab_milestones
+    Routes.PHOTOS -> R.string.tab_photos
     else -> R.string.tab_home
 }
 

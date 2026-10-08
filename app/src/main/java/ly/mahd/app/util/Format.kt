@@ -36,6 +36,18 @@ object Format {
     fun weeks(res: Resources, n: Int): String = res.getQuantityString(R.plurals.weeks, n, n.toString())
     fun days(res: Resources, n: Int): String = res.getQuantityString(R.plurals.days, n, n.toString())
     fun doses(res: Resources, n: Int): String = res.getQuantityString(R.plurals.doses, n, n.toString())
+    fun photos(res: Resources, n: Int): String = res.getQuantityString(R.plurals.photos, n, n.toString())
+
+    /** A shorter age for small labels: days in the first month, then months, then years and months ("سنة و4 أشهر"). */
+    fun shortAge(res: Resources, period: Period): String {
+        val totalMonths = period.toTotalMonths().toInt()
+        return when {
+            totalMonths == 0 -> if (period.days == 0) res.getString(R.string.age_newborn) else days(res, period.days)
+            period.years == 0 -> months(res, period.months)
+            period.months == 0 -> years(res, period.years)
+            else -> and(years(res, period.years), months(res, period.months))
+        }
+    }
 
     /** Joins two parts with the Arabic "and": "8 أشهر و5 أيام". */
     fun and(first: String, second: String): String = "$first و$second"

@@ -8,6 +8,14 @@
     -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!--
+        Only for "save photos to the gallery" on Android 9 and older; newer phones need no permission for it.
+        Taking photos uses the phone's own camera app and picking them uses Android's photo picker,
+        so the app asks for neither the camera nor the photo library.
+    -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
 
     <application
         android:name=".MahdApp"

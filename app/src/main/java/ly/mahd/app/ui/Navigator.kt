@@ -39,6 +39,7 @@ object Routes {
     const val VACCINES = "vaccines"
     const val GROWTH = "growth"
     const val MILESTONES = "milestones"
+    const val PHOTOS = "photos"
 
     // Screens opened on top
     const val ADD_PREGNANCY = "add_pregnancy"
@@ -51,8 +52,12 @@ object Routes {
     fun edit(profileId: Long) = "edit/$profileId"
     fun born(profileId: Long) = "born/$profileId"
     fun week(n: Int) = "week/$n"
+    fun photo(id: Long) = "photo/$id"
 
-    val TABS = setOf(HOME, PREGNANCY, VACCINES, GROWTH, MILESTONES)
+    /** Side-by-side photos, starting with photo [firstId] (or the oldest one). */
+    fun compare(firstId: Long?) = "compare/${firstId ?: 0}"
+
+    val TABS = setOf(HOME, PREGNANCY, VACCINES, GROWTH, MILESTONES, PHOTOS)
 }
 
 /** Asks the app to show the tab [route] for profile [profileId], e.g. when the mother taps a reminder. */

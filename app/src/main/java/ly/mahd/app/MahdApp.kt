@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import ly.mahd.app.content.ContentRepository
@@ -30,6 +31,9 @@ class MahdApp : Application() {
         private set
     lateinit var photos: PhotoStore
         private set
+
+    /** For work that must finish even if the mother leaves the screen, such as adding photos. */
+    val scope = MainScope()
 
     override fun onCreate() {
         super.onCreate()

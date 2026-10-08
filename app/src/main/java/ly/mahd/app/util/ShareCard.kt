@@ -7,6 +7,7 @@ import android.graphics.Canvas
 import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.Shader
 import android.graphics.Typeface
@@ -105,11 +106,11 @@ object ShareCard {
     }
 
     /** Saves the picture (off the main thread, so the screen does not stutter) and opens Android's share sheet. */
-    suspend fun share(context: Context, bitmap: Bitmap, chooserTitle: String) {
+    suspend fun share(context: Context, bitmap: Bitmap, chooserTitle: String, fileName: String = "atwar-achievements.png") {
         val file = withContext(Dispatchers.IO) {
             val dir = File(context.cacheDir, "share").apply { mkdirs() }
             dir.listFiles()?.forEach { it.delete() }
-            File(dir, "atwar-achievements.png").also { file ->
+            File(dir, fileName).also { file ->
                 FileOutputStream(file).use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
             }
         }
@@ -169,7 +170,7 @@ object ShareCard {
             .build()
     }
 
-    /** Draws centred text starting at [top]; returns its height. */
+    /** Draws centred text starting at [top] (in a column starting at [left]); returns its height. */
     private fun drawText(
         canvas: Canvas,
         text: String,
@@ -179,12 +180,72 @@ object ShareCard {
         width: Int,
         top: Float,
         maxLines: Int = 3,
+        left: Float = MARGIN.toFloat(),
     ): Float {
         val l = layout(text, size, color, bold, width, Layout.Alignment.ALIGN_CENTER, maxLines)
         canvas.save()
-        canvas.translate(MARGIN.toFloat(), top)
+        canvas.translate(left, top)
         l.draw(canvas)
         canvas.restore()
         return l.height.toFloat()
+    }
+
+    /** Two photos of a child side by side, each with its age (and date, weight) underneath. */
+    class Comparison(
+        /** e.g. "سارة: من 4 أشهر إلى سنة" */
+        val title: String,
+        val older: Bitmap,
+        /** e.g. "4 أشهر\n1 أكتوبر 2025\n6.4 كغ" */
+        val olderLabel: String,
+        val newer: Bitmap,
+        val newerLabel: String,
+        val footer: String,
+    )
+
+    fun renderComparison(content: Comparison): Bitmap {
+        val bitmap = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        val background = Paint().apply {
+            shader = LinearGradient(0f, 0f, 0f, HEIGHT.toFloat(), 0xFFFFF4F5.toInt(), 0xFFFFD3DC.toInt(), Shader.TileMode.CLAMP)
+        }
+        canvas.drawRect(0f, 0f, WIDTH.toFloat(), HEIGHT.toFloat(), background)
+        drawMoons(canvas, centerY = 110f)
+
+        var y = 190f
+        y += drawText(canvas, content.title, size = 56f, color = INK, bold = true, width = WIDTH - MARGIN * 2, top = y, maxLines = 2) + 40f
+
+        // Arabic reads from the right, so the older photo is on the right and the newer one on the left.
+        val gap = 36f
+        val panelWidth = (WIDTH - MARGIN * 2 - gap) / 2f
+        val panelHeight = panelWidth * 4f / 3f
+        val rightLeft = WIDTH - MARGIN - panelWidth
+        drawPhoto(canvas, content.older, RectF(rightLeft, y, rightLeft + panelWidth, y + panelHeight))
+        drawPhoto(canvas, content.newer, RectF(MARGIN.toFloat(), y, MARGIN + panelWidth, y + panelHeight))
+
+        val labelTop = y + panelHeight + 24f
+        drawText(canvas, content.olderLabel, 36f, BRAND, bold = true, width = panelWidth.toInt(), top = labelTop, maxLines = 3, left = rightLeft)
+        drawText(canvas, content.newerLabel, 36f, BRAND, bold = true, width = panelWidth.toInt(), top = labelTop, maxLines = 3)
+
+        drawText(canvas, content.footer, size = 32f, color = SOFT_INK, bold = false, width = WIDTH - MARGIN * 2, top = HEIGHT - 110f)
+        return bitmap
+    }
+
+    /** Draws [photo] filling [dst] with rounded corners, cropped from the middle like the album does. */
+    private fun drawPhoto(canvas: Canvas, photo: Bitmap, dst: RectF) {
+        val dstRatio = dst.width() / dst.height()
+        val srcRatio = photo.width.toFloat() / photo.height
+        val src = if (srcRatio > dstRatio) {
+            val w = (photo.height * dstRatio).toInt()
+            val x = (photo.width - w) / 2
+            Rect(x, 0, x + w, photo.height)
+        } else {
+            val h = (photo.width / dstRatio).toInt()
+            val top = (photo.height - h) / 2
+            Rect(0, top, photo.width, top + h)
+        }
+        canvas.save()
+        canvas.clipPath(Path().apply { addRoundRect(dst, 36f, 36f, Path.Direction.CW) })
+        canvas.drawBitmap(photo, src, dst, Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG))
+        canvas.restore()
     }
 }

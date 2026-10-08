@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Android 12+: back up the database and settings to the mother's own Google account. -->
+<!--
+    Android 12+: back up the database and settings to the mother's own Google account.
+    The children's photos (files/photos) are left out on purpose: Google's backup stops working
+    altogether once an app has more than 25 MB. The app offers "save photos to the gallery" instead.
+-->
 <data-extraction-rules>
     <cloud-backup>
         <include domain="database" path="." />

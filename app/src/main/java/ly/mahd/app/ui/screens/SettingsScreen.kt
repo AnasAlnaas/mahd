@@ -145,6 +145,11 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
                 AppCard {
                     Text(stringResource(R.string.backup_explain), style = MaterialTheme.typography.bodyMedium)
                     Text(
+                        stringResource(R.string.backup_photos_note),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
                         stringResource(R.string.backup_privacy),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,

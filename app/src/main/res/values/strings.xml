@@ -58,6 +58,14 @@
         <item quantity="many">%1$s جرعة</item>
         <item quantity="other">%1$s جرعة</item>
     </plurals>
+    <plurals name="photos">
+        <item quantity="zero">%1$s صورة</item>
+        <item quantity="one">صورة واحدة</item>
+        <item quantity="two">صورتان</item>
+        <item quantity="few">%1$s صور</item>
+        <item quantity="many">%1$s صورة</item>
+        <item quantity="other">%1$s صورة</item>
+    </plurals>
     <string name="age_newborn">مولود اليوم</string>
 
     <!-- Tabs and top bar -->
@@ -66,6 +74,7 @@
     <string name="tab_vaccines">التطعيمات</string>
     <string name="tab_growth">النمو</string>
     <string name="tab_milestones">المهارات</string>
+    <string name="tab_photos">الصور</string>
     <string name="settings_title">الإعدادات</string>
     <string name="switch_profile">تغيير الطفل أو الحمل</string>
     <string name="add_pregnancy">إضافة حمل</string>
@@ -293,6 +302,34 @@
     <string name="share_card_tagline">رحلة النمو من الحمل حتى عمر 4 سنوات</string>
     <string name="share_card_footer">تابعي أطوار طفلك مع تطبيق أطوار</string>
     <string name="share_failed">تعذّرت المشاركة، حاولي مرة أخرى</string>
+
+    <!-- Photos -->
+    <string name="photos_take">📷 التقاط صورة</string>
+    <string name="photos_pick">🖼️ من المعرض</string>
+    <string name="photos_compare">مقارنة صورتين</string>
+    <string name="photos_empty">التقطي صورة لـ%1$s كل شهر تقريبًا، ثم قارني بين صورتين لتري الفرق مع مرور الوقت.</string>
+    <string name="photos_adding">جارٍ إضافة الصور…</string>
+    <string name="photos_add_failed">تعذّرت إضافة بعض الصور</string>
+    <string name="photos_no_camera">لا يوجد تطبيق كاميرا على هذا الهاتف</string>
+    <string name="photos_private_note">🔒 الصور محفوظة داخل التطبيق فقط ولا تظهر في معرض الهاتف. وهي لا تدخل في النسخة الاحتياطية، فاحفظي نسخة منها في المعرض من وقت لآخر.</string>
+    <string name="photos_export">حفظ الصور في معرض الهاتف</string>
+    <string name="photos_exported">تم حفظ %1$s في معرض الهاتف (ألبوم Atwar)</string>
+    <string name="photos_export_failed">تعذّر حفظ الصور في المعرض</string>
+    <string name="photo_birth_day">يوم الولادة</string>
+    <string name="photo_date">📅 %1$s</string>
+    <string name="photo_weight">⚖️ الوزن في تلك الأيام: %1$s كغ</string>
+    <string name="photo_change_date">تغيير التاريخ</string>
+    <string name="photo_compare_with">مقارنة بصورة أخرى</string>
+    <string name="photo_share">مشاركة</string>
+    <string name="photo_share_chooser">مشاركة الصورة</string>
+    <string name="photo_delete_title">حذف الصورة؟</string>
+    <string name="photo_delete_text">ستُحذف الصورة من التطبيق. إذا لم تحفظيها في معرض الهاتف فلن تستطيعي استرجاعها.</string>
+    <string name="compare_title">مقارنة الصور</string>
+    <string name="compare_need_two">أضيفي صورتين على الأقل لتقارني بينهما.</string>
+    <string name="compare_first">الصورة الأولى</string>
+    <string name="compare_second">الصورة الثانية</string>
+    <string name="compare_share">📤 مشاركة المقارنة</string>
+    <string name="compare_card_title">%1$s: من %2$s إلى %3$s</string>
     <string name="answer_yes">نعم</string>
     <string name="answer_not_yet">ليس بعد</string>
     <string name="answer_not_sure">غير متأكدة</string>
@@ -314,12 +351,13 @@
     <string name="backup_save">حفظ نسخة في ملف</string>
     <string name="backup_share">إرسال النسخة (واتساب، درايف…)</string>
     <string name="backup_restore">استعادة من نسخة</string>
+    <string name="backup_photos_note">📷 الصور لا تدخل في النسخة الاحتياطية؛ احفظيها في معرض الهاتف من صفحة «الصور».</string>
     <string name="backup_privacy">🔒 ملف النسخة فيه معلومات حملك وأطفالك (الأسماء والتواريخ والتطعيمات والقياسات)، ويستطيع أي شخص يصله الملف أن يقرأه. أرسليه لنفسك فقط.</string>
     <string name="backup_saved">تم حفظ النسخة الاحتياطية</string>
     <string name="backup_failed">تعذّر حفظ النسخة، حاولي مرة أخرى</string>
     <string name="restore_invalid">هذا الملف ليس نسخة احتياطية من تطبيق أطوار</string>
     <string name="restore_confirm_title">استعادة النسخة؟</string>
-    <string name="restore_confirm_text">ستُستبدل كل البيانات الحالية في التطبيق بالبيانات الموجودة في النسخة (عدد الأطفال والحمل المسجّلين فيها: %1$s). لا يمكن التراجع عن ذلك.</string>
+    <string name="restore_confirm_text">ستُستبدل كل البيانات الحالية في التطبيق بالبيانات الموجودة في النسخة (عدد الأطفال والحمل المسجّلين فيها: %1$s). الصور لا تدخل في النسخة: تبقى صور الطفل الموجود فيها بنفس الاسم وتاريخ الميلاد، وتُحذف الصور الأخرى. لا يمكن التراجع عن ذلك.</string>
     <string name="restore_failed">تعذّرت استعادة النسخة. لم يتغيّر شيء في بياناتك الحالية.</string>
     <string name="restore_confirm_button">استعادة</string>
     <string name="restore_done">تمت استعادة النسخة</string>
@@ -329,7 +367,7 @@
     <string name="about_mission">أطوار تطبيق عربي يرافق الأم الليبية والعربية من الحمل حتى عمر 4 سنوات: الحمل أسبوعًا بأسبوع، والتطعيمات، والنمو، والمهارات، بلغة بسيطة وبدون إنترنت.</string>
     <string name="about_name_meaning">اسم «أطوار» مأخوذ من قوله تعالى: ﴿وَقَدْ خَلَقَكُمْ أَطْوَارًا﴾ [نوح: 14]، أي مراحل متعاقبة، وهي مراحل الحمل والطفولة التي يرافقك فيها التطبيق.</string>
     <string name="privacy_title">خصوصيتك</string>
-    <string name="privacy_text">لا يطلب التطبيق إذن الاتصال بالإنترنت، ولا يرسل بياناتك لأي جهة. كل ما تسجلينه يبقى على هاتفك، وفي النسخة الاحتياطية التي تحفظينها أنتِ. وإذا كان النسخ الاحتياطي مفعّلًا في أندرويد على هاتفك، فقد يحفظ النظام نسخة في حسابك الخاص على جوجل لتستعيديها على هاتف جديد؛ هذا من أندرويد وليس من التطبيق، ويمكنك إيقافه من إعدادات الهاتف. لا إعلانات ولا تتبّع.</string>
+    <string name="privacy_text">لا يطلب التطبيق إذن الاتصال بالإنترنت، ولا يرسل بياناتك لأي جهة. كل ما تسجلينه يبقى على هاتفك، وفي النسخة الاحتياطية التي تحفظينها أنتِ. وإذا كان النسخ الاحتياطي مفعّلًا في أندرويد على هاتفك، فقد يحفظ النظام نسخة في حسابك الخاص على جوجل لتستعيديها على هاتف جديد؛ هذا من أندرويد وليس من التطبيق، ويمكنك إيقافه من إعدادات الهاتف. صور أطفالك تبقى داخل التطبيق، ولا تخرج منه إلا إذا حفظتِها في المعرض أو أرسلتِها أنتِ. لا إعلانات ولا تتبّع.</string>
     <string name="sources_title">مصادر المعلومات</string>
     <string name="sources_text">• منحنيات النمو: معايير نمو الطفل من منظمة الصحة العالمية (WHO).\n• المهارات: قوائم CDC «تعرّفوا على العلامات، تصرّفوا مبكرًا» (2022)، مبسّطة.\n• التطعيمات: البرنامج الوطني للتطعيم، المركز الوطني لمكافحة الأمراض – ليبيا.\n• محتوى الحمل: كُتب للتطبيق وسيراجعه طبيب نساء وتوليد.\n• علامات الخطر عند الطفل: دليل منظمة الصحة العالمية للرعاية المتكاملة لأمراض الطفولة (IMCI)، مبسّطة، وسيراجعها طبيب أطفال.</string>
     <string name="review_title">المراجعة الطبية</string>
