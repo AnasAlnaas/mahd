@@ -14,10 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -43,6 +41,10 @@ import ly.mahd.app.data.ProfileKind
 import ly.mahd.app.data.Sex
 import ly.mahd.app.logic.PregnancyMath
 import ly.mahd.app.ui.components.AppCard
+import ly.mahd.app.ui.components.AppFilterChip
+import ly.mahd.app.ui.components.ConnectedChoice
+import ly.mahd.app.ui.components.ExpressiveButton
+import ly.mahd.app.ui.components.MoonPhase
 import ly.mahd.app.ui.components.ConfirmDialog
 import ly.mahd.app.ui.components.DateField
 import ly.mahd.app.ui.components.LocalToday
@@ -112,18 +114,11 @@ fun PregnancyFormScreen(app: MahdApp, existing: Profile?, onClose: () -> Unit) {
             )
 
             Text(stringResource(R.string.pregnancy_date_question), style = MaterialTheme.typography.titleMedium)
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(
-                    selected = useLastPeriod,
-                    onClick = { useLastPeriod = true },
-                    label = { Text(stringResource(R.string.pregnancy_by_last_period)) },
-                )
-                FilterChip(
-                    selected = !useLastPeriod,
-                    onClick = { useLastPeriod = false },
-                    label = { Text(stringResource(R.string.pregnancy_by_due_date)) },
-                )
-            }
+            ConnectedChoice(
+                options = listOf(stringResource(R.string.pregnancy_by_last_period), stringResource(R.string.pregnancy_by_due_date)),
+                selected = if (useLastPeriod) 0 else 1,
+                onSelect = { useLastPeriod = it == 0 },
+            )
 
             // The calendars also reach back to the saved date when it is older than the usual limit.
             val savedDue = existing?.dueDate
@@ -146,7 +141,7 @@ fun PregnancyFormScreen(app: MahdApp, existing: Profile?, onClose: () -> Unit) {
             }
 
             if (computedDue != null) {
-                AppCard(containerColor = MaterialTheme.colorScheme.secondaryContainer) {
+                AppCard(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                     if (plausible) {
                         val ga = PregnancyMath.gestationalAge(computedDue, today)
                         Text(
@@ -178,9 +173,9 @@ fun PregnancyFormScreen(app: MahdApp, existing: Profile?, onClose: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            Button(
+            ExpressiveButton(
                 onClick = {
-                    val due = computedDue ?: return@Button
+                    val due = computedDue ?: return@ExpressiveButton
                     scope.launch {
                         if (existing == null) {
                             val id = app.repository.addProfile(
@@ -265,10 +260,10 @@ fun ChildFormScreen(app: MahdApp, existing: Profile?, onClose: () -> Unit) {
                 weeks = weeksAtBirth, onWeeks = { weeksAtBirth = it },
             )
 
-            Button(
+            ExpressiveButton(
                 onClick = {
-                    val b = birth ?: return@Button
-                    val s = Sex.fromCode(sex) ?: return@Button
+                    val b = birth ?: return@ExpressiveButton
+                    val s = Sex.fromCode(sex) ?: return@ExpressiveButton
                     val weeks = if (premature) weeksAtBirth else existing?.weeksAtBirth?.takeIf { it >= 37 }
                     scope.launch {
                         if (existing == null) {
@@ -325,10 +320,12 @@ private fun ChildBasicsFields(name: String, onName: (String) -> Unit, sex: Strin
         modifier = Modifier.fillMaxWidth(),
     )
     Text(stringResource(R.string.sex_label), style = MaterialTheme.typography.titleMedium)
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        FilterChip(selected = sex == Sex.BOY.code, onClick = { onSex(Sex.BOY.code) }, label = { Text(stringResource(R.string.sex_boy)) })
-        FilterChip(selected = sex == Sex.GIRL.code, onClick = { onSex(Sex.GIRL.code) }, label = { Text(stringResource(R.string.sex_girl)) })
-    }
+    val sexes = listOf(Sex.BOY.code, Sex.GIRL.code)
+    ConnectedChoice(
+        options = listOf(stringResource(R.string.sex_boy), stringResource(R.string.sex_girl)),
+        selected = sexes.indexOf(sex).takeIf { it >= 0 },
+        onSelect = { onSex(sexes[it]) },
+    )
     Text(
         stringResource(R.string.sex_why),
         style = MaterialTheme.typography.bodyMedium,
@@ -351,7 +348,7 @@ private fun PrematureFields(premature: Boolean, onPremature: (Boolean) -> Unit, 
             Text(stringResource(R.string.premature_weeks_label), style = MaterialTheme.typography.labelLarge)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 PRETERM_WEEKS.forEach { w ->
-                    FilterChip(selected = weeks == w, onClick = { onWeeks(w) }, label = { Text(w.toString()) })
+                    AppFilterChip(selected = weeks == w, onClick = { onWeeks(w) }, label = w.toString())
                 }
             }
         }
@@ -377,8 +374,9 @@ fun BabyBornScreen(app: MahdApp, pregnancy: Profile, onDone: () -> Unit, onClose
     SubScreen(title = stringResource(R.string.baby_born_title), onBack = onClose) { padding ->
         FormColumn(padding) {
             AppCard(containerColor = MaterialTheme.colorScheme.primaryContainer) {
-                Text("🎉", style = MaterialTheme.typography.displaySmall)
-                Text(stringResource(R.string.baby_born_congrats), style = MaterialTheme.typography.titleLarge)
+                MoonPhase(1f, size = 40.dp)
+
+                Text(stringResource(R.string.baby_born_congrats), style = MaterialTheme.typography.headlineMedium)
                 Text(stringResource(R.string.baby_born_text), style = MaterialTheme.typography.bodyLarge)
             }
             ChildBasicsFields(name = name, onName = { name = it }, sex = sex, onSex = { sex = it })
@@ -390,7 +388,7 @@ fun BabyBornScreen(app: MahdApp, pregnancy: Profile, onDone: () -> Unit, onClose
                 onDate = { birth = it },
             )
             if (weeksAtBirth != null) {
-                AppCard(containerColor = MaterialTheme.colorScheme.secondaryContainer) {
+                AppCard(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                     Text(
                         stringResource(R.string.baby_born_weeks, weeksAtBirth.toString()),
                         style = MaterialTheme.typography.bodyLarge,
@@ -400,10 +398,10 @@ fun BabyBornScreen(app: MahdApp, pregnancy: Profile, onDone: () -> Unit, onClose
                     }
                 }
             }
-            Button(
+            ExpressiveButton(
                 onClick = {
-                    val b = birth ?: return@Button
-                    val s = Sex.fromCode(sex) ?: return@Button
+                    val b = birth ?: return@ExpressiveButton
+                    val s = Sex.fromCode(sex) ?: return@ExpressiveButton
                     scope.launch {
                         app.repository.updateProfile(
                             pregnancy.copy(
@@ -420,7 +418,7 @@ fun BabyBornScreen(app: MahdApp, pregnancy: Profile, onDone: () -> Unit, onClose
                 enabled = valid,
                 modifier = Modifier.fillMaxWidth().height(56.dp),
             ) { Text(stringResource(R.string.action_save)) }
-            OutlinedButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) {
+            TextButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.action_cancel))
             }
         }

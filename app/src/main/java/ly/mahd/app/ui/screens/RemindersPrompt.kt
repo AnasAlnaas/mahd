@@ -6,7 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.material3.Button
+import androidx.compose.ui.Alignment
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -20,7 +20,8 @@ import ly.mahd.app.MahdApp
 import ly.mahd.app.R
 import ly.mahd.app.data.Profile
 import ly.mahd.app.reminders.Notifications
-import ly.mahd.app.ui.components.AppCard
+import ly.mahd.app.ui.components.ExpressiveButton
+import ly.mahd.app.ui.components.FeaturedCard
 import ly.mahd.app.ui.components.rememberCanPostNotifications
 
 /** True while Home should ask the mother to turn reminders on (see [RemindersPrompt]). */
@@ -44,14 +45,14 @@ fun RemindersPrompt(app: MahdApp, profile: Profile) {
     // The card disappears by itself when the app comes back with notifications allowed (LocalResumeCount).
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
-    AppCard(containerColor = MaterialTheme.colorScheme.tertiaryContainer) {
-        Text("🔔  " + stringResource(R.string.reminders_prompt_title), style = MaterialTheme.typography.titleMedium)
+    FeaturedCard(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.onPrimaryContainer) {
+        Text(stringResource(R.string.reminders_prompt_title), style = MaterialTheme.typography.titleLarge)
         Text(
             stringResource(if (profile.isPregnancy) R.string.reminders_prompt_pregnancy else R.string.reminders_prompt_child),
             style = MaterialTheme.typography.bodyLarge,
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            ExpressiveButton(onClick = {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !app.prefs.notificationPermissionAsked) {
                     app.prefs.notificationPermissionAsked = true
                     launcher.launch(Manifest.permission.POST_NOTIFICATIONS)

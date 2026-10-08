@@ -5,11 +5,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -31,11 +30,11 @@ import ly.mahd.app.data.Profile
 import ly.mahd.app.logic.PregnancyMath
 import ly.mahd.app.ui.Navigator
 import ly.mahd.app.ui.Routes
-import ly.mahd.app.ui.components.AppCard
 import ly.mahd.app.ui.components.AppIcon
 import ly.mahd.app.ui.components.DraftNotice
-import ly.mahd.app.ui.components.EmojiBadge
-import ly.mahd.app.ui.components.TrimesterBar
+import ly.mahd.app.ui.components.GroupRow
+import ly.mahd.app.ui.components.ListGroup
+import ly.mahd.app.ui.components.TrimesterMoons
 import ly.mahd.app.ui.components.LocalToday
 import ly.mahd.app.ui.components.SubScreen
 import ly.mahd.app.ui.components.WarningCard
@@ -69,7 +68,7 @@ fun PregnancyScreen(app: MahdApp, profile: Profile, nav: Navigator, initialWeek:
                     onToday = { week = currentWeek },
                 )
             }
-            item { TrimesterBar(weeks = week.toFloat()) }
+            item { TrimesterMoons(weeks = week.toFloat()) }
             if (!content.reviewed) item { DraftNotice() }
             item { Crossfade(targetState = week, label = "week") { wk -> WeekDetail(content.week(wk)) } }
             item {
@@ -98,7 +97,7 @@ private fun WeekSwitcher(week: Int, lastWeek: Int, isCurrent: Boolean, onWeek: (
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     stringResource(R.string.pregnancy_week_number, week.toString()),
-                    style = MaterialTheme.typography.headlineSmall,
+                    style = MaterialTheme.typography.displaySmall,
                     color = MaterialTheme.colorScheme.primary,
                 )
                 Text(
@@ -114,7 +113,7 @@ private fun WeekSwitcher(week: Int, lastWeek: Int, isCurrent: Boolean, onWeek: (
             Text(
                 stringResource(R.string.this_is_your_week),
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.secondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         } else {
             TextButton(onClick = onToday) { Text(stringResource(R.string.back_to_current_week)) }
@@ -124,37 +123,35 @@ private fun WeekSwitcher(week: Int, lastWeek: Int, isCurrent: Boolean, onWeek: (
 
 @Composable
 private fun WeekDetail(w: PregnancyWeek) {
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        AppCard(containerColor = MaterialTheme.colorScheme.primaryContainer) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                EmojiBadge(w.emoji, 80.dp)
-                Spacer(Modifier.width(16.dp))
-                Column {
-                    Text(stringResource(R.string.baby_size_now, w.size), style = MaterialTheme.typography.titleLarge)
-                    val parts = buildList {
-                        w.lengthCm?.let { add(stringResource(R.string.approx_length, Format.decimal(it))) }
-                        w.weightG?.let { g ->
-                            add(
-                                if (g >= 1000) stringResource(R.string.approx_weight_kg, Format.decimal(g / 1000.0, 1))
-                                else stringResource(R.string.approx_weight_g, Format.decimal(g, 0)),
-                            )
-                        }
-                    }
-                    if (parts.isNotEmpty()) Text(parts.joinToString("  ·  "), style = MaterialTheme.typography.bodyMedium)
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(Modifier.padding(horizontal = 8.dp)) {
+            // The fruit is content (what the size is compared to), so it stays, inline with the words.
+            Text("${stringResource(R.string.baby_size_now, w.size)} ${w.emoji}", style = MaterialTheme.typography.headlineSmall)
+            val parts = buildList {
+                w.lengthCm?.let { add(stringResource(R.string.approx_length, Format.decimal(it))) }
+                w.weightG?.let { g ->
+                    add(
+                        if (g >= 1000) stringResource(R.string.approx_weight_kg, Format.decimal(g / 1000.0, 1))
+                        else stringResource(R.string.approx_weight_g, Format.decimal(g, 0)),
+                    )
                 }
             }
+            if (parts.isNotEmpty()) {
+                Text(parts.joinToString("  ·  "), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
-        AppCard {
-            Text("👶  " + stringResource(R.string.section_baby), style = MaterialTheme.typography.titleMedium)
-            Text(w.baby, style = MaterialTheme.typography.bodyLarge)
+        ListGroup {
+            WeekSection(stringResource(R.string.section_baby), w.baby, MaterialTheme.colorScheme.primary)
+            WeekSection(stringResource(R.string.section_mother), w.mother, MaterialTheme.colorScheme.primary)
+            WeekSection(stringResource(R.string.section_tip), w.tip, MaterialTheme.colorScheme.primary)
         }
-        AppCard {
-            Text("🤰  " + stringResource(R.string.section_mother), style = MaterialTheme.typography.titleMedium)
-            Text(w.mother, style = MaterialTheme.typography.bodyLarge)
-        }
-        AppCard(containerColor = MaterialTheme.colorScheme.secondaryContainer) {
-            Text("💡  " + stringResource(R.string.section_tip), style = MaterialTheme.typography.titleMedium)
-            Text(w.tip, style = MaterialTheme.typography.bodyLarge)
-        }
+    }
+}
+
+@Composable
+private fun WeekSection(title: String, text: String, titleColor: Color) {
+    GroupRow(spacing = 4.dp) {
+        Text(title, style = MaterialTheme.typography.labelLarge, color = titleColor)
+        Text(text, style = MaterialTheme.typography.bodyLarge)
     }
 }

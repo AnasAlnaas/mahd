@@ -80,11 +80,24 @@ content updates, web version, clinic directory.
 `gradlew assembleDebug` and `gradlew testDebugUnitTest`. Needs JDK 17+ (Android Studio's bundled
 JBR works). Keep the project outside OneDrive.
 
-## Visual language (added with the visual polish)
-- Area colours: vaccines = rose (`primary`), growth = teal (`secondary`), milestones = gold (`tertiary`);
-  `AppCard(accent = Area.X.accent())` draws a thin bar on the start edge. Milestone domains use `domainAccent(id)`.
-- Reusable pieces: `ProgressRing` (vaccines + milestone domains), `TrimesterBar` (pregnancy), `EmojiBadge`.
-- Vaccines screen is a timeline: finished visits and all future visits except the next one fold into one line.
+## Visual language ("Moon phases", Material 3 Expressive — read `DIRECTION.md` before any UI work)
+- `DIRECTION.md` holds the palette, type, shapes, motion and the **banned list** (no emoji in UI chrome, no coloured
+  card-edge bars, no stat-tile rows, no progress rings, no letter-spacing). Owner chose this direction (2026-10-08).
+- Font: Readex Pro, one variable file `res/font/readex_pro.ttf` (OFL; licence in `assets/licenses/`). If it ever
+  misbehaves, the owner's fallback is IBM Plex Sans Arabic.
+- Signature: `MoonPhase` (components/Moon.kt) for every progress (vaccines, milestone areas, pregnancy, empty states);
+  `TrimesterMoons` for the pregnancy (the launcher icon's three moons).
+- Containers: `ListGroup` + `GroupRow`/`GroupItem` (Android 16 grouped list: 24dp outer, 6dp inner corners, 2dp gaps);
+  `AppCard` for a single block; `FeaturedCard`/`WarningCard` for the few things that must stand out.
+- Controls: `ExpressiveButton` (pill that squashes when pressed), `ConnectedChoice` (connected button group),
+  `AppFilterChip`. Bottom bar = `ShortNavigationBar`; sub-screens use a collapsing `MediumTopAppBar`.
+- Area colours: vaccines = rose (`primary`), growth = teal (`secondary`), milestones = gold (`tertiary`): used for moons
+  and little else. Milestone domains use `domainAccent(id)`. Extra surface roles live in `LocalSurfaces`.
+- material3 1.4 keeps `MaterialExpressiveTheme`/`MotionScheme` internal, so the expressive springs are copied in
+  `AppMotion` (Theme.kt). Swap to the official API when material3 1.5 is stable (not before: no beta libraries).
+- Tab icons are hand-drawn line icons (1.8 stroke, round caps): home = crescent, vaccines = syringe, growth = chart,
+  milestones = building blocks, photos = frame, pregnancy = heart.
+- Vaccines screen is a timeline: finished visits and all future visits except the next one fold into one quiet line.
 - Growth chart labels its curves (+3 … −3, with a left-to-right mark so the sign stays in front in Arabic),
   tags the latest value, can zoom to the recent months, and shows a trend line (`GrowthMath.trend`).
 - Milestone "share" draws a PNG with Android Canvas (`util/ShareCard.kt`); text goes through `StaticLayout` for correct Arabic.

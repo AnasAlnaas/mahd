@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,7 +16,8 @@ import ly.mahd.app.R
 import ly.mahd.app.content.DangerSignSection
 import ly.mahd.app.data.Profile
 import ly.mahd.app.logic.ChildAge
-import ly.mahd.app.ui.components.AppCard
+import ly.mahd.app.ui.components.GroupRow
+import ly.mahd.app.ui.components.ListGroup
 import ly.mahd.app.ui.components.BulletList
 import ly.mahd.app.ui.components.DraftNotice
 import ly.mahd.app.ui.components.LocalToday
@@ -67,18 +67,22 @@ private fun DangerSignsList(
     SubScreen(title = title, onBack = onBack) { padding ->
         LazyColumn(
             Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item {
                 WarningCard(title = stringResource(R.string.danger_signs_intro_title)) {
                     Text(intro, style = MaterialTheme.typography.bodyLarge)
                 }
             }
-            items(sections) { section ->
-                AppCard {
-                    section.title?.let { Text(it, style = MaterialTheme.typography.titleMedium) }
-                    BulletList(section.signs)
+            item {
+                ListGroup {
+                    sections.forEach { section ->
+                        GroupRow {
+                            section.title?.let { Text(it, style = MaterialTheme.typography.titleMedium) }
+                            BulletList(section.signs, bullet = MaterialTheme.colorScheme.error)
+                        }
+                    }
                 }
             }
             item {

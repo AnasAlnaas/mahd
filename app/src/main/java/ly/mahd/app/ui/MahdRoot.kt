@@ -10,17 +10,21 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.ShortNavigationBar
+import androidx.compose.material3.ShortNavigationBarItem
+import androidx.compose.material3.ShortNavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -34,11 +38,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ly.mahd.app.MahdApp
 import ly.mahd.app.R
 import ly.mahd.app.data.Profile
 import ly.mahd.app.ui.components.AppIcon
+import ly.mahd.app.ui.theme.AppMotion
+import ly.mahd.app.ui.components.LocalToday
+import ly.mahd.app.ui.components.MoonPhase
+import ly.mahd.app.logic.PregnancyMath
 import ly.mahd.app.ui.screens.AboutScreen
 import ly.mahd.app.ui.screens.BabyBornScreen
 import ly.mahd.app.ui.screens.ChildDangerSignsScreen
@@ -141,6 +150,7 @@ private fun TabsScaffold(app: MahdApp, nav: Navigator, profiles: List<Profile>, 
     if (tab != route) LaunchedEffect(route, selected.id) { nav.selectTab(Routes.HOME) }
 
     Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             TopAppBar(
                 title = { ProfileSwitcher(app, nav, profiles, selected) },
@@ -149,23 +159,30 @@ private fun TabsScaffold(app: MahdApp, nav: Navigator, profiles: List<Profile>, 
                         AppIcon(R.drawable.ic_settings, stringResource(R.string.settings_title))
                     }
                 },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background),
             )
         },
         bottomBar = {
-            NavigationBar {
+            // Material 3 Expressive's short navigation bar: a slimmer bar with a pill behind the current tab.
+            ShortNavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                 tabs.forEach { t ->
-                    NavigationBarItem(
+                    ShortNavigationBarItem(
                         selected = t == tab,
                         onClick = { nav.selectTab(t) },
                         icon = { AppIcon(tabIcon(t), null) },
                         label = { Text(stringResource(tabLabel(t)), maxLines = 1) },
+                        colors = ShortNavigationBarItemDefaults.colors(
+                            selectedIndicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedIconColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                        ),
                     )
                 }
             }
         },
     ) { padding ->
         // A soft fade when switching tabs.
-        Crossfade(targetState = tab, label = "tab") { current ->
+        Crossfade(targetState = tab, animationSpec = AppMotion.defaultEffects(), label = "tab") { current ->
             Box(Modifier.padding(padding).fillMaxSize()) {
                 // A fresh screen for each profile, so nothing of the previous child shows while the new data loads.
                 key(selected.id) {
@@ -201,7 +218,34 @@ private fun tabLabel(tab: String): Int = when (tab) {
     else -> R.string.tab_home
 }
 
-fun profileEmoji(profile: Profile): String = if (profile.isPregnancy) "🤰" else "👶"
+/**
+ * A profile's picture: for a pregnancy, a moon lit as far as the pregnancy has come (week / 40);
+ * for a child, the first letter of the name on a soft disc.
+ */
+@Composable
+fun ProfileAvatar(profile: Profile, size: Dp = 36.dp) {
+    if (profile.isPregnancy) {
+        val today = LocalToday.current
+        val weeks = profile.dueDate?.let { PregnancyMath.gestationalAge(it, today).weeks } ?: 0
+        Box(
+            Modifier.size(size).background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            MoonPhase(weeks / 40f, size = size * 0.62f, animate = false)
+        }
+    } else {
+        Box(
+            Modifier.size(size).background(MaterialTheme.colorScheme.primaryContainer, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                profileName(profile).trim().take(1),
+                style = if (size >= 44.dp) MaterialTheme.typography.titleLarge else MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+            )
+        }
+    }
+}
 
 @Composable
 fun profileName(profile: Profile): String =
@@ -219,15 +263,16 @@ private fun ProfileSwitcher(app: MahdApp, nav: Navigator, profiles: List<Profile
                 .padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(profileEmoji(selected), style = MaterialTheme.typography.titleLarge)
-            Spacer(Modifier.width(8.dp))
+            ProfileAvatar(selected)
+            Spacer(Modifier.width(10.dp))
             Text(profileName(selected), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleLarge)
             AppIcon(R.drawable.ic_expand, stringResource(R.string.switch_profile))
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             profiles.forEach { p ->
                 DropdownMenuItem(
-                    text = { Text("${profileEmoji(p)}  ${profileName(p)}") },
+                    text = { Text(profileName(p)) },
+                    leadingIcon = { ProfileAvatar(p, size = 28.dp) },
                     trailingIcon = if (p.id == selected.id) ({ AppIcon(R.drawable.ic_check, null) }) else null,
                     onClick = {
                         open = false

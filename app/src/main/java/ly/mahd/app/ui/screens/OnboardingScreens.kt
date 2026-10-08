@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -32,11 +32,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
+
 import androidx.compose.ui.unit.dp
 import ly.mahd.app.MahdApp
 import ly.mahd.app.R
 import ly.mahd.app.ui.components.AppCard
+import ly.mahd.app.ui.components.AppIcon
+import ly.mahd.app.ui.components.ExpressiveButton
+import ly.mahd.app.ui.components.GroupItem
+import ly.mahd.app.ui.components.GroupRow
+import ly.mahd.app.ui.components.ListGroup
+import ly.mahd.app.ui.components.MoonPhase
 
 /**
  * First run: welcome + disclaimer, then "I'm pregnant" or "I have a child", then the form.
@@ -92,35 +98,34 @@ private fun WelcomeScreen(onContinue: () -> Unit) {
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .verticalScroll(rememberScrollState())
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(horizontal = 16.dp, vertical = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            Text("🌙", style = MaterialTheme.typography.displayLarge, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
-            Text(
-                stringResource(R.string.welcome_title),
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            Text(
-                stringResource(R.string.welcome_subtitle),
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center,
-            )
-            AppCard {
-                Feature("🤰", stringResource(R.string.welcome_feature_pregnancy))
-                Feature("💉", stringResource(R.string.welcome_feature_vaccines))
-                Feature("📈", stringResource(R.string.welcome_feature_growth))
-                Feature("⭐", stringResource(R.string.welcome_feature_milestones))
-                Feature("🔒", stringResource(R.string.welcome_feature_privacy))
+            Column(Modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                // The launcher icon's three moons, filling one after the other.
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    listOf(0.25f, 0.5f, 1f).forEach { MoonPhase(it, size = 36.dp) }
+                }
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    stringResource(R.string.welcome_title),
+                    style = MaterialTheme.typography.displaySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Text(stringResource(R.string.welcome_subtitle), style = MaterialTheme.typography.titleMedium)
             }
-            AppCard(containerColor = MaterialTheme.colorScheme.tertiaryContainer) {
+            ListGroup {
+                Feature(R.drawable.ic_pregnancy, stringResource(R.string.welcome_feature_pregnancy))
+                Feature(R.drawable.ic_vaccine, stringResource(R.string.welcome_feature_vaccines))
+                Feature(R.drawable.ic_growth, stringResource(R.string.welcome_feature_growth))
+                Feature(R.drawable.ic_milestones, stringResource(R.string.welcome_feature_milestones))
+                Feature(R.drawable.ic_lock, stringResource(R.string.welcome_feature_privacy))
+            }
+            AppCard(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                 Text(stringResource(R.string.disclaimer_title), style = MaterialTheme.typography.titleMedium)
-                Text(stringResource(R.string.disclaimer_text), style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.disclaimer_text), style = MaterialTheme.typography.bodyMedium)
             }
-            Button(onClick = onContinue, modifier = Modifier.fillMaxWidth().height(56.dp)) {
+            ExpressiveButton(onClick = onContinue, modifier = Modifier.fillMaxWidth().height(56.dp)) {
                 Text(stringResource(R.string.welcome_accept))
             }
         }
@@ -128,11 +133,13 @@ private fun WelcomeScreen(onContinue: () -> Unit) {
 }
 
 @Composable
-private fun Feature(emoji: String, text: String) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(emoji, style = MaterialTheme.typography.titleLarge)
-        Spacer(Modifier.width(12.dp))
-        Text(text, style = MaterialTheme.typography.bodyLarge)
+private fun Feature(icon: Int, text: String) {
+    GroupRow(contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            AppIcon(icon, null, tint = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.width(16.dp))
+            Text(text, style = MaterialTheme.typography.bodyLarge)
+        }
     }
 }
 
@@ -146,33 +153,31 @@ private fun ChooseStartScreen(onPregnant: () -> Unit, onChild: () -> Unit, onRes
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
                     .heightIn(min = maxHeight)
-                    .padding(24.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
+                    .padding(horizontal = 16.dp, vertical = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically),
             ) {
                 Text(
                     stringResource(R.string.choose_title),
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(horizontal = 8.dp),
                 )
-                BigChoice("🤰", stringResource(R.string.choose_pregnant), stringResource(R.string.choose_pregnant_hint), onPregnant)
-                BigChoice("👶", stringResource(R.string.choose_child), stringResource(R.string.choose_child_hint), onChild)
-                AppCard(onClick = onRestore) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("📂", style = MaterialTheme.typography.headlineSmall)
-                        Spacer(Modifier.width(16.dp))
-                        Column {
-                            Text(stringResource(R.string.choose_restore), style = MaterialTheme.typography.titleMedium)
-                            Text(stringResource(R.string.choose_restore_hint), style = MaterialTheme.typography.bodyMedium)
-                        }
-                    }
+                ListGroup {
+                    // A half moon for a pregnancy (on the way), a full one for a child who has arrived.
+                    BigChoice(0.5f, stringResource(R.string.choose_pregnant), stringResource(R.string.choose_pregnant_hint), onPregnant)
+                    BigChoice(1f, stringResource(R.string.choose_child), stringResource(R.string.choose_child_hint), onChild)
+                }
+                ListGroup {
+                    GroupItem(
+                        headline = stringResource(R.string.choose_restore),
+                        supporting = stringResource(R.string.choose_restore_hint),
+                        onClick = onRestore,
+                    )
                 }
                 Text(
                     stringResource(R.string.choose_more_later),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 8.dp),
                 )
             }
         }
@@ -180,15 +185,16 @@ private fun ChooseStartScreen(onPregnant: () -> Unit, onChild: () -> Unit, onRes
 }
 
 @Composable
-private fun BigChoice(emoji: String, title: String, hint: String, onClick: () -> Unit) {
-    AppCard(containerColor = MaterialTheme.colorScheme.primaryContainer, onClick = onClick) {
+private fun BigChoice(moon: Float, title: String, hint: String, onClick: () -> Unit) {
+    GroupRow(onClick = onClick, contentPadding = PaddingValues(20.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(emoji, style = MaterialTheme.typography.displaySmall)
-            Spacer(Modifier.width(16.dp))
-            Column {
-                Text(title, style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
-                Text(hint, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
+            MoonPhase(moon, size = 52.dp)
+            Spacer(Modifier.width(20.dp))
+            Column(Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleLarge)
+                Text(hint, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
+            AppIcon(R.drawable.ic_chevron_forward, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

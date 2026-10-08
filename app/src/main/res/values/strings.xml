@@ -183,8 +183,11 @@
     <string name="due_on">موعد الولادة: %1$s</string>
     <string name="corrected_age_line">العمر المصحَّح: %1$s</string>
     <string name="corrected_age_before_term">العمر المصحَّح: قبل موعد الولادة المتوقع (باقي %1$s)</string>
-    <string name="greeting_morning">صباح الخير ☀️</string>
-    <string name="greeting_evening">مساء الخير 🌙</string>
+    <string name="greeting_morning">صباح الخير</string>
+    <string name="greeting_evening">مساء الخير</string>
+    <string name="count_of_total">%1$s من %2$s</string>
+    <string name="milestones_now">الآن</string>
+    <string name="latest_measurement_on">آخر قياس (%1$s)</string>
     <string name="tile_vaccine_in">للتطعيمة القادمة</string>
     <string name="tile_vaccine_today_value">اليوم</string>
     <string name="tile_vaccine_today_label">موعد التطعيمة</string>
@@ -230,7 +233,7 @@
     <string name="status_upcoming">لاحقًا</string>
     <string name="status_skipped">لا ينطبق</string>
     <string name="vaccine_ring_of_total">من %1$s</string>
-    <string name="vaccine_summary_ok">كل شيء في موعده 👏</string>
+    <string name="vaccine_summary_ok">كل شيء في موعده</string>
     <string name="vaccine_summary_late">متأخر: %1$s</string>
     <string name="vaccine_summary_hint">اضغطي على أي تطعيمة لتسجيلها أو لتعديلها.</string>
     <string name="visit_expand">عرض التفاصيل</string>
@@ -271,9 +274,9 @@
     <string name="growth_empty">لا توجد قياسات بعد.</string>
     <string name="chart_range_all">منذ الولادة</string>
     <string name="chart_range_recent">الأشهر الأخيرة</string>
-    <string name="trend_up">↗ ارتفع قياس طفلك إلى منحنى أعلى مقارنة بالقياس السابق.</string>
-    <string name="trend_steady">➡ قياس طفلك يسير على منحناه كما في القياس السابق.</string>
-    <string name="trend_down">↘ نزل قياس طفلك إلى منحنى أدنى مقارنة بالقياس السابق. إن استمر ذلك، اسألي طبيب الأطفال.</string>
+    <string name="trend_up">ارتفع قياس طفلك إلى منحنى أعلى مقارنة بالقياس السابق.</string>
+    <string name="trend_steady">قياس طفلك يسير على منحناه كما في القياس السابق.</string>
+    <string name="trend_down">نزل قياس طفلك إلى منحنى أدنى مقارنة بالقياس السابق. إن استمر ذلك، اسألي طبيب الأطفال.</string>
     <string name="measurements_history">القياسات السابقة</string>
     <string name="delete_measurement_title">حذف هذا القياس؟</string>
     <string name="value_weight">الوزن %1$s كغ</string>
@@ -304,20 +307,20 @@
     <string name="share_failed">تعذّرت المشاركة، حاولي مرة أخرى</string>
 
     <!-- Photos -->
-    <string name="photos_take">📷 التقاط صورة</string>
-    <string name="photos_pick">🖼️ من المعرض</string>
+    <string name="photos_take">التقاط صورة</string>
+    <string name="photos_pick">من المعرض</string>
     <string name="photos_compare">مقارنة صورتين</string>
     <string name="photos_empty">التقطي صورة لـ%1$s كل شهر تقريبًا، ثم قارني بين صورتين لتري الفرق مع مرور الوقت.</string>
     <string name="photos_adding">جارٍ إضافة الصور…</string>
     <string name="photos_add_failed">تعذّرت إضافة بعض الصور</string>
     <string name="photos_no_camera">لا يوجد تطبيق كاميرا على هذا الهاتف</string>
-    <string name="photos_private_note">🔒 الصور محفوظة داخل التطبيق فقط ولا تظهر في معرض الهاتف. وهي لا تدخل في النسخة الاحتياطية، فاحفظي نسخة منها في المعرض من وقت لآخر.</string>
+    <string name="photos_private_note">الصور محفوظة داخل التطبيق فقط ولا تظهر في معرض الهاتف. وهي لا تدخل في النسخة الاحتياطية، فاحفظي نسخة منها في المعرض من وقت لآخر.</string>
     <string name="photos_export">حفظ الصور في معرض الهاتف</string>
     <string name="photos_exported">تم حفظ %1$s في معرض الهاتف (ألبوم Atwar)</string>
     <string name="photos_export_failed">تعذّر حفظ الصور في المعرض</string>
     <string name="photo_birth_day">يوم الولادة</string>
-    <string name="photo_date">📅 %1$s</string>
-    <string name="photo_weight">⚖️ الوزن في تلك الأيام: %1$s كغ</string>
+    <string name="photo_date">التُقطت في %1$s</string>
+    <string name="photo_weight">الوزن في تلك الأيام: %1$s كغ</string>
     <string name="photo_change_date">تغيير التاريخ</string>
     <string name="photo_compare_with">مقارنة بصورة أخرى</string>
     <string name="photo_share">مشاركة</string>
@@ -328,7 +331,7 @@
     <string name="compare_need_two">أضيفي صورتين على الأقل لتقارني بينهما.</string>
     <string name="compare_first">الصورة الأولى</string>
     <string name="compare_second">الصورة الثانية</string>
-    <string name="compare_share">📤 مشاركة المقارنة</string>
+    <string name="compare_share">مشاركة المقارنة</string>
     <string name="compare_card_title">%1$s: من %2$s إلى %3$s</string>
     <string name="answer_yes">نعم</string>
     <string name="answer_not_yet">ليس بعد</string>
@@ -351,8 +354,8 @@
     <string name="backup_save">حفظ نسخة في ملف</string>
     <string name="backup_share">إرسال النسخة (واتساب، درايف…)</string>
     <string name="backup_restore">استعادة من نسخة</string>
-    <string name="backup_photos_note">📷 الصور لا تدخل في النسخة الاحتياطية؛ احفظيها في معرض الهاتف من صفحة «الصور».</string>
-    <string name="backup_privacy">🔒 ملف النسخة فيه معلومات حملك وأطفالك (الأسماء والتواريخ والتطعيمات والقياسات)، ويستطيع أي شخص يصله الملف أن يقرأه. أرسليه لنفسك فقط.</string>
+    <string name="backup_photos_note">الصور لا تدخل في النسخة الاحتياطية؛ احفظيها في معرض الهاتف من صفحة «الصور».</string>
+    <string name="backup_privacy">ملف النسخة فيه معلومات حملك وأطفالك (الأسماء والتواريخ والتطعيمات والقياسات)، ويستطيع أي شخص يصله الملف أن يقرأه. أرسليه لنفسك فقط.</string>
     <string name="backup_saved">تم حفظ النسخة الاحتياطية</string>
     <string name="backup_failed">تعذّر حفظ النسخة، حاولي مرة أخرى</string>
     <string name="restore_invalid">هذا الملف ليس نسخة احتياطية من تطبيق أطوار</string>
@@ -377,7 +380,7 @@
     <!-- Notifications -->
     <string name="notification_channel_name">التذكيرات</string>
     <string name="notification_channel_description">مواعيد التطعيمات وبداية كل أسبوع حمل</string>
-    <string name="notify_new_week_title">بدأ الأسبوع %1$s من حملك 🌸</string>
+    <string name="notify_new_week_title">بدأ الأسبوع %1$s من حملك</string>
     <string name="notify_new_week_text">اكتشفي ما الجديد عند طفلك هذا الأسبوع.</string>
     <string name="notify_vaccine_title">تطعيمة %1$s</string>
     <string name="notify_private_title">لديك تذكير من أطوار</string>

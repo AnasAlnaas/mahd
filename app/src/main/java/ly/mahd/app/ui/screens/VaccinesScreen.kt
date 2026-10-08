@@ -22,7 +22,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.ui.draw.clip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -54,7 +55,9 @@ import ly.mahd.app.ui.components.DatePickerPopup
 import ly.mahd.app.ui.components.DraftNotice
 import ly.mahd.app.ui.components.LocalToday
 import ly.mahd.app.ui.components.Pill
-import ly.mahd.app.ui.components.ProgressRing
+import ly.mahd.app.ui.components.MoonPhase
+import ly.mahd.app.ui.components.ExpressiveButton
+import ly.mahd.app.ui.theme.LocalSurfaces
 import ly.mahd.app.ui.theme.LocalStatusColors
 import ly.mahd.app.util.Format
 import java.time.LocalDate
@@ -88,7 +91,7 @@ fun VaccinesScreen(app: MahdApp, profile: Profile) {
 
     LazyColumn(
         Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
     ) {
         item { SummaryHeader(summary) }
         if (!schedule.reviewed) {
@@ -232,36 +235,29 @@ private fun SummaryHeader(summary: VaccinePlanner.Summary) {
     val res = LocalContext.current.resources
     val status = LocalStatusColors.current
     val late = summary.lateDoses > 0
-    Column(Modifier.padding(bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.vaccines_title), style = MaterialTheme.typography.headlineSmall)
-        AppCard {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                ProgressRing(
-                    progress = summary.progress,
-                    color = if (late) status.attention else status.good,
-                ) {
-                    Text(summary.given.toString(), style = MaterialTheme.typography.headlineMedium)
-                    Text(
-                        stringResource(R.string.vaccine_ring_of_total, summary.total.toString()),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        if (late) stringResource(R.string.vaccine_summary_late, Format.doses(res, summary.lateDoses))
-                        else stringResource(R.string.vaccine_summary_ok),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = if (late) MaterialTheme.colorScheme.error else status.good,
-                    )
-                    Text(
-                        stringResource(R.string.vaccine_summary_hint),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+    Column(Modifier.padding(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.vaccines_title), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    stringResource(R.string.count_of_total, summary.given.toString(), summary.total.toString()),
+                    style = MaterialTheme.typography.displaySmall,
+                )
+                Text(
+                    if (late) stringResource(R.string.vaccine_summary_late, Format.doses(res, summary.lateDoses))
+                    else stringResource(R.string.vaccine_summary_ok),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (late) MaterialTheme.colorScheme.error else status.good,
+                )
             }
+            Spacer(Modifier.width(16.dp))
+            MoonPhase(summary.progress, size = 88.dp)
         }
+        Text(
+            stringResource(R.string.vaccine_summary_hint),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
     }
 }
 
@@ -357,22 +353,27 @@ private fun VisitCard(
     val colors = MaterialTheme.colorScheme
     val highlight = plan.status == Status.OVERDUE || plan.status == Status.DUE_TODAY || plan.status == Status.PARTLY_DONE
 
-    // A folded visit shows as a single tappable line.
+    // A folded visit is a quiet line on the page, not a card: only the visits that need something stand out.
     if (collapsed) {
-        AppCard(onClick = onToggle) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text(plan.visit.title, style = MaterialTheme.typography.titleMedium)
-                    Text(Format.date(plan.dueDate), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
-                }
-                StatusPill(plan.status)
-                AppIcon(R.drawable.ic_expand, stringResource(R.string.visit_expand), tint = colors.onSurfaceVariant)
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .clip(MaterialTheme.shapes.medium)
+                .clickable(onClick = onToggle)
+                .padding(start = 12.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(plan.visit.title, style = MaterialTheme.typography.titleMedium)
+                Text(Format.date(plan.dueDate), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
             }
+            StatusPill(plan.status)
+            AppIcon(R.drawable.ic_expand, stringResource(R.string.visit_expand), Modifier.padding(start = 4.dp), tint = colors.onSurfaceVariant)
         }
         return
     }
 
-    AppCard(containerColor = if (highlight) colors.errorContainer.copy(alpha = 0.45f) else colors.surfaceContainerLow) {
+    AppCard(containerColor = if (highlight) colors.errorContainer.copy(alpha = 0.5f) else LocalSurfaces.current.groupRow) {
         Row(
             Modifier.fillMaxWidth().clickable(enabled = plan.isComplete || plan.status == Status.UPCOMING, onClick = onToggle),
             verticalAlignment = Alignment.CenterVertically,
@@ -410,7 +411,12 @@ private fun VisitCard(
                     Text(dose.description, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
                     // The age-limit note is redundant once the "too late" line below is shown.
                     if (!isExpired) {
-                        dose.note?.let { Text("⚠️ $it", style = MaterialTheme.typography.bodyMedium, color = colors.tertiary) }
+                        dose.note?.let {
+                            Row(verticalAlignment = Alignment.Top) {
+                                AppIcon(R.drawable.ic_info, null, Modifier.padding(top = 3.dp, end = 6.dp).size(16.dp), tint = colors.tertiary)
+                                Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.tertiary)
+                            }
+                        }
                     }
                     if (given != null) {
                         Text(
@@ -435,9 +441,9 @@ private fun VisitCard(
             }
         }
         if (!plan.isComplete && plan.status != Status.UPCOMING) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedButton(onClick = onMarkAll) { Text(stringResource(R.string.mark_all_given)) }
-                OutlinedButton(onClick = onSkipRemaining) { Text(stringResource(R.string.skip_remaining)) }
+            Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                ExpressiveButton(onClick = onMarkAll) { Text(stringResource(R.string.mark_all_given)) }
+                TextButton(onClick = onSkipRemaining) { Text(stringResource(R.string.skip_remaining)) }
             }
             if (onMarkUpTo != null) {
                 TextButton(onClick = onMarkUpTo) { Text(stringResource(R.string.mark_upto_given)) }

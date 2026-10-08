@@ -34,10 +34,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -77,6 +75,8 @@ import ly.mahd.app.logic.PhotoRules
 import ly.mahd.app.ui.Navigator
 import ly.mahd.app.ui.Routes
 import ly.mahd.app.ui.components.AppCard
+import ly.mahd.app.ui.components.ExpressiveButton
+import ly.mahd.app.ui.theme.LocalSurfaces
 import ly.mahd.app.ui.components.ConfirmDialog
 import ly.mahd.app.ui.components.DatePickerPopup
 import ly.mahd.app.ui.components.EmptyState
@@ -162,7 +162,7 @@ fun PhotosScreen(app: MahdApp, profile: Profile, nav: Navigator) {
         item(span = { GridItemSpan(maxLineSpan) }) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(
+                    ExpressiveButton(
                         enabled = !busy,
                         modifier = Modifier.weight(1f),
                         onClick = {
@@ -174,7 +174,8 @@ fun PhotosScreen(app: MahdApp, profile: Profile, nav: Navigator) {
                             }
                         },
                     ) { Text(stringResource(R.string.photos_take)) }
-                    OutlinedButton(
+                    ExpressiveButton(
+                        tonal = true,
                         enabled = !busy,
                         modifier = Modifier.weight(1f),
                         onClick = { gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
@@ -185,22 +186,22 @@ fun PhotosScreen(app: MahdApp, profile: Profile, nav: Navigator) {
                     LinearProgressIndicator(Modifier.fillMaxWidth())
                 }
                 if (photos.size >= 2) {
-                    OutlinedButton(onClick = { nav.push(Routes.compare(null)) }, modifier = Modifier.fillMaxWidth()) {
-                        Text("↔️  " + stringResource(R.string.photos_compare))
+                    ExpressiveButton(onClick = { nav.push(Routes.compare(null)) }, modifier = Modifier.fillMaxWidth(), tonal = true) {
+                        Text(stringResource(R.string.photos_compare))
                     }
                 }
             }
         }
         if (photos.isEmpty()) {
             item(span = { GridItemSpan(maxLineSpan) }) {
-                EmptyState("📸", stringResource(R.string.photos_empty, profileName(profile)))
+                EmptyState(stringResource(R.string.photos_empty, profileName(profile)))
             }
         }
         items(photos.asReversed(), key = { it.id }) { photo ->
             PhotoTile(app.photos, photo, photoAge(res, birth, photo.date)) { nav.push(Routes.photo(photo.id)) }
         }
         item(span = { GridItemSpan(maxLineSpan) }) {
-            AppCard(modifier = Modifier.padding(top = 8.dp)) {
+            AppCard(modifier = Modifier.padding(top = 8.dp), containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                 Text(stringResource(R.string.photos_private_note), style = MaterialTheme.typography.bodyMedium)
                 if (photos.isNotEmpty()) {
                     TextButton(onClick = {
@@ -287,12 +288,12 @@ fun PhotoScreen(app: MahdApp, profile: Profile, photoId: Long, nav: Navigator) {
             item {
                 PhotoImage(
                     app.photos, photo.file, minSidePx = 1080,
-                    modifier = Modifier.fillMaxWidth().height(460.dp).clip(RoundedCornerShape(16.dp)),
+                    modifier = Modifier.fillMaxWidth().height(460.dp).clip(MaterialTheme.shapes.extraLarge),
                     contentScale = ContentScale.Fit,
                 )
             }
             item {
-                AppCard {
+                AppCard(containerColor = LocalSurfaces.current.groupRow) {
                     Text(stringResource(R.string.photo_date, Format.date(photo.date)), style = MaterialTheme.typography.titleMedium)
                     PhotoRules.weightNear(growth, photo.date)?.let { kg ->
                         Text(stringResource(R.string.photo_weight, Format.decimal(kg, 2)), style = MaterialTheme.typography.bodyLarge)
@@ -302,10 +303,11 @@ fun PhotoScreen(app: MahdApp, profile: Profile, photoId: Long, nav: Navigator) {
             }
             item {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = { nav.push(Routes.compare(photo.id)) }, modifier = Modifier.weight(1f)) {
+                    ExpressiveButton(onClick = { nav.push(Routes.compare(photo.id)) }, modifier = Modifier.weight(1f)) {
                         Text(stringResource(R.string.photo_compare_with))
                     }
-                    OutlinedButton(
+                    ExpressiveButton(
+                        tonal = true,
                         onClick = { scope.launch { runOrToast(context, R.string.share_failed) { sharePhoto(context, app.photos.file(photo.file)) } } },
                         modifier = Modifier.weight(1f),
                     ) { Text(stringResource(R.string.photo_share)) }
@@ -378,7 +380,7 @@ fun CompareScreen(app: MahdApp, profile: Profile, firstId: Long?, onBack: () -> 
         val entries = growth ?: return@SubScreen
         val defaults = PhotoRules.defaultPair(list.map { it.id }, firstId)
         if (defaults == null) {
-            Box(Modifier.padding(padding)) { EmptyState("📸", stringResource(R.string.compare_need_two)) }
+            Box(Modifier.padding(padding)) { EmptyState(stringResource(R.string.compare_need_two)) }
             return@SubScreen
         }
         val first = list.firstOrNull { it.id == chosenFirst } ?: list.first { it.id == defaults.first }
@@ -407,7 +409,7 @@ fun CompareScreen(app: MahdApp, profile: Profile, firstId: Long?, onBack: () -> 
                 }
             }
             item {
-                Button(
+                ExpressiveButton(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = {
                         scope.launch {
@@ -444,7 +446,7 @@ private fun ComparePanel(store: PhotoStore, photo: Photo, label: String, modifie
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         PhotoImage(
             store, photo.file, minSidePx = 600,
-            modifier = Modifier.fillMaxWidth().aspectRatio(3f / 4f).clip(RoundedCornerShape(16.dp)),
+            modifier = Modifier.fillMaxWidth().aspectRatio(3f / 4f).clip(MaterialTheme.shapes.extraLarge),
         )
         Text(
             label,
