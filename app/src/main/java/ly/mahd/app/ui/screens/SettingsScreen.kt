@@ -40,10 +40,12 @@ import ly.mahd.app.R
 import ly.mahd.app.data.BackupFile
 import ly.mahd.app.data.Profile
 import ly.mahd.app.data.Repository
+import ly.mahd.app.data.ThemeMode
 import ly.mahd.app.reminders.Notifications
 import ly.mahd.app.ui.Navigator
 import ly.mahd.app.ui.Routes
 import ly.mahd.app.ui.components.AppCard
+import ly.mahd.app.ui.components.ConnectedChoice
 import ly.mahd.app.ui.components.ExpressiveButton
 import ly.mahd.app.ui.components.GroupItem
 import ly.mahd.app.ui.components.GroupRow
@@ -57,6 +59,7 @@ import ly.mahd.app.ui.components.SubScreen
 import ly.mahd.app.ui.components.rememberCanPostNotifications
 import ly.mahd.app.ui.ProfileAvatar
 import ly.mahd.app.ui.profileName
+import ly.mahd.app.ui.theme.LocalSurfaces
 import ly.mahd.app.util.Format
 import java.io.File
 import java.time.LocalDate
@@ -68,6 +71,7 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
     val scope = rememberCoroutineScope()
     val reminders by app.prefs.remindersEnabled.collectAsState()
     val advice by app.prefs.adviceNotifications.collectAsState()
+    val themeMode by app.prefs.themeMode.collectAsState()
     val canPost = rememberCanPostNotifications()
     var pendingRestore by remember { mutableStateOf<Repository.Snapshot?>(null) }
 
@@ -160,6 +164,31 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
                             supporting = stringResource(R.string.notifications_blocked),
                             supportingColor = MaterialTheme.colorScheme.error,
                             onClick = { Notifications.openSettings(context) },
+                        )
+                    }
+                }
+            }
+
+            // ----- Appearance -----
+            item { SectionTitle(stringResource(R.string.settings_appearance), Modifier.padding(top = 12.dp)) }
+            item {
+                val modes = ThemeMode.entries
+                ListGroup {
+                    GroupRow(spacing = 12.dp) {
+                        ConnectedChoice(
+                            options = listOf(
+                                stringResource(R.string.theme_system),
+                                stringResource(R.string.theme_light),
+                                stringResource(R.string.theme_dark),
+                            ),
+                            selected = modes.indexOf(themeMode),
+                            onSelect = { app.prefs.setThemeMode(modes[it]) },
+                            unselectedColor = LocalSurfaces.current.inset,
+                        )
+                        Text(
+                            stringResource(R.string.theme_hint),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }

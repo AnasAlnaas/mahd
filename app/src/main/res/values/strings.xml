@@ -354,6 +354,11 @@
     <string name="reminders_prompt_allow">تفعيل التذكيرات</string>
     <string name="reminders_prompt_later">ليس الآن</string>
     <string name="settings_backup">النسخة الاحتياطية</string>
+    <string name="settings_appearance">المظهر</string>
+    <string name="theme_system">تلقائي</string>
+    <string name="theme_light">فاتح</string>
+    <string name="theme_dark">داكن</string>
+    <string name="theme_hint">«تلقائي» يتبع إعداد الهاتف. الداكن أريح للعين في رضعات الليل.</string>
     <string name="backup_explain">بياناتك محفوظة على هذا الهاتف. قد يحفظ أندرويد نسخة منها في حسابك على جوجل، لكن الأضمن أن تحفظي نسخة بنفسك من وقت لآخر (مثلًا أرسليها لنفسك على واتساب)، حتى تستعيديها إذا ضاع الهاتف أو تغيّر.</string>
     <string name="backup_save">حفظ نسخة في ملف</string>
     <string name="backup_share">إرسال النسخة (واتساب، درايف…)</string>

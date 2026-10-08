@@ -2,5 +2,8 @@
 <resources>
     <color name="brand_primary">#A23B5B</color>
     <color name="window_background">#F6F1EE</color>
+    <!-- Used when the mother picks light or dark in Settings instead of following the phone (MainActivity). -->
+    <color name="window_background_light">#F6F1EE</color>
+    <color name="window_background_dark">#161218</color>
     <color name="ic_launcher_background">#A23B5B</color>
 </resources>

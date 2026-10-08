@@ -99,6 +99,9 @@ JBR works). Keep the project outside OneDrive.
   `AppCard` for a single block; `FeaturedCard`/`WarningCard` for the few things that must stand out.
 - Controls: `ExpressiveButton` (pill that squashes when pressed), `ConnectedChoice` (connected button group),
   `AppFilterChip`. Bottom bar = `ShortNavigationBar`; sub-screens use a collapsing `MediumTopAppBar`.
+- Light/dark: Settings → المظهر offers تلقائي (follow the phone, default) / فاتح / داكن (`Prefs.themeMode`). MainActivity
+  applies it to `MahdTheme(dark)`, the system-bar icons (`enableEdgeToEdge` with `SystemBarStyle.auto { dark }`) and the
+  window background, so never call `isSystemInDarkTheme()` elsewhere — read the theme instead.
 - Area colours: vaccines = rose (`primary`), growth = teal (`secondary`), milestones = gold (`tertiary`): used for moons
   and little else. Milestone domains use `domainAccent(id)`. Extra surface roles live in `LocalSurfaces`.
 - material3 1.4 keeps `MaterialExpressiveTheme`/`MotionScheme` internal, so the expressive springs are copied in

@@ -44,6 +44,15 @@ class Prefs(context: Context) {
         _adviceNotifications.value = enabled
     }
 
+    /** Light or dark colours: follow the phone (the default), or always one of them. */
+    private val _themeMode = MutableStateFlow(ThemeMode.fromCode(sp.getString(KEY_THEME, null)))
+    val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
+
+    fun setThemeMode(mode: ThemeMode) {
+        sp.edit { putString(KEY_THEME, mode.code) }
+        _themeMode.value = mode
+    }
+
     var notificationPermissionAsked: Boolean
         get() = sp.getBoolean(KEY_PERMISSION_ASKED, false)
         set(value) = sp.edit { putBoolean(KEY_PERMISSION_ASKED, value) }
@@ -87,10 +96,21 @@ class Prefs(context: Context) {
         const val KEY_DISCLAIMER = "disclaimer_accepted"
         const val KEY_REMINDERS = "reminders_enabled"
         const val KEY_ADVICE_NOTIFICATIONS = "advice_notifications"
+        const val KEY_THEME = "theme_mode"
         const val KEY_PERMISSION_ASKED = "notification_permission_asked"
         const val KEY_REMINDER_PROMPT_DISMISSED = "reminder_prompt_dismissed"
         const val KEY_LAST_CHECK = "last_reminder_check"
         const val NOTIFIED_PREFIX = "notified:"
         const val WEEK_PREFIX = "pregnancy_week:"
+    }
+}
+
+enum class ThemeMode(val code: String) {
+    SYSTEM("system"),
+    LIGHT("light"),
+    DARK("dark");
+
+    companion object {
+        fun fromCode(code: String?) = entries.firstOrNull { it.code == code } ?: SYSTEM
     }
 }
