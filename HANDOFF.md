@@ -16,7 +16,7 @@ second review round. Read this first, then `CLAUDE.md` (decisions already made �
 - Owner: not a programmer ("Claude writes the code, owner runs/tests"). Wants Claude to **drive** (build, run, test,
   screenshot) and to ask before outward-facing actions (push, merge, install on the real phone).
 
-## 2. State of the app (all verified on an emulator, 41 unit tests pass, release build OK)
+## 2. State of the app (all verified on an emulator, 49 unit tests pass, release build OK)
 - Onboarding: welcome + disclaimer → choose *pregnant / I have a child / I have a backup file* (restore on first launch).
   The choice screen scrolls on small phones / large fonts.
 - Profiles: several pregnancies/children; "my baby is born" turns a pregnancy into a child; an overdue pregnancy can
@@ -44,6 +44,10 @@ second review round. Read this first, then `CLAUDE.md` (decisions already made �
   backup file, About. Backups are **validated by value** (at least one profile, dates 1900..today+1y, a child needs a birth
   date, a pregnancy a due date, sane measurements), read off the main thread, max 5 MB. File name `atwar-backup-DATE.json`.
 - Sharing (backup, achievements card) shows a message instead of crashing when it fails.
+- **Photos** (branch `feature/photos`, 2026-10-08): a "الصور" tab per child — take a photo (phone's camera app) or pick
+  up to 20 from the gallery (photo picker), each labelled with the child's age; photo screen (date, weight measured
+  within 14 days, change date, share, compare, delete); side-by-side comparison with a shareable card; "save to the
+  phone's gallery" (Pictures/Atwar). Private app storage, left out of all backups (see CLAUDE.md).
 - Medical content is **DRAFT** (`reviewed: false` in `app/src/main/assets/content/*.json`). Never present it as reviewed.
 
 ## 3. Environment on this laptop (Windows 11)
@@ -64,7 +68,7 @@ second review round. Read this first, then `CLAUDE.md` (decisions already made �
 PowerShell, from `D:\code\mahd`:
 ```powershell
 $env:JAVA_HOME = "C:\Program Files\Android\Android Studio\jbr"
-.\gradlew.bat testDebugUnitTest            # 41 tests
+.\gradlew.bat testDebugUnitTest            # 49 tests
 $env:ANDROID_SERIAL = "emulator-5554"      # keep the phone out of it
 .\gradlew.bat installDebug
 ```
@@ -111,6 +115,8 @@ a 10-month-old, a 30-weeker, an overdue pregnancy) and `atwar-test.json` (a 16-m
 - `content/` — JSON/CSV readers; `ContentRepository` takes an opener lambda so tests can read the real files.
   Files: `pregnancy.json`, `milestones.json`, `vaccines_ly.json`, `child_danger_signs.json`, `growth_who.csv`.
 - `ui/` — `MahdRoot` (onboarding vs main, tabs, `OpenRequest` from a tapped reminder), `Navigator` (+ `Routes`).
+  Photos: `data/PhotoStore` (files, shrinking, cache, gallery export), `logic/PhotoRules`, `ui/screens/PhotosScreen.kt`
+  (album, `PhotoScreen`, `CompareScreen`, `PhotoImage`), `ShareCard.renderComparison`.
   `ui/screens/` — Home, Vaccines (timeline), Growth + `GrowthChart` (Canvas), Milestones, Pregnancy, `DangerSignsScreen`
   (pregnancy + child), Settings, Onboarding, `RemindersPrompt`, `Restore.kt` (picker + `applyRestore` + `runOrToast`).
   `ui/components/` — `AppCard(accent)`, `ProgressRing`, `TrimesterBar`, `EmojiBadge`, `LocalToday`, `LocalResumeCount`,
@@ -145,7 +151,8 @@ and kept as a draft until a paediatrician signs off; never auto-prompt for notif
 8. Final Latin name for Play (tentatively "Atwar"), `applicationId`, privacy-policy page, Play Console account, upload key,
    closed test (14 days, 12+ testers); bump `versionCode` for every build shared with testers.
 9. Roadmap (v1.1+): Libyan-dialect audio, kick counter, contraction timer, appointment reminders, Hijri dates, Ramadan
-   guidance, starting solids, photo diary, printable doctor report, feeding/sleep log.
+   guidance, starting solids, printable doctor report, feeding/sleep log. Photo follow-ups: siblings at the same age,
+   a monthly "time for a photo" reminder, a backup file that includes photos (zip), a pose guide on the camera.
 10. Housekeeping: delete the merged local branches
     (`git branch -d fix/review-findings feature/atwar-timeline-restore feature/visual-polish fix/review-round-2`).
 

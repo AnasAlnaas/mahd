@@ -47,6 +47,12 @@ Libyan vaccine schedule or Libyan dialect. Plan: MVP first, add features over ti
   positive finite measurements). Everything the app can save must keep passing. The picker reads at most 5 MB, off the
   main thread. Backup file name: `atwar-backup-DATE.json`. Android Auto Backup is ON (database goes to the mother's
   own Google account); the privacy text says so. Declare it in Play's data-safety form.
+- Photos (owner chose "option A"): each child has a "الصور" tab. Pictures are JPEGs in the app's private folder
+  (`files/photos`, `data/PhotoStore`), shrunk to 1600 px and saved without EXIF; the DB (v3, table `photos`) says whose
+  and when. Camera = the phone's camera app (`TakePicture`), gallery = Android's photo picker: no camera/photo
+  permissions. Photos are NOT in Auto Backup (it stops above 25 MB) nor in the backup file; "save to gallery" copies them
+  to Pictures/Atwar (storage permission only on Android ≤ 9). A restore keeps the photos of a child the backup
+  describes the same way (`Profile.isSameChildAs`); delete profiles via `MahdApp.deleteProfile` (removes the files).
 - Screens collect database flows with `initial = null` and draw nothing until loaded (no "everything is late"
   flash); Home reads one `Repository.childRecords()`; each profile gets a fresh screen (`key(selected.id)`).
 - Content files are covered by `ContentFilesTest`; run `gradlew testDebugUnitTest` after every content edit.
