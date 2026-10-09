@@ -186,7 +186,6 @@
     <string name="greeting_morning">صباح الخير</string>
     <string name="greeting_evening">مساء الخير</string>
     <string name="count_of_total">%1$s من %2$s</string>
-    <string name="milestones_now">الآن</string>
     <string name="advice_title_quran">من هدي القرآن</string>
     <string name="advice_title_hadith">من هدي النبي ﷺ</string>
     <string name="advice_switch">آية أو حديث مرتين في الأسبوع</string>
@@ -294,10 +293,16 @@
     <string name="value_out_of_range">رقم غير معقول، تأكدي منه</string>
 
     <!-- Milestones -->
-    <string name="milestones_by_age">مهارات %1$s</string>
+    <string name="milestones_up_to">المهارات حتى %1$s</string>
     <string name="milestones_corrected_note">نستخدم العمر المصحَّح لأن طفلك وُلد مبكرًا.</string>
-    <string name="milestones_intro">معظم الأطفال (75 من كل 100) يقومون بهذه الأشياء في هذا العمر. اختاري لكل مهارة: نعم، أو ليس بعد، أو غير متأكدة.</string>
-    <string name="milestones_future">لم يصل طفلك إلى هذا العمر بعد، ويمكنك الاطلاع على هذه المهارات مسبقًا.</string>
+    <string name="milestones_intro">معظم الأطفال (75 من كل 100) يقومون بهذه الأشياء في عمرها. راقبي طفلك واختاري لكل مهارة: نعم، أو ليس بعد، أو يحاول. ما يتقنه ينزل إلى الأسفل.</string>
+    <string name="milestones_focus_title">راقبيها الآن</string>
+    <string name="milestones_done_title">أتقنها</string>
+    <string name="milestones_from_age">من مهارات %1$s</string>
+    <string name="milestones_all_done">ما شاء الله! ظهرت كل المهارات حتى هذا العمر.</string>
+    <string name="milestones_next_list">القائمة التالية عند %1$s، بعد %2$s.</string>
+    <string name="milestones_first_list_title">أول قائمة مهارات عند %1$s</string>
+    <string name="milestones_first_list_in">بعد %1$s. حتى ذلك الحين، هذه أشياء تساعد طفلك:</string>
     <string name="milestones_talk_to_doctor_title">تحدثي مع الطبيب</string>
     <string name="milestones_talk_to_doctor">بعض المهارات لم تظهر بعد. كل طفل له وتيرته، لكن من الأفضل أن تخبري طبيب الأطفال بذلك في أقرب زيارة. الاكتشاف المبكر يساعد كثيرًا.</string>
     <string name="milestones_tips_title">كيف تساعدين طفلك</string>
@@ -339,7 +344,7 @@
     <string name="compare_card_title">%1$s: من %2$s إلى %3$s</string>
     <string name="answer_yes">نعم</string>
     <string name="answer_not_yet">ليس بعد</string>
-    <string name="answer_not_sure">غير متأكدة</string>
+    <string name="answer_progress">يحاول</string>
 
     <!-- Settings -->
     <string name="settings_profiles">الأطفال والحمل</string>

@@ -61,6 +61,13 @@ Libyan vaccine schedule or Libyan dialect. Plan: MVP first, add features over ti
   notification on Tuesdays and Fridays (Settings switch, part of the reminders). Owner chose "sources only, no draft
   note" in the UI — but the texts (and the items marked `"verify": true`) must still be checked against printed
   sources by a qualified person before release. Ornate brackets ﴿ ﴾ are drawn in the system font (Readex lacks them).
+- Skills tab (owner's design, 2026-10-09): only skills of the ages the child has REACHED are shown (corrected age for a
+  preterm baby); older ages stay hidden. All reached lists show as one list (`logic/MilestoneFocus`): "راقبيها الآن"
+  (newest age first) and "أتقنها" (answered yes) at the end. Answers: نعم / ليس بعد / يحاول — `MilestoneAnswer.PROGRESS`
+  keeps code 2 of the old "not sure" so old saves and backups still load. "Yes" plays a small firework (`SparkBurst`) and
+  holds the skill in place ~1 s before it glides down (`animateItem`); the page keeps its scroll position (a lazy list
+  would otherwise follow the moved key). A 1-month list (AAP, not CDC) is first; before 1 month the tab and Home show a
+  countdown moon instead of skills.
 - Screens collect database flows with `initial = null` and draw nothing until loaded (no "everything is late"
   flash); Home reads one `Repository.childRecords()`; each profile gets a fresh screen (`key(selected.id)`).
 - Content files are covered by `ContentFilesTest`; run `gradlew testDebugUnitTest` after every content edit.
@@ -71,7 +78,7 @@ Libyan vaccine schedule or Libyan dialect. Plan: MVP first, add features over ti
 ## MVP scope (v1.0)
 Onboarding + disclaimer; pregnancy and child profiles (several allowed); "Today" home;
 pregnancy weeks 1–42 + danger signs; "my baby is born" conversion; vaccines with reminders;
-growth (WHO charts, plain-language bands, corrected age for preterm); milestones 2 m–4 y;
+growth (WHO charts, plain-language bands, corrected age for preterm); milestones 1 m–4 y;
 backup save/share/restore as JSON; settings/about.
 
 ## Later (v1.1+)

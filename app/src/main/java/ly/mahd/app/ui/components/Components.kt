@@ -157,15 +157,16 @@ fun GroupRow(
     container: Color = LocalSurfaces.current.groupRow,
     contentPadding: PaddingValues = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
     spacing: Dp = 8.dp,
+    shape: Shape = AppShape.groupInner,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val inner: @Composable () -> Unit = {
         Column(Modifier.padding(contentPadding), verticalArrangement = Arrangement.spacedBy(spacing), content = content)
     }
     if (onClick != null) {
-        Surface(onClick = onClick, modifier = modifier.fillMaxWidth(), shape = AppShape.groupInner, color = container, content = inner)
+        Surface(onClick = onClick, modifier = modifier.fillMaxWidth(), shape = shape, color = container, content = inner)
     } else {
-        Surface(modifier = modifier.fillMaxWidth(), shape = AppShape.groupInner, color = container, content = inner)
+        Surface(modifier = modifier.fillMaxWidth(), shape = shape, color = container, content = inner)
     }
 }
 
@@ -389,6 +390,8 @@ fun ConnectedChoice(
     selectedColors: @Composable (Int) -> Pair<Color, Color> = {
         MaterialTheme.colorScheme.primary to MaterialTheme.colorScheme.onPrimary
     },
+    /** Extra modifier for segment i, e.g. to know where it is on screen. */
+    segmentModifier: (Int) -> Modifier = { Modifier },
 ) {
     val spec = AppMotion.fastSpatial<Dp>()
     Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -404,7 +407,7 @@ fun ConnectedChoice(
             Surface(
                 selected = isSelected,
                 onClick = { onSelect(i) },
-                modifier = Modifier.weight(1f).height(height),
+                modifier = Modifier.weight(1f).height(height).then(segmentModifier(i)),
                 shape = RoundedCornerShape(topStart = start, bottomStart = start, topEnd = end, bottomEnd = end),
                 color = bg,
                 contentColor = fg,

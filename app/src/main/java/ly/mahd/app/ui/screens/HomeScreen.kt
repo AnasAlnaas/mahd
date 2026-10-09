@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import ly.mahd.app.MahdApp
 import ly.mahd.app.R
 import ly.mahd.app.content.GrowthIndicator
+import ly.mahd.app.content.MilestoneContent
 import ly.mahd.app.content.MilestoneGroup
 import ly.mahd.app.data.ChildRecords
 import ly.mahd.app.data.GrowthEntry
@@ -41,6 +42,7 @@ import ly.mahd.app.data.MilestoneAnswer
 import ly.mahd.app.data.Profile
 import ly.mahd.app.logic.ChildAge
 import ly.mahd.app.logic.GrowthMath
+import ly.mahd.app.logic.MilestoneFocus
 import ly.mahd.app.logic.PregnancyMath
 import ly.mahd.app.logic.VaccinePlanner
 import ly.mahd.app.ui.Navigator
@@ -186,7 +188,8 @@ private fun ChildHome(app: MahdApp, profile: Profile, nav: Navigator) {
     val records by remember(profile.id) { app.repository.childRecords(profile.id) }.collectAsState(initial = null)
     val data = records ?: return
     val plans = VaccinePlanner.plan(app.content.vaccines, birth, data.doses, today, data.skipped)
-    val group = app.content.milestones.groupForAge(ChildAge.referenceMonths(birth, profile.weeksAtBirth, today))
+    val months = ChildAge.referenceMonths(birth, profile.weeksAtBirth, today)
+    val group = app.content.milestones.groupForAge(months)
     val askForReminders = shouldAskForReminders(app)
     val advice = rememberTodaysAdvice(app, profile)
 
@@ -219,7 +222,7 @@ private fun ChildHome(app: MahdApp, profile: Profile, nav: Navigator) {
         item {
             ListGroup {
                 NextVaccineRow(plans, nav)
-                MilestonesRow(group, data, nav)
+                MilestonesRow(app.content.milestones, months, data, nav)
                 GrowthRow(app, profile, birth, data.growth, nav)
             }
         }
@@ -282,7 +285,19 @@ fun vaccineWhenText(res: Resources, daysUntilDue: Int): String = when {
 }
 
 @Composable
-private fun MilestonesRow(group: MilestoneGroup, data: ChildRecords, nav: Navigator) {
+private fun MilestonesRow(content: MilestoneContent, months: Double, data: ChildRecords, nav: Navigator) {
+    val res = LocalContext.current.resources
+    // Before the first list (1 month): the same countdown the skills tab shows.
+    val group = content.reachedGroups(months).lastOrNull() ?: run {
+        val first = content.groups.first()
+        GroupItem(
+            headline = stringResource(R.string.milestones_first_list_title, first.title),
+            supporting = Format.days(res, MilestoneFocus.daysUntil(first, months)),
+            leading = { MoonPhase((months / first.months).toFloat(), size = 40.dp, lit = MaterialTheme.colorScheme.tertiary) },
+            onClick = { nav.selectTab(Routes.MILESTONES) },
+        )
+        return
+    }
     val yes = group.items.count { data.answers[it.id] == MilestoneAnswer.YES }
     val notYet = group.items.count { data.answers[it.id] == MilestoneAnswer.NOT_YET }
     GroupItem(

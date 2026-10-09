@@ -70,6 +70,12 @@ data class MilestoneContent(
     /** The checklist that fits a child of this age: the latest one the child has reached. */
     fun groupForAge(months: Double): MilestoneGroup =
         groups.lastOrNull { it.months <= months + 0.01 } ?: groups.first()
+
+    /** Every checklist the child has reached; skills of older ages stay hidden until the child gets there. */
+    fun reachedGroups(months: Double): List<MilestoneGroup> = groups.filter { it.months <= months + 0.01 }
+
+    /** The next checklist the child has not reached yet, or null after the last one. */
+    fun nextGroup(months: Double): MilestoneGroup? = groups.firstOrNull { it.months > months + 0.01 }
 }
 
 data class VaccineDose(

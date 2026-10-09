@@ -1,68 +1,81 @@
 package ly.mahd.app.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
-import ly.mahd.app.ui.components.AppFilterChip
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ly.mahd.app.MahdApp
 import ly.mahd.app.R
 import ly.mahd.app.content.MilestoneDomain
 import ly.mahd.app.content.MilestoneGroup
-import ly.mahd.app.content.MilestoneItem
 import ly.mahd.app.data.MilestoneAnswer
 import ly.mahd.app.data.Profile
 import ly.mahd.app.logic.ChildAge
+import ly.mahd.app.logic.MilestoneFocus
 import ly.mahd.app.ui.components.AppCard
 import ly.mahd.app.ui.components.BulletList
-import ly.mahd.app.ui.components.DraftNotice
-import ly.mahd.app.ui.components.LocalToday
-import ly.mahd.app.ui.components.MoonPhase
 import ly.mahd.app.ui.components.ConnectedChoice
+import ly.mahd.app.ui.components.DraftNotice
 import ly.mahd.app.ui.components.ExpressiveButton
 import ly.mahd.app.ui.components.GroupRow
-import ly.mahd.app.ui.components.ListGroup
-import ly.mahd.app.ui.theme.LocalStatusColors
+import ly.mahd.app.ui.components.LocalToday
+import ly.mahd.app.ui.components.MoonPhase
+import ly.mahd.app.ui.components.SectionTitle
+import ly.mahd.app.ui.components.SparkBurst
 import ly.mahd.app.ui.components.WarningCard
 import ly.mahd.app.ui.profileName
-import ly.mahd.app.ui.theme.domainAccent
+import ly.mahd.app.ui.theme.AppMotion
+import ly.mahd.app.ui.theme.LocalStatusColors
 import ly.mahd.app.ui.theme.LocalSurfaces
+import ly.mahd.app.ui.theme.domainAccent
 import ly.mahd.app.util.Format
 import ly.mahd.app.util.ShareCard
 
+/** How long a skill answered "yes" stays where it was, for its little firework, before gliding down. */
+private const val CELEBRATION_MS = 1000L
+
 /**
- * Milestone checklists by age (2 months to 4 years). For each skill the mother answers
- * "yes", "not yet" or "not sure". If a skill is "not yet" after its age, we gently suggest
- * talking to the doctor — the app never diagnoses.
+ * Milestones (1 month to 4 years). Only the skills of the ages the child has reached are shown; the mother answers
+ * "yes", "not yet" or "making progress". What the child does sinks to the end with a small firework, so the top
+ * always shows what to watch now. If a skill is "not yet", we gently suggest telling the doctor — the app never
+ * diagnoses.
  */
 @Composable
 fun MilestonesScreen(app: MahdApp, profile: Profile) {
@@ -74,10 +87,12 @@ fun MilestonesScreen(app: MahdApp, profile: Profile) {
     val scope = rememberCoroutineScope()
 
     val months = ChildAge.referenceMonths(birth, profile.weeksAtBirth, today)
-    val currentGroup = content.groupForAge(months)
-    var groupId by rememberSaveable(profile.id) { mutableStateOf(currentGroup.id) }
-    val group = content.groups.firstOrNull { it.id == groupId } ?: currentGroup
-    val reached = months + 0.01 >= group.months
+    val currentGroup = content.reachedGroups(months).lastOrNull()
+    val nextGroup = content.nextGroup(months)
+    val corrected = ChildAge.usesCorrectedAge(birth, profile.weeksAtBirth, today)
+
+    // Skills just answered "yes": they stay in place until their firework has played.
+    var held by remember(profile.id) { mutableStateOf(setOf<String>()) }
 
     val context = LocalContext.current
     val appName = stringResource(R.string.app_name)
@@ -88,75 +103,99 @@ fun MilestonesScreen(app: MahdApp, profile: Profile) {
 
     // Null until the database answers, so the checklist does not show as empty for a moment.
     val answers = loaded ?: return
-    val notYet = group.items.filter { answers[it.id] == MilestoneAnswer.NOT_YET }
-    val yesTotal = group.items.count { answers[it.id] == MilestoneAnswer.YES }
-    val countLine = stringResource(R.string.milestones_progress, yesTotal.toString(), group.items.size.toString())
 
-    val chipsState = rememberLazyListState()
-    LaunchedEffect(profile.id) {
-        chipsState.scrollToItem(content.groups.indexOfFirst { it.id == currentGroup.id }.coerceAtLeast(0))
+    if (currentGroup == null) {
+        // Younger than the first list: a countdown (the moon fills as the day comes), and ways to help meanwhile.
+        val first = nextGroup ?: return
+        FirstListCountdown(first, months, corrected, content.reviewed)
+        return
+    }
+
+    val entries = MilestoneFocus.revealed(content, months)
+    val lists = MilestoneFocus.split(entries, answers, held)
+    // A skill just answered "yes" shows as yes at once, before the database confirms it, so the firework plays on green.
+    val shown = if (held.isEmpty()) answers else answers + held.associateWith { MilestoneAnswer.YES }
+    val anyNotYet = entries.any { answers[it.item.id] == MilestoneAnswer.NOT_YET }
+    val yesNow = currentGroup.items.filter { answers[it.id] == MilestoneAnswer.YES }
+
+    fun answer(id: String, a: MilestoneAnswer?) {
+        scope.launch { app.repository.setMilestoneAnswer(profile.id, id, a) }
+        if (a == MilestoneAnswer.YES) {
+            held = held + id
+            scope.launch {
+                delay(CELEBRATION_MS)
+                held = held - id
+            }
+        }
+    }
+
+    // A list follows a moved item by its key, so when a skill moves between "watch now" and "mastered" the page
+    // would jump after it. Instead the page stays where the mother is reading and only the skill glides away.
+    val listState = rememberLazyListState()
+    val lastPosition = remember { intArrayOf(0, 0) }
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.firstVisibleItemIndex to listState.firstVisibleItemScrollOffset }
+            .collect { (index, offset) -> lastPosition[0] = index; lastPosition[1] = offset }
+    }
+    val doneIds = lists.done.map { it.item.id }.toSet()
+    val lastDoneIds = remember { arrayOfNulls<Set<String>>(1) }
+    SideEffect {
+        val before = lastDoneIds[0]
+        if (before != null && before != doneIds) listState.requestScrollToItem(lastPosition[0], lastPosition[1])
+        lastDoneIds[0] = doneIds
     }
 
     LazyColumn(
         Modifier.fillMaxSize(),
+        state = listState,
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        item {
-            val now = stringResource(R.string.milestones_now)
-            LazyRow(state = chipsState, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(content.groups, key = { it.id }) { g ->
-                    AppFilterChip(
-                        selected = g.id == group.id,
-                        onClick = { groupId = g.id },
-                        label = if (g.id == currentGroup.id) "${g.title} · $now" else g.title,
+        item(key = "header") {
+            Column(Modifier.padding(horizontal = 8.dp).padding(bottom = 14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(stringResource(R.string.milestones_up_to, currentGroup.title), style = MaterialTheme.typography.headlineMedium)
+                if (corrected) Text(stringResource(R.string.milestones_corrected_note), style = MaterialTheme.typography.bodyMedium)
+                Text(
+                    stringResource(R.string.milestones_intro),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                nextGroup?.let { next ->
+                    Text(
+                        stringResource(
+                            R.string.milestones_next_list,
+                            next.title,
+                            Format.days(res, MilestoneFocus.daysUntil(next, months)),
+                        ),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
         }
-        item {
-            Column(Modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(stringResource(R.string.milestones_by_age, group.title), style = MaterialTheme.typography.headlineMedium)
-                if (ChildAge.usesCorrectedAge(birth, profile.weeksAtBirth, today)) {
-                    Text(stringResource(R.string.milestones_corrected_note), style = MaterialTheme.typography.bodyMedium)
-                }
-                Text(
-                    if (reached) stringResource(R.string.milestones_intro)
-                    else stringResource(R.string.milestones_future),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-        item { DomainMoons(content.domains, group, answers) }
-        if (!content.reviewed) item { DraftNotice() }
-        content.domains.forEach { domain ->
-            val domainItems = group.items.filter { it.domain == domain.id }
-            if (domainItems.isNotEmpty()) {
-                item(key = "domain-${group.id}-${domain.id}") {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(
-                            domain.title,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = domainAccent(domain.id),
-                            modifier = Modifier.padding(horizontal = 8.dp),
-                        )
-                        ListGroup {
-                            domainItems.forEach { item ->
-                                MilestoneRow(item, answers[item.id]) { answer ->
-                                    scope.launch { app.repository.setMilestoneAnswer(profile.id, item.id, answer) }
-                                }
-                            }
-                        }
-                    }
+        item(key = "moons") { DomainMoons(content.domains, entries, answers, Modifier.padding(bottom = 14.dp)) }
+        if (!content.reviewed) item(key = "draft") { DraftNotice(modifier = Modifier.padding(bottom = 14.dp)) }
+
+        sectionTitle("focus-title", "${res.getString(R.string.milestones_focus_title)} · ${lists.focus.size}")
+        if (lists.focus.isEmpty()) {
+            item(key = "all-done") {
+                AppCard(Modifier.animateItem(), containerColor = MaterialTheme.colorScheme.surfaceContainer) {
+                    Text(stringResource(R.string.milestones_all_done), style = MaterialTheme.typography.titleMedium)
                 }
             }
         }
-        if (yesTotal > 0) {
-            item {
+        skillRows(lists.focus, currentGroup, shown, ::answer)
+
+        if (lists.done.isNotEmpty()) {
+            sectionTitle("done-title", "${res.getString(R.string.milestones_done_title)} · ${lists.done.size}")
+            skillRows(lists.done, currentGroup, shown, ::answer)
+        }
+
+        if (yesNow.isNotEmpty()) {
+            item(key = "share") {
                 ExpressiveButton(
                     tonal = true,
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp).animateItem(),
                     onClick = {
                         scope.launch {
                             runOrToast(context, R.string.share_failed) {
@@ -164,9 +203,13 @@ fun MilestonesScreen(app: MahdApp, profile: Profile) {
                                     appName = appName,
                                     tagline = tagline,
                                     title = shareTitle,
-                                    subtitle = "${Format.age(res, ChildAge.period(birth, today))} · ${group.title}",
-                                    achievements = group.items.filter { answers[it.id] == MilestoneAnswer.YES }.map { it.text },
-                                    countLine = countLine,
+                                    subtitle = "${Format.age(res, ChildAge.period(birth, today))} · ${currentGroup.title}",
+                                    achievements = yesNow.map { it.text },
+                                    countLine = res.getString(
+                                        R.string.milestones_progress,
+                                        yesNow.size.toString(),
+                                        currentGroup.items.size.toString(),
+                                    ),
                                     footer = footer,
                                 )
                                 val bitmap = withContext(Dispatchers.Default) { ShareCard.render(card) }
@@ -177,75 +220,166 @@ fun MilestonesScreen(app: MahdApp, profile: Profile) {
                 ) { Text(stringResource(R.string.share_achievements)) }
             }
         }
-        if (reached && notYet.isNotEmpty()) {
-            item {
-                WarningCard(title = stringResource(R.string.milestones_talk_to_doctor_title)) {
+        if (anyNotYet) {
+            item(key = "doctor") {
+                WarningCard(
+                    title = stringResource(R.string.milestones_talk_to_doctor_title),
+                    modifier = Modifier.padding(top = 16.dp).animateItem(),
+                ) {
                     Text(stringResource(R.string.milestones_talk_to_doctor), style = MaterialTheme.typography.bodyLarge)
                 }
             }
         }
-        if (group.tips.isNotEmpty()) {
-            item {
-                AppCard {
-                    Text(stringResource(R.string.milestones_tips_title), style = MaterialTheme.typography.titleLarge)
-                    BulletList(group.tips, bullet = MaterialTheme.colorScheme.tertiary)
-                }
-            }
+        if (currentGroup.tips.isNotEmpty()) {
+            item(key = "tips") { TipsCard(currentGroup.tips, Modifier.padding(top = 16.dp).animateItem()) }
         }
-        item {
-            AppCard {
+        item(key = "warnings") {
+            AppCard(Modifier.padding(top = 16.dp).animateItem()) {
                 Text(stringResource(R.string.milestones_warnings_title), style = MaterialTheme.typography.titleLarge)
                 BulletList(content.warnings, bullet = MaterialTheme.colorScheme.error)
             }
         }
-        item {
+        item(key = "source") {
             Text(
                 stringResource(R.string.milestones_source),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 8.dp),
+                modifier = Modifier.padding(horizontal = 8.dp, vertical = 16.dp).animateItem(),
             )
         }
     }
 }
 
-/** One skill, and "yes / not yet / not sure" as a connected button group. Tapping the chosen answer clears it. */
-@Composable
-private fun MilestoneRow(item: MilestoneItem, answer: MilestoneAnswer?, onAnswer: (MilestoneAnswer?) -> Unit) {
-    val order = listOf(MilestoneAnswer.YES, MilestoneAnswer.NOT_YET, MilestoneAnswer.NOT_SURE)
-    val status = LocalStatusColors.current
-    val colors = MaterialTheme.colorScheme
-    GroupRow(spacing = 12.dp) {
-        Text(item.text, style = MaterialTheme.typography.bodyLarge)
-        ConnectedChoice(
-            options = listOf(
-                stringResource(R.string.answer_yes),
-                stringResource(R.string.answer_not_yet),
-                stringResource(R.string.answer_not_sure),
+private fun LazyListScope.sectionTitle(key: String, text: String) {
+    item(key = key) { SectionTitle(text, Modifier.padding(top = 4.dp, bottom = 6.dp).animateItem()) }
+}
+
+/**
+ * The skills of one section, as one grouped list whose rows glide to their new place when an answer moves them.
+ * Each row is its own list item (so it can move), and takes the group's outer corners when it is first or last.
+ */
+private fun LazyListScope.skillRows(
+    rows: List<MilestoneFocus.Entry>,
+    currentGroup: MilestoneGroup,
+    answers: Map<String, MilestoneAnswer>,
+    onAnswer: (String, MilestoneAnswer?) -> Unit,
+) {
+    itemsIndexed(rows, key = { _, e -> e.item.id }) { i, e ->
+        MilestoneRow(
+            entry = e,
+            showAge = e.group.id != currentGroup.id,
+            answer = answers[e.item.id],
+            shape = sectionRowShape(i, rows.size),
+            modifier = Modifier.animateItem(
+                fadeInSpec = AppMotion.defaultEffects(),
+                placementSpec = AppMotion.slowSpatial(),
+                fadeOutSpec = AppMotion.defaultEffects(),
             ),
-            selected = answer?.let { order.indexOf(it) },
-            onSelect = { i -> onAnswer(if (order[i] == answer) null else order[i]) },
-            height = 44.dp,
-            unselectedColor = LocalSurfaces.current.inset,
-            selectedColors = { i ->
-                when (order[i]) {
-                    MilestoneAnswer.YES -> status.good to status.onGood
-                    MilestoneAnswer.NOT_YET -> status.attentionContainer to status.onAttentionContainer
-                    MilestoneAnswer.NOT_SURE -> colors.inverseSurface to colors.inverseOnSurface
-                }
-            },
+            onAnswer = { onAnswer(e.item.id, it) },
         )
     }
 }
 
-/** One moon per area of development (social, language, thinking, movement) for this age. */
+private fun sectionRowShape(index: Int, count: Int): RoundedCornerShape {
+    val top = if (index == 0) 24.dp else 6.dp
+    val bottom = if (index == count - 1) 24.dp else 6.dp
+    return RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom)
+}
+
+/**
+ * One skill, and "yes / not yet / making progress" as a connected button group. Tapping the chosen answer clears it.
+ * "Yes" sets off a small firework from the button itself.
+ */
 @Composable
-private fun DomainMoons(domains: List<MilestoneDomain>, group: MilestoneGroup, answers: Map<String, MilestoneAnswer>) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+private fun MilestoneRow(
+    entry: MilestoneFocus.Entry,
+    showAge: Boolean,
+    answer: MilestoneAnswer?,
+    shape: RoundedCornerShape,
+    modifier: Modifier,
+    onAnswer: (MilestoneAnswer?) -> Unit,
+) {
+    val order = listOf(MilestoneAnswer.YES, MilestoneAnswer.NOT_YET, MilestoneAnswer.PROGRESS)
+    val status = LocalStatusColors.current
+    val colors = MaterialTheme.colorScheme
+    val haptics = LocalHapticFeedback.current
+    var bursts by remember { mutableIntStateOf(0) }
+    // Where the row and its "yes" button are, so the sparks start from the button (plain holders, not state).
+    val rowAt = remember { arrayOfNulls<LayoutCoordinates>(1) }
+    val yesAt = remember { arrayOfNulls<LayoutCoordinates>(1) }
+
+    Box(modifier.onGloballyPositioned { rowAt[0] = it }) {
+        GroupRow(spacing = 12.dp, shape = shape) {
+            Column {
+                if (showAge) {
+                    Text(
+                        stringResource(R.string.milestones_from_age, entry.group.title),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = colors.onSurfaceVariant,
+                    )
+                }
+                Text(entry.item.text, style = MaterialTheme.typography.bodyLarge)
+            }
+            ConnectedChoice(
+                options = listOf(
+                    stringResource(R.string.answer_yes),
+                    stringResource(R.string.answer_not_yet),
+                    stringResource(R.string.answer_progress),
+                ),
+                selected = answer?.let { order.indexOf(it) },
+                onSelect = { i ->
+                    val picked = order[i]
+                    if (picked == answer) {
+                        onAnswer(null)
+                    } else {
+                        if (picked == MilestoneAnswer.YES) {
+                            bursts++
+                            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+                        }
+                        onAnswer(picked)
+                    }
+                },
+                height = 44.dp,
+                unselectedColor = LocalSurfaces.current.inset,
+                selectedColors = { i ->
+                    when (order[i]) {
+                        MilestoneAnswer.YES -> status.good to status.onGood
+                        MilestoneAnswer.NOT_YET -> colors.inverseSurface to colors.inverseOnSurface
+                        MilestoneAnswer.PROGRESS -> colors.tertiaryContainer to colors.onTertiaryContainer
+                    }
+                },
+                segmentModifier = { i -> if (i == 0) Modifier.onGloballyPositioned { yesAt[0] = it } else Modifier },
+            )
+        }
+        SparkBurst(
+            trigger = bursts,
+            origin = {
+                val row = rowAt[0]
+                val yes = yesAt[0]
+                if (row != null && yes != null && row.isAttached && yes.isAttached) {
+                    row.localPositionOf(yes, Offset(yes.size.width / 2f, yes.size.height / 2f))
+                } else {
+                    null
+                }
+            },
+            modifier = Modifier.matchParentSize(),
+        )
+    }
+}
+
+/** One moon per area of development (social, language, thinking, movement), over every skill shown. */
+@Composable
+private fun DomainMoons(
+    domains: List<MilestoneDomain>,
+    entries: List<MilestoneFocus.Entry>,
+    answers: Map<String, MilestoneAnswer>,
+    modifier: Modifier = Modifier,
+) {
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
         domains.forEach { d ->
-            val items = group.items.filter { it.domain == d.id }
+            val items = entries.filter { it.item.domain == d.id }
             if (items.isNotEmpty()) {
-                val yes = items.count { answers[it.id] == MilestoneAnswer.YES }
+                val yes = items.count { answers[it.item.id] == MilestoneAnswer.YES }
                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     MoonPhase(yes / items.size.toFloat(), size = 52.dp, lit = domainAccent(d.id))
                     Text(
@@ -263,5 +397,43 @@ private fun DomainMoons(domains: List<MilestoneDomain>, group: MilestoneGroup, a
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun TipsCard(tips: List<String>, modifier: Modifier = Modifier) {
+    AppCard(modifier) {
+        Text(stringResource(R.string.milestones_tips_title), style = MaterialTheme.typography.titleLarge)
+        BulletList(tips, bullet = MaterialTheme.colorScheme.tertiary)
+    }
+}
+
+/** Before the first list: the moon fills as its day comes near, with ways to help the baby until then. */
+@Composable
+private fun FirstListCountdown(first: MilestoneGroup, months: Double, corrected: Boolean, reviewed: Boolean) {
+    val res = LocalContext.current.resources
+    LazyColumn(
+        Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        item {
+            Column(Modifier.padding(horizontal = 8.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                MoonPhase((months / first.months).toFloat(), size = 64.dp, lit = MaterialTheme.colorScheme.tertiary)
+                Text(
+                    stringResource(R.string.milestones_first_list_title, first.title),
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(top = 8.dp),
+                )
+                Text(
+                    stringResource(R.string.milestones_first_list_in, Format.days(res, MilestoneFocus.daysUntil(first, months))),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                if (corrected) Text(stringResource(R.string.milestones_corrected_note), style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+        if (first.tips.isNotEmpty()) item { TipsCard(first.tips) }
+        if (!reviewed) item { DraftNotice() }
     }
 }

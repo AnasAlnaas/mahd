@@ -90,7 +90,8 @@ data class ChildRecords(
 enum class MilestoneAnswer(val code: Int) {
     YES(1),
     NOT_YET(0),
-    NOT_SURE(2);
+    /** "يحاول": the child is starting to do it. Same code as the old "not sure" answer, so old saves and backups still load. */
+    PROGRESS(2);
 
     companion object {
         fun fromCode(code: Int) = entries.firstOrNull { it.code == code }

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "reviewed": false,
-  "reviewNote": "DRAFT. Simplified Arabic adaptation of the CDC 'Learn the Signs. Act Early.' milestone checklists (2022 revision), plus common red flags. Must be reviewed by a Libyan paediatrician. Check CDC reuse terms before release.",
+  "reviewNote": "DRAFT. Simplified Arabic adaptation of the CDC 'Learn the Signs. Act Early.' milestone checklists (2022 revision), plus a 1-month list from the AAP (see its source), plus common red flags. Must be reviewed by a Libyan paediatrician. Check CDC reuse terms before release.",
   "domains": [
     { "id": "social", "title": "اجتماعي وعاطفي", "emoji": "🤗" },
     { "id": "language", "title": "اللغة والتواصل", "emoji": "🗣️" },
@@ -9,6 +9,24 @@
     { "id": "movement", "title": "الحركة والنمو الجسدي", "emoji": "🏃" }
   ],
   "groups": [
+    {
+      "id": "m1", "months": 1, "title": "عمر شهر",
+      "source": "AAP (HealthyChildren.org / Caring for Your Baby and Young Child): developmental milestones at 1 month. CDC has no 1-month list; chosen not to repeat the CDC 2-month items.",
+      "items": [
+        { "id": "m1_l1", "domain": "language", "text": "يبكي ليخبرك أنه جائع أو منزعج" },
+        { "id": "m1_c1", "domain": "cognitive", "text": "يحدّق في الوجوه القريبة وفي الأشكال ذات الأبيض والأسود" },
+        { "id": "m1_m1", "domain": "movement", "text": "يدير رأسه من جهة إلى أخرى وهو مستلقٍ على بطنه" },
+        { "id": "m1_m2", "domain": "movement", "text": "يقرّب يديه من وجهه وفمه" },
+        { "id": "m1_m3", "domain": "movement", "text": "يبحث بفمه عن الثدي عندما تلمسين خدّه، ويمصّ جيدًا" },
+        { "id": "m1_m4", "domain": "movement", "text": "ينتفض ويمدّ ذراعيه عند سماع صوت عالٍ مفاجئ" }
+      ],
+      "tips": [
+        "احمليه وكلّميه وجهًا لوجه على بعد 20 إلى 30 سم؛ هذه أوضح مسافة يرى بها الآن.",
+        "أريه أشياء بالأبيض والأسود، وحرّكيها ببطء أمام عينيه.",
+        "ضعيه على بطنه وهو مستيقظ وأنتِ بجانبه، دقائق قليلة عدة مرات في اليوم.",
+        "نوّميه دائمًا على ظهره، في سرير خالٍ من الوسائد والألعاب والأغطية الثقيلة."
+      ]
+    },
     {
       "id": "m2", "months": 2, "title": "عمر شهرين",
       "items": [
