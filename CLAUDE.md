@@ -64,7 +64,12 @@ Libyan vaccine schedule or Libyan dialect. Plan: MVP first, add features over ti
   wording only: each reflection ("advice"/"adviceFather") must also be read against the verse's or hadith's real meaning
   and context (e.g. الكهف 46 contrasts children with الباقيات الصالحات; Muslim 996 is about servants, so it was dropped).
   Shown as a card high on Home (danger-signs card moved to the end: owner's choice) and as a
-  notification on Tuesdays and Fridays (Settings switch, part of the reminders). Owner chose "sources only, no draft
+  notification on Tuesdays and Fridays (Settings switch, part of the reminders).
+  Science facts (owner's request, 2026-10-10): `assets/content/science_facts.json` (kind `fact`, ids `s_*`, same stage
+  fields) rotates with the verses/hadith on the Home card ("معلومة علمية"). Each fact names a health body (WHO, NHS, AAP,
+  ACOG, CDC) or a specific peer-reviewed study; it is medical content, so the card shows the draft line while that file's
+  `reviewed` is false. Notifications stay verse/hadith only (the switch promises that). Removed in the same review:
+  the aqiqah hadith (Bukhari 5472 is mu'allaq, not a connected narration). Owner chose "sources only, no draft
   note" in the UI — the reflections should still be read by a qualified person before release. Ornate brackets ﴿ ﴾ are drawn in the system font (Readex lacks them).
 - Mother or father (owner's request, 2026-10-09): asked on first open (`ParentChoiceScreen`, before onboarding; also once
   for existing installs), changeable in Settings (`Prefs.parent`, `LocalParent`). Father = blue palette (`FatherLight/Dark`

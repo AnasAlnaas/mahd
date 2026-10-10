@@ -132,7 +132,7 @@ private fun PregnancyHome(app: MahdApp, profile: Profile, nav: Navigator) {
             }
         }
         if (askForReminders) item { RemindersPrompt(app, profile) }
-        advice?.let { item { AdviceCard(it) } }
+        advice?.let { item { AdviceCard(it, app.content.advice.factsReviewed) } }
         item {
             ListGroup {
                 GroupItem(
@@ -234,7 +234,7 @@ private fun ChildHome(app: MahdApp, profile: Profile, nav: Navigator) {
             )
         }
         if (askForReminders) item { RemindersPrompt(app, profile) }
-        advice?.let { item { AdviceCard(it) } }
+        advice?.let { item { AdviceCard(it, app.content.advice.factsReviewed) } }
         item {
             ListGroup {
                 NextVaccineRow(plans, nav)

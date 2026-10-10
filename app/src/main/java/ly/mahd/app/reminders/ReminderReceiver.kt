@@ -81,7 +81,7 @@ class ReminderReceiver : BroadcastReceiver() {
         }
 
         /**
-         * Twice a week, a verse or hadith for the profile she is following (the same one Home shows today).
+         * Twice a week, a verse or hadith for the profile she is following (from the same rotation as Home).
          * Missed days are not caught up: unlike a vaccine reminder, nothing is lost if one is skipped.
          */
         private fun sendAdvice(context: Context, res: Resources, today: LocalDate) {
@@ -91,7 +91,9 @@ class ReminderReceiver : BroadcastReceiver() {
             if (app.prefs.wasNotified(key)) return
             val profiles = app.repository.profilesNow()
             val profile = profiles.firstOrNull { it.id == app.prefs.selectedProfileId.value } ?: profiles.firstOrNull() ?: return
-            val item = AdviceRules.forDay(app.content.advice.items, profile, today, app.prefs.parent.value ?: Parent.MOTHER) ?: return
+            // The switch promises a verse or hadith, so the science facts stay on Home.
+            val islamic = app.content.advice.items.filter { it.kind != AdviceKind.FACT }
+            val item = AdviceRules.forDay(islamic, profile, today, app.prefs.parent.value ?: Parent.MOTHER) ?: return
             val title = res.getString(if (item.kind == AdviceKind.QURAN) R.string.advice_title_quran else R.string.advice_title_hadith)
             val text = "${item.displayText}\n${item.source}"
             if (Notifications.post(context, key, title, text, profile.id, Routes.HOME)) app.prefs.markNotified(key)

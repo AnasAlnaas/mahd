@@ -34,11 +34,30 @@ class AdviceTest {
             // Every hadith names al-Bukhari or Muslim; every verse names its sura.
             if (a.kind == AdviceKind.HADITH) assertTrue("${a.id}: source", "البخاري" in a.source || "مسلم" in a.source)
             if (a.kind == AdviceKind.QURAN) assertTrue("${a.id}: source", a.source.startsWith("سورة"))
+            // Science facts live in their own file and are never presented as Qur'an or hadith.
+            if (a.kind == AdviceKind.FACT) assertTrue("${a.id}: fact id", a.id.startsWith("s_"))
             // The app adds the Qur'anic brackets itself.
             assertFalse("${a.id}: brackets in the text", '﴿' in a.text || '﴾' in a.text)
             assertTrue("${a.id}: bad sex", a.sex == null || a.sex == "boy" || a.sex == "girl")
             if (a.audience == AdviceAudience.PREGNANCY) assertTrue(a.minMonths == null && a.maxMonths == null)
             if (a.audience == AdviceAudience.CHILD) assertTrue(a.minWeeks == null && a.maxWeeks == null)
+        }
+    }
+
+    @Test
+    fun scienceFactsAreADraftMixedWithTheTexts() {
+        val content = ContentRepository { path -> File("src/main/assets/$path").inputStream() }.advice
+        val facts = items.filter { it.kind == AdviceKind.FACT }
+        assertTrue(facts.size >= 30)
+        assertFalse("medical content stays a draft until a doctor reviews it", content.factsReviewed)
+        // Neither the verses and hadith nor the facts take over a stage.
+        for (week in 4..42) {
+            val shown = AdviceRules.eligible(items, pregnancy(week), today)
+            assertTrue("pregnancy week $week", shown.any { it.kind == AdviceKind.FACT } && shown.any { it.kind != AdviceKind.FACT })
+        }
+        for (months in 0L..60L) {
+            val shown = AdviceRules.eligible(items, child(months), today)
+            assertTrue("child of $months months", shown.any { it.kind == AdviceKind.FACT } && shown.any { it.kind != AdviceKind.FACT })
         }
     }
 
@@ -63,8 +82,13 @@ class AdviceTest {
         assertTrue(baby.none { it.audience == AdviceAudience.PREGNANCY })
         assertTrue(baby.any { it.id == "q_baqarah_233_a" })
         assertTrue(AdviceRules.eligible(items, child(30), today).none { it.id == "q_baqarah_233_a" }) // under 2 years only
-        assertTrue(AdviceRules.eligible(items, child(0), today).any { it.id == "h_aqiqah" })
-        assertTrue(AdviceRules.eligible(items, child(3), today).none { it.id == "h_aqiqah" })
+        assertTrue(AdviceRules.eligible(items, child(0), today).any { it.id == "q_al_imran_36" })
+        assertTrue(AdviceRules.eligible(items, child(3), today).none { it.id == "q_al_imran_36" })
+        // An "all" item can be limited in both: the colostrum fact from week 34 until the first month.
+        assertTrue(AdviceRules.eligible(items, pregnancy(30), today).none { it.id == "s_colostrum" })
+        assertTrue(AdviceRules.eligible(items, pregnancy(36), today).any { it.id == "s_colostrum" })
+        assertTrue(AdviceRules.eligible(items, child(0), today).any { it.id == "s_colostrum" })
+        assertTrue(AdviceRules.eligible(items, child(2), today).none { it.id == "s_colostrum" })
 
         assertTrue(AdviceRules.eligible(items, child(12, Sex.GIRL), today).any { it.sex == "girl" })
         assertTrue(AdviceRules.eligible(items, child(12, Sex.BOY), today).none { it.sex == "girl" })

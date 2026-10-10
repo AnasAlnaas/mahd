@@ -115,7 +115,12 @@ class ContentRepository(private val opener: (String) -> InputStream) {
     val milestones: MilestoneContent by lazy { parseMilestones(readJson("content/milestones.json")) }
     val vaccines: VaccineSchedule by lazy { parseVaccines(readJson("content/vaccines_ly.json")) }
     val childDangerSigns: ChildDangerSigns by lazy { parseChildDangerSigns(readJson("content/child_danger_signs.json")) }
-    val advice: AdviceContent by lazy { parseAdvice(readJson("content/islamic_advice.json")) }
+    /** Today's word on Home: the verses and hadith, then the science facts (each file has its own review flag). */
+    val advice: AdviceContent by lazy {
+        val islamic = parseAdvice(readJson("content/islamic_advice.json"))
+        val facts = parseAdvice(readJson("content/science_facts.json"))
+        AdviceContent(islamic.reviewed, islamic.items + facts.items, factsReviewed = facts.reviewed)
+    }
     val growth: GrowthStandards by lazy {
         GrowthStandards.parseCsv(opener("content/growth_who.csv").bufferedReader().use { it.readText() })
     }
@@ -234,9 +239,9 @@ private fun JSONArray.strings(): List<String> = (0 until length()).map { getStri
 private fun JSONObject.optNumber(key: String): Double? =
     if (has(key) && !isNull(key)) getDouble(key) else null
 
-// ---------- Islamic advice (Qur'an and authentic hadith) ----------
+// ---------- Daily advice (Qur'an, authentic hadith, science facts) ----------
 
-enum class AdviceKind { QURAN, HADITH }
+enum class AdviceKind { QURAN, HADITH, FACT }
 
 /** Who an advice item is for (see "for" in islamic_advice.json). */
 enum class AdviceAudience { PREGNANCY, CHILD, ALL }
@@ -245,9 +250,9 @@ data class AdviceItem(
     val id: String,
     val kind: AdviceKind,
     val audience: AdviceAudience,
-    /** The exact text: a verse (shown between ﴿ ﴾) or a hadith. */
+    /** The exact text: a verse (shown between ﴿ ﴾), a hadith, or a science fact. */
     val text: String,
-    /** Where it comes from: "سورة لقمان: 14", "متفق عليه: البخاري (5971) ومسلم (2548)". */
+    /** Where it comes from: "سورة لقمان: 14", "متفق عليه: البخاري (5971) ومسلم (2548)", "منظمة الصحة العالمية". */
     val source: String,
     /** A short reflection for the mother, in simple Arabic. */
     val advice: String,
@@ -266,7 +271,8 @@ data class AdviceItem(
     val displayText: String get() = if (kind == AdviceKind.QURAN) "﴿$text﴾" else text
 }
 
-data class AdviceContent(val reviewed: Boolean, val items: List<AdviceItem>)
+/** [reviewed] is for the verses and hadith, [factsReviewed] for the science facts (medical content). */
+data class AdviceContent(val reviewed: Boolean, val items: List<AdviceItem>, val factsReviewed: Boolean = false)
 
 private fun JSONObject.optIntOrNull(key: String): Int? =
     if (has(key) && !isNull(key)) getInt(key) else null

@@ -39,18 +39,25 @@ fun rememberTodaysAdvice(app: MahdApp, profile: Profile): AdviceItem? {
 }
 
 /**
- * A verse or hadith with its exact source, then a short word for the mother. A verse is set larger, between
- * the Qur'anic brackets; a hadith (usually longer) at body size.
+ * A verse, hadith or science fact with its exact source, then a short word for the mother. A verse is set larger,
+ * between the Qur'anic brackets; a hadith or fact (usually longer) at body size. A fact is medical content, so it
+ * carries the draft line until a doctor has reviewed the facts file.
  */
 @Composable
-fun AdviceCard(item: AdviceItem, modifier: Modifier = Modifier) {
+fun AdviceCard(item: AdviceItem, factsReviewed: Boolean, modifier: Modifier = Modifier) {
     val quran = item.kind == AdviceKind.QURAN
     AppCard(modifier) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             MoonPhase(0.3f, size = 16.dp, animate = false)
             Spacer(Modifier.width(8.dp))
             Text(
-                stringResource(if (quran) R.string.advice_title_quran else R.string.advice_title_hadith),
+                stringResource(
+                    when (item.kind) {
+                        AdviceKind.QURAN -> R.string.advice_title_quran
+                        AdviceKind.HADITH -> R.string.advice_title_hadith
+                        AdviceKind.FACT -> R.string.advice_title_fact
+                    },
+                ),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
             )
@@ -62,6 +69,9 @@ fun AdviceCard(item: AdviceItem, modifier: Modifier = Modifier) {
         )
         Text(item.source, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(item.adviceFor(LocalParent.current), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
+        if (item.kind == AdviceKind.FACT && !factsReviewed) {
+            Text(stringResource(R.string.draft_notice), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
     }
 }
 
