@@ -37,6 +37,9 @@ Libyan vaccine schedule or Libyan dialect. Plan: MVP first, add features over ti
   "لديك تذكير من أطوار" (owner's choice: follow the phone's setting, no in-app switch).
 - Notification permission is asked in context: a Home card (`RemindersPrompt`) explains the reminders and asks only
   when tapped (Android asks at most twice); never auto-prompt at startup.
+- Feeding (owner's decision, 2026-10-10): the app promotes breastfeeding only. Never mention formula, bottles or
+  "breast or bottle" as a choice in any content or string. A feeding problem is sent to the doctor (e.g. `s_enough_milk`:
+  wet nappies and weight), never solved with formula in the app's own words.
 - Danger signs: pregnancy (`pregnancy.json`) and children (`child_danger_signs.json`, DRAFT from WHO IMCI + NICE fever
   rule for under 3 months). A section with `maxAgeMonths` is shown first for a younger child. No "call ambulance"
   button until a doctor confirms the number (owner's decision).
