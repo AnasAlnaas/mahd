@@ -35,10 +35,13 @@ import ly.mahd.app.MahdApp
 import ly.mahd.app.R
 import ly.mahd.app.content.GrowthIndicator
 import ly.mahd.app.content.MilestoneContent
+import ly.mahd.app.content.fatherStage
 import ly.mahd.app.content.MilestoneGroup
+import ly.mahd.app.content.tipsFor
 import ly.mahd.app.data.ChildRecords
 import ly.mahd.app.data.GrowthEntry
 import ly.mahd.app.data.MilestoneAnswer
+import ly.mahd.app.data.Parent
 import ly.mahd.app.data.Profile
 import ly.mahd.app.logic.ChildAge
 import ly.mahd.app.logic.GrowthMath
@@ -53,6 +56,7 @@ import ly.mahd.app.ui.components.ExpressiveButton
 import ly.mahd.app.ui.components.GroupItem
 import ly.mahd.app.ui.components.GroupRow
 import ly.mahd.app.ui.components.ListGroup
+import ly.mahd.app.ui.components.LocalParent
 import ly.mahd.app.ui.components.LocalToday
 import ly.mahd.app.ui.components.MoonPhase
 import ly.mahd.app.ui.components.TrimesterMoons
@@ -138,6 +142,18 @@ private fun PregnancyHome(app: MahdApp, profile: Profile, nav: Navigator) {
                     supportingColor = MaterialTheme.colorScheme.primary,
                     onClick = { nav.selectTab(Routes.PREGNANCY) },
                 )
+                // The father sees how he can help at this stage, right on Home.
+                val stage = app.content.pregnancy.fatherStage(ga.weeks.coerceAtLeast(1))
+                if (LocalParent.current == Parent.FATHER && stage != null) {
+                    GroupRow(spacing = 4.dp) {
+                        Text(
+                            stringResource(R.string.section_support),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Text(stage.support, style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
             }
         }
         item { BabyBornCard(profile, nav) }
@@ -386,7 +402,8 @@ private fun Sparkline(values: List<Double>, color: Color) {
 @Composable
 private fun TipBlock(group: MilestoneGroup) {
     val today = LocalToday.current
-    val tip = group.tips.getOrNull(today.dayOfYear % group.tips.size.coerceAtLeast(1)) ?: return
+    val tips = group.tipsFor(LocalParent.current)
+    val tip = tips.getOrNull(today.dayOfYear % tips.size.coerceAtLeast(1)) ?: return
     Column(Modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(stringResource(R.string.tip_of_the_day), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
         Text(tip, style = MaterialTheme.typography.bodyLarge)

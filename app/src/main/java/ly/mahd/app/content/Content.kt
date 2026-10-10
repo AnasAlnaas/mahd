@@ -1,6 +1,7 @@
 package ly.mahd.app.content
 
 import android.content.res.AssetManager
+import ly.mahd.app.data.Parent
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.InputStream
@@ -26,6 +27,8 @@ data class PregnancyContent(
     val reviewed: Boolean,
     val weeks: List<PregnancyWeek>,
     val dangerSigns: List<String>,
+    /** For the father, instead of the mother's "your body" and tip: what his wife may be going through, and how to help. */
+    val fatherStages: List<FatherStage> = emptyList(),
 ) {
     /** Content for a week; weeks outside the table use the nearest one. */
     fun week(n: Int): PregnancyWeek = weeks.firstOrNull { it.week == n }
@@ -57,6 +60,8 @@ data class MilestoneGroup(
     val title: String,
     val items: List<MilestoneItem>,
     val tips: List<String>,
+    /** The same, written for the father: short things a working father can do. */
+    val tipsFather: List<String> = emptyList(),
 )
 
 data class MilestoneContent(
@@ -143,6 +148,9 @@ class ContentRepository(private val opener: (String) -> InputStream) {
             )
         }.sortedBy { it.week },
         dangerSigns = o.getJSONArray("dangerSigns").strings(),
+        fatherStages = o.optJSONArray("fatherStages")?.objects().orEmpty().map {
+            FatherStage(it.getInt("fromWeek"), it.getInt("toWeek"), it.getString("wife"), it.getString("support"))
+        },
     )
 
     private fun parseMilestones(o: JSONObject) = MilestoneContent(
@@ -159,6 +167,7 @@ class ContentRepository(private val opener: (String) -> InputStream) {
                     MilestoneItem(it.getString("id"), it.getString("domain"), it.getString("text"))
                 },
                 tips = g.optJSONArray("tips")?.strings().orEmpty(),
+                tipsFather = g.optJSONArray("tipsFather")?.strings().orEmpty(),
             )
         }.sortedBy { it.months },
         warnings = o.getJSONArray("warnings").strings(),
@@ -190,6 +199,8 @@ class ContentRepository(private val opener: (String) -> InputStream) {
                 minMonths = a.optIntOrNull("minMonths"),
                 maxMonths = a.optIntOrNull("maxMonths"),
                 sex = if (a.has("sex") && !a.isNull("sex")) a.getString("sex") else null,
+                parent = a.optString("parent", "mother"),
+                adviceFather = if (a.has("adviceFather")) a.getString("adviceFather") else null,
             )
         },
     )
@@ -246,6 +257,10 @@ data class AdviceItem(
     val maxMonths: Int? = null,
     /** "boy" or "girl" when the item is about sons or daughters only. */
     val sex: String? = null,
+    /** "mother" (the default), "father" or "both": who sees this item. */
+    val parent: String = "mother",
+    /** For a "both" item: the word for the father (when [advice] is written to the mother). */
+    val adviceFather: String? = null,
 ) {
     /** The text as shown: a verse between the Qur'anic brackets ﴿ ﴾, a hadith as written. */
     val displayText: String get() = if (kind == AdviceKind.QURAN) "﴿$text﴾" else text
@@ -255,3 +270,25 @@ data class AdviceContent(val reviewed: Boolean, val items: List<AdviceItem>)
 
 private fun JSONObject.optIntOrNull(key: String): Int? =
     if (has(key) && !isNull(key)) getInt(key) else null
+
+/** One stage of the pregnancy for the father, weeks [fromWeek]..[toWeek] (inclusive). */
+data class FatherStage(val fromWeek: Int, val toWeek: Int, val wife: String, val support: String)
+
+/** The father's stage for a pregnancy week (weeks outside the table use the nearest stage). */
+fun PregnancyContent.fatherStage(week: Int): FatherStage? =
+    fatherStages.firstOrNull { week in it.fromWeek..it.toWeek }
+        ?: fatherStages.minByOrNull { minOf(kotlin.math.abs(week - it.fromWeek), kotlin.math.abs(week - it.toWeek)) }
+
+/** The tips for whoever uses the app (the mother's tips if a group has no father tips). */
+fun MilestoneGroup.tipsFor(parent: Parent): List<String> =
+    if (parent == Parent.FATHER && tipsFather.isNotEmpty()) tipsFather else tips
+
+/** Whether [parent] sees this advice item. */
+fun AdviceItem.isFor(parent: Parent): Boolean = when (this.parent) {
+    "both" -> true
+    "father" -> parent == Parent.FATHER
+    else -> parent == Parent.MOTHER
+}
+
+/** The short word under the text, written to whoever reads it. */
+fun AdviceItem.adviceFor(parent: Parent): String = if (parent == Parent.FATHER) adviceFather ?: advice else advice

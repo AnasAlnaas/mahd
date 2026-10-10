@@ -40,6 +40,7 @@ import ly.mahd.app.R
 import ly.mahd.app.data.BackupFile
 import ly.mahd.app.data.Profile
 import ly.mahd.app.data.Repository
+import ly.mahd.app.data.Parent
 import ly.mahd.app.data.ThemeMode
 import ly.mahd.app.reminders.Notifications
 import ly.mahd.app.ui.Navigator
@@ -53,6 +54,7 @@ import ly.mahd.app.ui.components.ListGroup
 import ly.mahd.app.ui.components.MoonPhase
 import ly.mahd.app.ui.components.AppIcon
 import ly.mahd.app.ui.components.ConfirmDialog
+import ly.mahd.app.ui.components.LocalParent
 import ly.mahd.app.ui.components.LocalToday
 import ly.mahd.app.ui.components.SectionTitle
 import ly.mahd.app.ui.components.SubScreen
@@ -187,6 +189,28 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
                         )
                         Text(
                             stringResource(R.string.theme_hint),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+
+            // ----- Who uses the app -----
+            item { SectionTitle(stringResource(R.string.settings_parent), Modifier.padding(top = 12.dp)) }
+            item {
+                val parents = listOf(Parent.MOTHER, Parent.FATHER)
+                ListGroup {
+                    GroupRow(spacing = 12.dp) {
+                        ConnectedChoice(
+                            options = listOf(stringResource(R.string.role_mother_short), stringResource(R.string.role_father_short)),
+                            selected = parents.indexOf(LocalParent.current),
+                            // The screen restarts in the new voice and colours (MainActivity).
+                            onSelect = { app.prefs.setParent(parents[it]) },
+                            unselectedColor = LocalSurfaces.current.inset,
+                        )
+                        Text(
+                            stringResource(R.string.settings_parent_hint),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

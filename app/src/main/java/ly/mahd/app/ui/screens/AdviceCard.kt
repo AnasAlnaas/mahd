@@ -22,9 +22,11 @@ import ly.mahd.app.MahdApp
 import ly.mahd.app.R
 import ly.mahd.app.content.AdviceItem
 import ly.mahd.app.content.AdviceKind
+import ly.mahd.app.content.adviceFor
 import ly.mahd.app.data.Profile
 import ly.mahd.app.logic.AdviceRules
 import ly.mahd.app.ui.components.AppCard
+import ly.mahd.app.ui.components.LocalParent
 import ly.mahd.app.ui.components.LocalToday
 import ly.mahd.app.ui.components.MoonPhase
 
@@ -32,7 +34,8 @@ import ly.mahd.app.ui.components.MoonPhase
 @Composable
 fun rememberTodaysAdvice(app: MahdApp, profile: Profile): AdviceItem? {
     val today = LocalToday.current
-    return remember(profile, today) { AdviceRules.forDay(app.content.advice.items, profile, today) }
+    val parent = LocalParent.current
+    return remember(profile, today, parent) { AdviceRules.forDay(app.content.advice.items, profile, today, parent) }
 }
 
 /**
@@ -58,16 +61,18 @@ fun AdviceCard(item: AdviceItem, modifier: Modifier = Modifier) {
             else MaterialTheme.typography.bodyLarge,
         )
         Text(item.source, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(item.advice, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
+        Text(item.adviceFor(LocalParent.current), style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 4.dp))
     }
 }
 
 /**
- * Readex Pro has no proper glyphs for the ornate Qur'anic brackets ﴿ ﴾ (it draws plain, wrong-facing parentheses),
- * so just those two characters are drawn in the phone's own Arabic font, which has them.
+ * Readex Pro has no proper glyphs for the ornate Qur'anic brackets ﴿ ﴾ (it draws plain, wrong-facing parentheses)
+ * nor for the mushaf's pause marks (ۖ ۚ ۗ …) and verse separator ۝, so those characters are drawn in the phone's
+ * own Arabic font, which has them.
  */
 private fun quranicBrackets(text: String): AnnotatedString = buildAnnotatedString {
     text.forEach { c ->
-        if (c == '﴿' || c == '﴾') withStyle(SpanStyle(fontFamily = FontFamily.Default)) { append(c) } else append(c)
+        val mushafSign = c == '﴿' || c == '﴾' || c in 'ۖ'..'ۭ'
+        if (mushafSign) withStyle(SpanStyle(fontFamily = FontFamily.Default)) { append(c) } else append(c)
     }
 }

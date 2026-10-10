@@ -104,6 +104,60 @@ private val Dark = darkColorScheme(
     surfaceContainerHighest = Color(0xFF39323A),
 )
 
+// The father's colours: a deep, calm blue in place of rose, and cool greys in place of the warm ones.
+// Teal (growth), gold (milestones) and the health colours keep their meaning.
+private val FatherLight = Light.copy(
+    primary = Color(0xFF2C5A9E),
+    onPrimary = Color(0xFFFFFFFF),
+    primaryContainer = Color(0xFFD9E4FF),
+    onPrimaryContainer = Color(0xFF123266),
+    background = Color(0xFFF1F3F7),
+    onBackground = Color(0xFF1A1C21),
+    surface = Color(0xFFF1F3F7),
+    onSurface = Color(0xFF1A1C21),
+    surfaceVariant = Color(0xFFE0E4EC),
+    onSurfaceVariant = Color(0xFF4A505C),
+    outline = Color(0xFF7A808C),
+    outlineVariant = Color(0xFFCDD2DB),
+    inverseSurface = Color(0xFF2E3138),
+    inverseOnSurface = Color(0xFFEEF0F6),
+    inversePrimary = Color(0xFFAFC6FF),
+    surfaceTint = Color(0xFF2C5A9E),
+    surfaceBright = Color(0xFFFCFDFF),
+    surfaceDim = Color(0xFFD9DCE3),
+    surfaceContainerLowest = Color(0xFFFCFDFF),
+    surfaceContainerLow = Color(0xFFF6F7FA),
+    surfaceContainer = Color(0xFFEBEEF3),
+    surfaceContainerHigh = Color(0xFFE5E8EE),
+    surfaceContainerHighest = Color(0xFFDFE2E9),
+)
+
+private val FatherDark = Dark.copy(
+    primary = Color(0xFFAFC6FF),
+    onPrimary = Color(0xFF0F2F61),
+    primaryContainer = Color(0xFF29467A),
+    onPrimaryContainer = Color(0xFFD9E4FF),
+    background = Color(0xFF111318),
+    onBackground = Color(0xFFE2E4EB),
+    surface = Color(0xFF111318),
+    onSurface = Color(0xFFE2E4EB),
+    surfaceVariant = Color(0xFF363A43),
+    onSurfaceVariant = Color(0xFFC3C7D1),
+    outline = Color(0xFF8D919B),
+    outlineVariant = Color(0xFF434750),
+    inverseSurface = Color(0xFFE2E4EB),
+    inverseOnSurface = Color(0xFF2E3138),
+    inversePrimary = Color(0xFF2C5A9E),
+    surfaceTint = Color(0xFFAFC6FF),
+    surfaceBright = Color(0xFF373A41),
+    surfaceDim = Color(0xFF111318),
+    surfaceContainerLowest = Color(0xFF0C0E12),
+    surfaceContainerLow = Color(0xFF191B21),
+    surfaceContainer = Color(0xFF1D2026),
+    surfaceContainerHigh = Color(0xFF282A31),
+    surfaceContainerHighest = Color(0xFF33353C),
+)
+
 /** Extra colours for health states (normal / attention / warning). */
 @Immutable
 data class StatusColors(
@@ -157,6 +211,8 @@ data class SurfaceRoles(
 
 private val LightSurfaces = SurfaceRoles(groupRow = Color(0xFFFFFDFB), inset = Color(0xFFF1EBE8), moonShadow = Color(0xFFE6DCDC))
 private val DarkSurfaces = SurfaceRoles(groupRow = Color(0xFF241F26), inset = Color(0xFF3A333B), moonShadow = Color(0xFF3E363E))
+private val FatherLightSurfaces = SurfaceRoles(groupRow = Color(0xFFFCFDFF), inset = Color(0xFFEBEEF3), moonShadow = Color(0xFFDCE0E8))
+private val FatherDarkSurfaces = SurfaceRoles(groupRow = Color(0xFF1F2229), inset = Color(0xFF353943), moonShadow = Color(0xFF383C45))
 
 val LocalSurfaces = staticCompositionLocalOf { LightSurfaces }
 
@@ -238,11 +294,17 @@ object AppMotion {
 }
 
 @Composable
-fun MahdTheme(dark: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-    val colors: ColorScheme = if (dark) Dark else Light
+fun MahdTheme(dark: Boolean = isSystemInDarkTheme(), father: Boolean = false, content: @Composable () -> Unit) {
+    val colors: ColorScheme = when {
+        father -> if (dark) FatherDark else FatherLight
+        else -> if (dark) Dark else Light
+    }
     CompositionLocalProvider(
         LocalStatusColors provides if (dark) DarkStatus else LightStatus,
-        LocalSurfaces provides if (dark) DarkSurfaces else LightSurfaces,
+        LocalSurfaces provides when {
+            father -> if (dark) FatherDarkSurfaces else FatherLightSurfaces
+            else -> if (dark) DarkSurfaces else LightSurfaces
+        },
     ) {
         MaterialTheme(colorScheme = colors, shapes = AppShapes, typography = AppTypography, content = content)
     }

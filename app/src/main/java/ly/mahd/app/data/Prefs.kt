@@ -44,6 +44,16 @@ class Prefs(context: Context) {
         _adviceNotifications.value = enabled
     }
 
+    /** Who uses the app on this phone: the mother or the father. Null until chosen (asked on first open). */
+    private val _parent = MutableStateFlow(Parent.fromCode(sp.getString(KEY_PARENT, null)))
+    val parent: StateFlow<Parent?> = _parent.asStateFlow()
+
+    fun setParent(parent: Parent) {
+        // commit(), not apply(): the activity is recreated right after and reads it back while starting.
+        sp.edit(commit = true) { putString(KEY_PARENT, parent.code) }
+        _parent.value = parent
+    }
+
     /** Light or dark colours: follow the phone (the default), or always one of them. */
     private val _themeMode = MutableStateFlow(ThemeMode.fromCode(sp.getString(KEY_THEME, null)))
     val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
@@ -91,17 +101,23 @@ class Prefs(context: Context) {
             .forEach { remove(it) }
     }
 
-    private companion object {
-        const val KEY_SELECTED = "selected_profile"
-        const val KEY_DISCLAIMER = "disclaimer_accepted"
-        const val KEY_REMINDERS = "reminders_enabled"
-        const val KEY_ADVICE_NOTIFICATIONS = "advice_notifications"
-        const val KEY_THEME = "theme_mode"
-        const val KEY_PERMISSION_ASKED = "notification_permission_asked"
-        const val KEY_REMINDER_PROMPT_DISMISSED = "reminder_prompt_dismissed"
-        const val KEY_LAST_CHECK = "last_reminder_check"
-        const val NOTIFIED_PREFIX = "notified:"
-        const val WEEK_PREFIX = "pregnancy_week:"
+    companion object {
+        /** The stored choice, read before the app object exists (AppLocale.wrap runs in attachBaseContext). */
+        fun storedParent(context: Context): Parent? = Parent.fromCode(
+            context.getSharedPreferences("mahd_prefs", Context.MODE_PRIVATE).getString(KEY_PARENT, null),
+        )
+
+        private const val KEY_SELECTED = "selected_profile"
+        private const val KEY_DISCLAIMER = "disclaimer_accepted"
+        private const val KEY_REMINDERS = "reminders_enabled"
+        private const val KEY_ADVICE_NOTIFICATIONS = "advice_notifications"
+        private const val KEY_THEME = "theme_mode"
+        private const val KEY_PARENT = "parent"
+        private const val KEY_PERMISSION_ASKED = "notification_permission_asked"
+        private const val KEY_REMINDER_PROMPT_DISMISSED = "reminder_prompt_dismissed"
+        private const val KEY_LAST_CHECK = "last_reminder_check"
+        private const val NOTIFIED_PREFIX = "notified:"
+        private const val WEEK_PREFIX = "pregnancy_week:"
     }
 }
 
@@ -112,5 +128,15 @@ enum class ThemeMode(val code: String) {
 
     companion object {
         fun fromCode(code: String?) = entries.firstOrNull { it.code == code } ?: SYSTEM
+    }
+}
+
+/** Who the app speaks to: the mother (feminine forms, rose) or the father (masculine forms, blue). */
+enum class Parent(val code: String) {
+    MOTHER("mother"),
+    FATHER("father");
+
+    companion object {
+        fun fromCode(code: String?) = entries.firstOrNull { it.code == code }
     }
 }

@@ -45,6 +45,7 @@ import ly.mahd.app.MahdApp
 import ly.mahd.app.R
 import ly.mahd.app.content.MilestoneDomain
 import ly.mahd.app.content.MilestoneGroup
+import ly.mahd.app.content.tipsFor
 import ly.mahd.app.data.MilestoneAnswer
 import ly.mahd.app.data.Profile
 import ly.mahd.app.logic.ChildAge
@@ -55,6 +56,7 @@ import ly.mahd.app.ui.components.ConnectedChoice
 import ly.mahd.app.ui.components.DraftNotice
 import ly.mahd.app.ui.components.ExpressiveButton
 import ly.mahd.app.ui.components.GroupRow
+import ly.mahd.app.ui.components.LocalParent
 import ly.mahd.app.ui.components.LocalToday
 import ly.mahd.app.ui.components.MoonPhase
 import ly.mahd.app.ui.components.SectionTitle
@@ -90,6 +92,7 @@ fun MilestonesScreen(app: MahdApp, profile: Profile) {
     val currentGroup = content.reachedGroups(months).lastOrNull()
     val nextGroup = content.nextGroup(months)
     val corrected = ChildAge.usesCorrectedAge(birth, profile.weeksAtBirth, today)
+    val parent = LocalParent.current
 
     // Skills just answered "yes": they stay in place until their firework has played.
     var held by remember(profile.id) { mutableStateOf(setOf<String>()) }
@@ -230,8 +233,9 @@ fun MilestonesScreen(app: MahdApp, profile: Profile) {
                 }
             }
         }
-        if (currentGroup.tips.isNotEmpty()) {
-            item(key = "tips") { TipsCard(currentGroup.tips, Modifier.padding(top = 16.dp).animateItem()) }
+        val tips = currentGroup.tipsFor(parent)
+        if (tips.isNotEmpty()) {
+            item(key = "tips") { TipsCard(tips, Modifier.padding(top = 16.dp).animateItem()) }
         }
         item(key = "warnings") {
             AppCard(Modifier.padding(top = 16.dp).animateItem()) {
@@ -412,6 +416,7 @@ private fun TipsCard(tips: List<String>, modifier: Modifier = Modifier) {
 @Composable
 private fun FirstListCountdown(first: MilestoneGroup, months: Double, corrected: Boolean, reviewed: Boolean) {
     val res = LocalContext.current.resources
+    val parent = LocalParent.current
     LazyColumn(
         Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
@@ -433,7 +438,8 @@ private fun FirstListCountdown(first: MilestoneGroup, months: Double, corrected:
                 if (corrected) Text(stringResource(R.string.milestones_corrected_note), style = MaterialTheme.typography.bodyMedium)
             }
         }
-        if (first.tips.isNotEmpty()) item { TipsCard(first.tips) }
+        val tips = first.tipsFor(parent)
+        if (tips.isNotEmpty()) item { TipsCard(tips) }
         if (!reviewed) item { DraftNotice() }
     }
 }

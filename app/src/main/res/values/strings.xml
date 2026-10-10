@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
     All app text. The default language of this app is Arabic (tools:locale="ar").
-    The mother is addressed in the feminine form. Numbers are passed in as text (%1$s)
+    The mother is addressed in the feminine form; the father's versions are in strings_father.xml. Numbers are passed in as text (%1$s)
     so they always show as 0-9 digits.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:locale="ar">
@@ -345,6 +345,21 @@
     <string name="answer_yes">نعم</string>
     <string name="answer_not_yet">ليس بعد</string>
     <string name="answer_progress">يحاول</string>
+
+    <!-- Who uses the app (asked on first open; changeable in Settings) -->
+    <string name="role_title">من سيستخدم أطوار على هذا الهاتف؟</string>
+    <string name="role_hint">يتغيّر الكلام والنصائح على حسب اختيارك، ويمكنك تغييره لاحقًا من الإعدادات.</string>
+    <string name="role_mother">أنا الأم</string>
+    <string name="role_mother_hint">متابعة حملك وطفلك</string>
+    <string name="role_father">أنا الأب</string>
+    <string name="role_father_hint">متابعة حمل زوجتك وطفلك، ونصائح تناسب الأب</string>
+    <string name="settings_parent">من يستخدم التطبيق؟</string>
+    <string name="settings_parent_hint">لكل منكما هاتفه. يستطيع أحدكما أن يرسل نسخة احتياطية للآخر ليتابع نفس البيانات.</string>
+    <string name="role_mother_short">الأم</string>
+    <string name="role_father_short">الأب</string>
+    <!-- The father's pregnancy week: what his wife may be going through, and how he can help -->
+    <string name="section_wife">زوجتك هذه الأيام</string>
+    <string name="section_support">كيف تدعمها</string>
 
     <!-- Settings -->
     <string name="settings_profiles">الأطفال والحمل</string>

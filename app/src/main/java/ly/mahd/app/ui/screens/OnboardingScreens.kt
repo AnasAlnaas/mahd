@@ -31,11 +31,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 
 import androidx.compose.ui.unit.dp
 import ly.mahd.app.MahdApp
 import ly.mahd.app.R
+import ly.mahd.app.data.Parent
 import ly.mahd.app.ui.components.AppCard
 import ly.mahd.app.ui.components.AppIcon
 import ly.mahd.app.ui.components.ExpressiveButton
@@ -189,6 +191,65 @@ private fun BigChoice(moon: Float, title: String, hint: String, onClick: () -> U
     GroupRow(onClick = onClick, contentPadding = PaddingValues(20.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             MoonPhase(moon, size = 52.dp)
+            Spacer(Modifier.width(20.dp))
+            Column(Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleLarge)
+                Text(hint, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            AppIcon(R.drawable.ic_chevron_forward, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+/**
+ * Asked once, before anything else: is the mother or the father using the app on this phone?
+ * The answer changes the voice of every text, the advice, and the colours (rose or blue). Changeable in Settings.
+ */
+@Composable
+fun ParentChoiceScreen(app: MahdApp) {
+    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+        BoxWithConstraints(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .heightIn(min = maxHeight)
+                    .padding(horizontal = 16.dp, vertical = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically),
+            ) {
+                Column(Modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        listOf(0.25f, 0.5f, 1f).forEach { MoonPhase(it, size = 28.dp) }
+                    }
+                    Text(stringResource(R.string.role_title), style = MaterialTheme.typography.headlineMedium)
+                    Text(
+                        stringResource(R.string.role_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                ListGroup {
+                    // Each choice shows its own colour: rose for the mother, blue for the father.
+                    RoleChoice(MOTHER_ROSE, stringResource(R.string.role_mother), stringResource(R.string.role_mother_hint)) {
+                        app.prefs.setParent(Parent.MOTHER)
+                    }
+                    RoleChoice(FATHER_BLUE, stringResource(R.string.role_father), stringResource(R.string.role_father_hint)) {
+                        app.prefs.setParent(Parent.FATHER)
+                    }
+                }
+            }
+        }
+    }
+}
+
+private val MOTHER_ROSE = Color(0xFFA23B5B)
+private val FATHER_BLUE = Color(0xFF2C5A9E)
+
+@Composable
+private fun RoleChoice(color: Color, title: String, hint: String, onClick: () -> Unit) {
+    GroupRow(onClick = onClick, contentPadding = PaddingValues(20.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            MoonPhase(1f, size = 44.dp, lit = color)
             Spacer(Modifier.width(20.dp))
             Column(Modifier.weight(1f)) {
                 Text(title, style = MaterialTheme.typography.titleLarge)

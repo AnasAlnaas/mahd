@@ -2,6 +2,7 @@ package ly.mahd.app
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -11,10 +12,12 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import ly.mahd.app.data.Parent
 import ly.mahd.app.data.ThemeMode
 import ly.mahd.app.reminders.Notifications
 import ly.mahd.app.reminders.ReminderReceiver
@@ -22,6 +25,7 @@ import ly.mahd.app.reminders.ReminderScheduler
 import ly.mahd.app.ui.MahdRoot
 import ly.mahd.app.ui.OpenRequest
 import ly.mahd.app.ui.Routes
+import ly.mahd.app.ui.components.LocalParent
 import ly.mahd.app.ui.components.LocalResumeCount
 import ly.mahd.app.ui.components.LocalToday
 import ly.mahd.app.ui.theme.MahdTheme
@@ -48,18 +52,32 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // Only on a fresh start: after a screen rotation the same intent must not move the mother again.
         if (savedInstanceState == null) openFromReminder(intent)
-        // The window shows for a moment before Compose draws; paint it in the chosen mode, not the phone's.
-        when (app.prefs.themeMode.value) {
-            ThemeMode.LIGHT -> window.setBackgroundDrawableResource(R.color.window_background_light)
-            ThemeMode.DARK -> window.setBackgroundDrawableResource(R.color.window_background_dark)
-            ThemeMode.SYSTEM -> Unit
+        // Who this screen speaks to; the text was already chosen for them when the activity started (AppLocale).
+        val startedAs = app.prefs.parent.value
+        // The window shows for a moment before Compose draws; paint it in the chosen mode and the parent's colours.
+        val systemDark = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+        val startDark = when (app.prefs.themeMode.value) {
+            ThemeMode.SYSTEM -> systemDark
+            ThemeMode.LIGHT -> false
+            ThemeMode.DARK -> true
         }
+        window.setBackgroundDrawableResource(
+            when {
+                startedAs == Parent.FATHER -> if (startDark) R.color.window_background_father_dark else R.color.window_background_father_light
+                else -> if (startDark) R.color.window_background_dark else R.color.window_background_light
+            },
+        )
         setContent {
             val mode by app.prefs.themeMode.collectAsState()
+            val parent by app.prefs.parent.collectAsState()
             val dark = when (mode) {
                 ThemeMode.SYSTEM -> isSystemInDarkTheme()
                 ThemeMode.LIGHT -> false
                 ThemeMode.DARK -> true
+            }
+            // Choosing mother or father changes every text: start the screen again so all of it is in the new voice.
+            LaunchedEffect(parent) {
+                if (parent != startedAs) recreate()
             }
             // The status and navigation bar icons follow the app's choice, not the phone's, so they stay readable.
             DisposableEffect(dark) {
@@ -69,8 +87,12 @@ class MainActivity : ComponentActivity() {
                 )
                 onDispose {}
             }
-            MahdTheme(dark = dark) {
-                CompositionLocalProvider(LocalToday provides today.value, LocalResumeCount provides resumeCount.intValue) {
+            MahdTheme(dark = dark, father = startedAs == Parent.FATHER) {
+                CompositionLocalProvider(
+                    LocalToday provides today.value,
+                    LocalResumeCount provides resumeCount.intValue,
+                    LocalParent provides (startedAs ?: Parent.MOTHER),
+                ) {
                     MahdRoot(app, openRequest.value, onOpenHandled = { openRequest.value = null })
                 }
             }

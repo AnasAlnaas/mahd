@@ -25,7 +25,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import ly.mahd.app.MahdApp
 import ly.mahd.app.R
+import ly.mahd.app.content.FatherStage
 import ly.mahd.app.content.PregnancyWeek
+import ly.mahd.app.content.fatherStage
+import ly.mahd.app.data.Parent
 import ly.mahd.app.data.Profile
 import ly.mahd.app.logic.PregnancyMath
 import ly.mahd.app.ui.Navigator
@@ -35,6 +38,7 @@ import ly.mahd.app.ui.components.DraftNotice
 import ly.mahd.app.ui.components.GroupRow
 import ly.mahd.app.ui.components.ListGroup
 import ly.mahd.app.ui.components.TrimesterMoons
+import ly.mahd.app.ui.components.LocalParent
 import ly.mahd.app.ui.components.LocalToday
 import ly.mahd.app.ui.components.SubScreen
 import ly.mahd.app.ui.components.WarningCard
@@ -70,7 +74,7 @@ fun PregnancyScreen(app: MahdApp, profile: Profile, nav: Navigator, initialWeek:
             }
             item { TrimesterMoons(weeks = week.toFloat()) }
             if (!content.reviewed) item { DraftNotice() }
-            item { Crossfade(targetState = week, label = "week") { wk -> WeekDetail(content.week(wk)) } }
+            item { Crossfade(targetState = week, label = "week") { wk -> WeekDetail(content.week(wk), content.fatherStage(wk)) } }
             item {
                 WarningCard(
                     title = stringResource(R.string.danger_signs_title),
@@ -122,7 +126,7 @@ private fun WeekSwitcher(week: Int, lastWeek: Int, isCurrent: Boolean, onWeek: (
 }
 
 @Composable
-private fun WeekDetail(w: PregnancyWeek) {
+private fun WeekDetail(w: PregnancyWeek, fatherStage: FatherStage?) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Column(Modifier.padding(horizontal = 8.dp)) {
             // The fruit is content (what the size is compared to), so it stays, inline with the words.
@@ -142,8 +146,14 @@ private fun WeekDetail(w: PregnancyWeek) {
         }
         ListGroup {
             WeekSection(stringResource(R.string.section_baby), w.baby, MaterialTheme.colorScheme.primary)
-            WeekSection(stringResource(R.string.section_mother), w.mother, MaterialTheme.colorScheme.primary)
-            WeekSection(stringResource(R.string.section_tip), w.tip, MaterialTheme.colorScheme.primary)
+            if (LocalParent.current == Parent.FATHER && fatherStage != null) {
+                // The father: what his wife may be going through, and how he can help (instead of "your body" and the tip).
+                WeekSection(stringResource(R.string.section_wife), fatherStage.wife, MaterialTheme.colorScheme.primary)
+                WeekSection(stringResource(R.string.section_support), fatherStage.support, MaterialTheme.colorScheme.primary)
+            } else {
+                WeekSection(stringResource(R.string.section_mother), w.mother, MaterialTheme.colorScheme.primary)
+                WeekSection(stringResource(R.string.section_tip), w.tip, MaterialTheme.colorScheme.primary)
+            }
         }
     }
 }

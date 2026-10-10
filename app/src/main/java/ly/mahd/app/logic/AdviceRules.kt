@@ -2,6 +2,8 @@ package ly.mahd.app.logic
 
 import ly.mahd.app.content.AdviceAudience
 import ly.mahd.app.content.AdviceItem
+import ly.mahd.app.content.isFor
+import ly.mahd.app.data.Parent
 import ly.mahd.app.data.Profile
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -12,13 +14,14 @@ object AdviceRules {
     val NOTIFICATION_DAYS = setOf(DayOfWeek.TUESDAY, DayOfWeek.FRIDAY)
 
     /** The items that fit this profile today: her pregnancy week, or her child's age (and sex, for a few items). */
-    fun eligible(items: List<AdviceItem>, profile: Profile, today: LocalDate): List<AdviceItem> {
+    fun eligible(items: List<AdviceItem>, profile: Profile, today: LocalDate, parent: Parent = Parent.MOTHER): List<AdviceItem> {
+        val mine = items.filter { it.isFor(parent) }
         val due = profile.dueDate
         val birth = profile.birthDate
         return when {
             profile.isPregnancy && due != null -> {
                 val weeks = PregnancyMath.gestationalAge(due, today).weeks
-                items.filter { a ->
+                mine.filter { a ->
                     a.audience != AdviceAudience.CHILD &&
                         (a.minWeeks == null || weeks >= a.minWeeks) &&
                         (a.maxWeeks == null || weeks <= a.maxWeeks)
@@ -27,14 +30,14 @@ object AdviceRules {
             profile.isChild && birth != null -> {
                 val months = ChildAge.months(birth, today)
                 val sex = profile.sex?.name?.lowercase()
-                items.filter { a ->
+                mine.filter { a ->
                     a.audience != AdviceAudience.PREGNANCY &&
                         (a.minMonths == null || months >= a.minMonths) &&
                         (a.maxMonths == null || months < a.maxMonths) &&
                         (a.sex == null || a.sex == sex)
                 }
             }
-            else -> items.filter { it.audience == AdviceAudience.ALL }
+            else -> mine.filter { it.audience == AdviceAudience.ALL }
         }
     }
 
@@ -42,8 +45,8 @@ object AdviceRules {
      * Today's item: the eligible ones in turn, one per day, so she sees a different one each day and the same one
      * all day long. Each profile starts at a different place in the list, so two children don't show the same text.
      */
-    fun forDay(items: List<AdviceItem>, profile: Profile, today: LocalDate): AdviceItem? {
-        val list = eligible(items, profile, today).sortedBy { it.id }
+    fun forDay(items: List<AdviceItem>, profile: Profile, today: LocalDate, parent: Parent = Parent.MOTHER): AdviceItem? {
+        val list = eligible(items, profile, today, parent).sortedBy { it.id }
         if (list.isEmpty()) return null
         return list[Math.floorMod(today.toEpochDay() + profile.id * 7, list.size.toLong()).toInt()]
     }

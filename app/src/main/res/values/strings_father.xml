@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    The father's wording. Each "X_m" replaces the string "X" when the father uses the app (masculine forms, and
+    "your wife" where the mother's text says "you"). Only strings that differ are here; the swap happens in one
+    place (util/ParentText.kt), so screens and notifications need no changes. A test checks that every "_m" has
+    its mother string, is in the swap list, and keeps the same %1$s placeholders.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="ar">
+    <string name="choose_date_m">اختر التاريخ</string>
+    <string name="tab_pregnancy_m">الحمل</string>
+    <string name="default_pregnancy_name_m">حمل زوجتي</string>
+
+    <string name="welcome_title_m">أهلاً بك في أطوار</string>
+    <string name="welcome_subtitle_m">رفيقك من الحمل حتى عمر 4 سنوات</string>
+    <string name="disclaimer_text_m">هذا التطبيق للمعلومات والمتابعة فقط، ولا يغني عن الطبيب. عند أي قلق أو علامة خطر، راجع الطبيب أو أقرب مستشفى فورًا.</string>
+    <string name="choose_pregnant_m">زوجتي حامل</string>
+    <string name="choose_pregnant_hint_m">تابع الحمل أسبوعًا بأسبوع، وكيف تدعم زوجتك</string>
+    <string name="choose_restore_hint_m">استعد بياناتك، أو نسخة أرسلتها لك زوجتك من هاتفها</string>
+
+    <string name="pregnancy_date_question_m">ماذا تعرف؟</string>
+    <string name="due_date_not_plausible_m">هذا التاريخ لا يناسب حملاً جاريًا. تأكد من التاريخ.</string>
+    <string name="due_date_hint_m">إذا حدّد الطبيب موعد الولادة بالسونار، فاختر «موعد الولادة» وأدخل التاريخ الذي حدّده.</string>
+
+    <string name="baby_born_text_m">أدخل بيانات طفلك لتتحوّل هذه المتابعة من متابعة الحمل إلى متابعة الطفل: التطعيمات والنمو والمهارات.</string>
+    <string name="baby_born_hint_m">عند الولادة، انقل هذه المتابعة إلى متابعة الطفل.</string>
+    <string name="baby_born_overdue_hint_m">مضى على موعد الولادة المتوقع أكثر من أسبوع. إذا وصل طفلك، سجّل ذلك هنا لتبدأ متابعة التطعيمات والنمو والمهارات.</string>
+
+    <string name="past_due_m">مضى على موعد الولادة %1$s. رافق زوجتك إلى طبيبتها.</string>
+    <string name="read_this_week_m">اقرأ عن هذا الأسبوع</string>
+    <string name="danger_signs_title_m">متى تأخذ زوجتك إلى المستشفى فورًا؟</string>
+    <string name="danger_signs_teaser_m">علامات الخطر أثناء الحمل: اعرفها جيدًا، فقد تكون أنت من يلاحظها أولًا.</string>
+    <string name="danger_signs_intro_title_m">لا تنتظر</string>
+    <string name="danger_signs_intro_m">إذا ظهرت على زوجتك أي علامة من هذه العلامات، خذها إلى أقرب مستشفى أو اتصل بالإسعاف فورًا، حتى في الليل.</string>
+    <string name="danger_signs_footer_m">صدّقها إذا قالت إن شيئًا ليس على ما يرام، وخذها إلى الطبيب حتى لو لم يكن في هذه القائمة.</string>
+    <string name="child_danger_signs_title_m">متى تذهب بطفلك إلى الطوارئ فورًا؟</string>
+    <string name="child_danger_signs_teaser_m">علامات الخطر عند الطفل: حرارة عند رضيع صغير، صعوبة في التنفس، جفاف… اعرفها جيدًا.</string>
+    <string name="child_danger_signs_intro_m">إذا ظهرت على طفلك أي علامة من هذه العلامات، اذهب به فورًا إلى أقرب مستشفى أو طوارئ أطفال، حتى في الليل.</string>
+    <string name="this_is_your_week_m">هذا هو الأسبوع الحالي</string>
+    <string name="back_to_current_week_m">العودة إلى الأسبوع الحالي</string>
+
+    <string name="advice_switch_hint_m">نصيحة من القرآن الكريم أو من صحيحي البخاري ومسلم، تناسب مرحلة الحمل أو عمر طفلك، وتخاطبك كأب.</string>
+    <string name="tile_weight_none_m">أضف قياسًا</string>
+    <string name="all_vaccines_done_m">أحسنت! تم تسجيل كل التطعيمات في الجدول.</string>
+    <string name="growth_card_empty_m">لم تُسجَّل أي قياسات بعد. سجّل الوزن والطول بعد كل زيارة للطبيب.</string>
+
+    <string name="vaccines_intro_m">اضغط على التطعيمة عند أخذها لتسجيلها. سنذكّرك قبل كل موعد.</string>
+    <string name="vaccines_draft_notice_m">مسودة: يجب مطابقة هذا الجدول مع المركز الوطني لمكافحة الأمراض قبل النشر. اتبع دائمًا ما يقوله مركز التطعيم.</string>
+    <string name="vaccine_summary_hint_m">اضغط على أي تطعيمة لتسجيلها أو لتعديلها.</string>
+    <string name="skip_confirm_text_m">ستُسجَّل هذه الجرعات «لا ينطبق» ولن نذكّرك بها. اختر هذا فقط إذا قال الطبيب إنها لم تعد مطلوبة، أو فات وقتها. يمكنك التراجع في أي وقت.</string>
+    <string name="mark_upto_given_m">سجّل كل التطعيمات حتى هذه التطعيمة كمُعطاة</string>
+    <string name="upto_confirm_button_m">سجّل الكل</string>
+
+    <string name="growth_need_sex_m">أضف جنس الطفل في الإعدادات لعرض المنحنى.</string>
+    <string name="growth_preterm_note_m">أُخذ هذا القياس قبل الموعد المتوقع للولادة، ولا تنطبق عليه منحنيات منظمة الصحة العالمية (فهي للأطفال المولودين في موعدهم). اسأل طبيب الأطفال، فهناك منحنيات خاصة بالخُدّج.</string>
+    <string name="growth_preterm_note_short_m">القياس قبل الموعد المتوقع للولادة: اسأل الطبيب عن منحنى الخُدّج.</string>
+    <string name="growth_see_doctor_m">ناقش هذا القياس مع طبيب الأطفال في الزيارة القادمة. قياس واحد لا يكفي للحكم، والمهم هو اتجاه النمو مع الوقت.</string>
+    <string name="trend_down_m">نزل قياس طفلك إلى منحنى أدنى مقارنة بالقياس السابق. إن استمر ذلك، اسأل طبيب الأطفال.</string>
+    <string name="measurement_hint_m">يكفي إدخال قياس واحد. استخدم أرقام الطبيب أو المركز الصحي.</string>
+    <string name="value_out_of_range_m">رقم غير معقول، تأكد منه</string>
+
+    <string name="milestones_intro_m">معظم الأطفال (75 من كل 100) يقومون بهذه الأشياء في عمرها. راقب طفلك واختر لكل مهارة: نعم، أو ليس بعد، أو يحاول. ما يتقنه ينزل إلى الأسفل.</string>
+    <string name="milestones_focus_title_m">راقبها الآن</string>
+    <string name="milestones_talk_to_doctor_title_m">تحدّث مع الطبيب</string>
+    <string name="milestones_talk_to_doctor_m">بعض المهارات لم تظهر بعد. كل طفل له وتيرته، لكن من الأفضل أن تخبر طبيب الأطفال بذلك في أقرب زيارة. الاكتشاف المبكر يساعد كثيرًا.</string>
+    <string name="milestones_tips_title_m">ما يمكنك فعله كأب</string>
+    <string name="milestones_warnings_title_m">راجع الطبيب في أي عمر إذا…</string>
+    <string name="share_achievements_m">شارك إنجازات طفلك</string>
+    <string name="share_card_footer_m">تابع أطوار طفلك مع تطبيق أطوار</string>
+    <string name="share_failed_m">تعذّرت المشاركة، حاول مرة أخرى</string>
+
+    <string name="photos_empty_m">التقط صورة لـ%1$s كل شهر تقريبًا، ثم قارن بين صورتين لترى الفرق مع مرور الوقت.</string>
+    <string name="photos_private_note_m">الصور محفوظة داخل التطبيق فقط ولا تظهر في معرض الهاتف. وهي لا تدخل في النسخة الاحتياطية، فاحفظ نسخة منها في المعرض من وقت لآخر.</string>
+    <string name="photo_delete_text_m">ستُحذف الصورة من التطبيق. إذا لم تحفظها في معرض الهاتف فلن تستطيع استرجاعها.</string>
+    <string name="compare_need_two_m">أضف صورتين على الأقل لتقارن بينهما.</string>
+
+    <string name="reminders_battery_hint_m">إذا لم تصلك التذكيرات في مواعيدها، تأكد أن هاتفك لا يوقف التطبيق في الخلفية (في إعدادات البطارية، اسمح لأطوار بالعمل في الخلفية).</string>
+    <string name="reminders_prompt_title_m">فعّل التذكيرات</string>
+    <string name="reminders_prompt_pregnancy_m">نرسل لك رسالة قصيرة مع بداية كل أسبوع جديد من حمل زوجتك: ما تمرّ به، وكيف تدعمها. لهذا نحتاج إذنك بإرسال الإشعارات.</string>
+    <string name="theme_hint_m">«تلقائي» يتبع إعداد الهاتف. الداكن أريح للعين في السهر مع الطفل ليلًا.</string>
+    <string name="backup_explain_m">بياناتك محفوظة على هذا الهاتف. قد يحفظ أندرويد نسخة منها في حسابك على جوجل، لكن الأضمن أن تحفظ نسخة بنفسك من وقت لآخر (مثلًا أرسلها لنفسك على واتساب)، حتى تستعيدها إذا ضاع الهاتف أو تغيّر. ويمكنك إرسالها لزوجتك لتتابع نفس البيانات على هاتفها.</string>
+    <string name="backup_photos_note_m">الصور لا تدخل في النسخة الاحتياطية؛ احفظها في معرض الهاتف من صفحة «الصور».</string>
+    <string name="backup_privacy_m">ملف النسخة فيه معلومات الحمل وأطفالك (الأسماء والتواريخ والتطعيمات والقياسات)، ويستطيع أي شخص يصله الملف أن يقرأه. أرسله لنفسك أو لزوجتك فقط.</string>
+    <string name="backup_failed_m">تعذّر حفظ النسخة، حاول مرة أخرى</string>
+
+    <string name="about_mission_m">أطوار تطبيق عربي يرافق الأم والأب في ليبيا والبلاد العربية من الحمل حتى عمر 4 سنوات: الحمل أسبوعًا بأسبوع، والتطعيمات، والنمو، والمهارات، بلغة بسيطة وبدون إنترنت.</string>
+    <string name="privacy_text_m">لا يطلب التطبيق إذن الاتصال بالإنترنت، ولا يرسل بياناتك لأي جهة. كل ما تسجّله يبقى على هاتفك، وفي النسخة الاحتياطية التي تحفظها أنت. وإذا كان النسخ الاحتياطي مفعّلًا في أندرويد على هاتفك، فقد يحفظ النظام نسخة في حسابك الخاص على جوجل لتستعيدها على هاتف جديد؛ هذا من أندرويد وليس من التطبيق، ويمكنك إيقافه من إعدادات الهاتف. صور أطفالك تبقى داخل التطبيق، ولا تخرج منه إلا إذا حفظتها في المعرض أو أرسلتها أنت. لا إعلانات ولا تتبّع.</string>
+
+    <string name="notify_new_week_title_m">بدأ الأسبوع %1$s من حمل زوجتك</string>
+    <string name="notify_new_week_text_m">اعرف ما تمرّ به زوجتك هذا الأسبوع، وكيف تدعمها.</string>
+    <string name="notify_vaccine_late_m">%1$s: مضى على موعدها %2$s. إذا أخذها طفلك، سجّلها في التطبيق.</string>
+</resources>

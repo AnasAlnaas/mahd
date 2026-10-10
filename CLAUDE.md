@@ -57,10 +57,25 @@ Libyan vaccine schedule or Libyan dialect. Plan: MVP first, add features over ti
   from Sahih al-Bukhari / Sahih Muslim ONLY, each with its exact source (Bukhari numbers = Fath al-Bari, Muslim =
   Abd al-Baqi). Never add weak/disputed narrations, nor texts that clash with medical safety (tahnik with a chewed date,
   honey under one year). Items are tagged by stage (`for`, weeks/months, `sex`); `AdviceRules.forDay` rotates one per
-  day per profile. Shown as a card high on Home (danger-signs card moved to the end: owner's choice) and as a
+  day per profile. WORDING IS VERIFIED, NOT TRUSTED (owner caught a wrong reflection, 2026-10-10): every verse must
+  match api.quran.com letter for letter, and every hadith must be the narration's own words (not a paraphrase), with
+  "واللفظ للبخاري/لمسلم" when the two differ. After ANY change to that file run
+  `powershell -ExecutionPolicy Bypass -File tools\verify_islamic_texts.ps1` (must say "0 failed"). The script checks
+  wording only: each reflection ("advice"/"adviceFather") must also be read against the verse's or hadith's real meaning
+  and context (e.g. الكهف 46 contrasts children with الباقيات الصالحات; Muslim 996 is about servants, so it was dropped).
+  Shown as a card high on Home (danger-signs card moved to the end: owner's choice) and as a
   notification on Tuesdays and Fridays (Settings switch, part of the reminders). Owner chose "sources only, no draft
-  note" in the UI — but the texts (and the items marked `"verify": true`) must still be checked against printed
-  sources by a qualified person before release. Ornate brackets ﴿ ﴾ are drawn in the system font (Readex lacks them).
+  note" in the UI — the reflections should still be read by a qualified person before release. Ornate brackets ﴿ ﴾ are drawn in the system font (Readex lacks them).
+- Mother or father (owner's request, 2026-10-09): asked on first open (`ParentChoiceScreen`, before onboarding; also once
+  for existing installs), changeable in Settings (`Prefs.parent`, `LocalParent`). Father = blue palette (`FatherLight/Dark`
+  in Theme.kt; teal/gold/health colours unchanged) and masculine text. Text swap without touching screens: every string
+  with a father version lives in `res/values/strings_father.xml` as `<name>_m`, listed in `util/FatherStrings.kt`;
+  `AppLocale.wrap` returns resources that swap them (Android's grammatical-gender API needs Android 14). Changing the role
+  recreates the activity. `FatherTest` checks each `_m` has its mother string, the same placeholders, and a map entry —
+  add both when you add a gendered string. Father content (DRAFT): `pregnancy.json` `fatherStages` (wife / how to support
+  her, weeks 1–42, shown instead of "your body"/tip and on Home), `milestones.json` `tipsFather` per age, and
+  `islamic_advice.json` `parent` (mother|father|both) + `adviceFather`; 15 father-only texts. Shared content (week "baby"
+  text, skill items, warnings) is written to neither parent. One phone = one parent; they share data via backup files.
 - Skills tab (owner's design, 2026-10-09): only skills of the ages the child has REACHED are shown (corrected age for a
   preterm baby); older ages stay hidden. All reached lists show as one list (`logic/MilestoneFocus`): "راقبيها الآن"
   (newest age first) and "أتقنها" (answered yes) at the end. Answers: نعم / ليس بعد / يحاول — `MilestoneAnswer.PROGRESS`

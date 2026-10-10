@@ -58,6 +58,7 @@ import ly.mahd.app.ui.screens.GrowthScreen
 import ly.mahd.app.ui.screens.HomeScreen
 import ly.mahd.app.ui.screens.MilestonesScreen
 import ly.mahd.app.ui.screens.OnboardingFlow
+import ly.mahd.app.ui.screens.ParentChoiceScreen
 import ly.mahd.app.ui.screens.PhotoScreen
 import ly.mahd.app.ui.screens.PhotosScreen
 import ly.mahd.app.ui.screens.PregnancyFormScreen
@@ -73,12 +74,15 @@ import ly.mahd.app.ui.screens.VaccinesScreen
 fun MahdRoot(app: MahdApp, openRequest: OpenRequest?, onOpenHandled: () -> Unit) {
     val profiles by remember { app.repository.profiles }.collectAsState(initial = null)
     val accepted by app.prefs.disclaimerAccepted.collectAsState()
+    val parent by app.prefs.parent.collectAsState()
     val selectedId by app.prefs.selectedProfileId.collectAsState()
     val nav = rememberNavigator()
 
     val list = profiles
     when {
         list == null -> Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
+        // First of all: who uses the app (also asked once of mothers who installed before the father version).
+        parent == null -> ParentChoiceScreen(app)
         !accepted || list.isEmpty() -> OnboardingFlow(app)
         else -> {
             val selected = list.firstOrNull { it.id == selectedId } ?: list.first()

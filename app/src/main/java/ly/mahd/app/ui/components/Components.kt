@@ -47,6 +47,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -65,6 +66,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ly.mahd.app.R
+import ly.mahd.app.data.Parent
 import ly.mahd.app.reminders.Notifications
 import ly.mahd.app.ui.theme.AppMotion
 import ly.mahd.app.ui.theme.AppShape
@@ -82,6 +84,9 @@ val LocalToday = compositionLocalOf<LocalDate> { LocalDate.now() }
  * may have changed in the phone's settings meanwhile, such as notifications, is checked again.
  */
 val LocalResumeCount = compositionLocalOf { 0 }
+
+/** Who uses the app: the mother or the father. Chosen once; the screen restarts when it changes (MainActivity). */
+val LocalParent = staticCompositionLocalOf { Parent.MOTHER }
 
 /** Whether reminders can be shown right now; checked again whenever the app comes back to the screen. */
 @Composable

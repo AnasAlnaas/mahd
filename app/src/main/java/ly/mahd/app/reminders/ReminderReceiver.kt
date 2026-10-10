@@ -8,6 +8,7 @@ import android.util.Log
 import ly.mahd.app.R
 import ly.mahd.app.app
 import ly.mahd.app.content.AdviceKind
+import ly.mahd.app.data.Parent
 import ly.mahd.app.data.Profile
 import ly.mahd.app.logic.AdviceRules
 import ly.mahd.app.logic.PregnancyMath
@@ -90,7 +91,7 @@ class ReminderReceiver : BroadcastReceiver() {
             if (app.prefs.wasNotified(key)) return
             val profiles = app.repository.profilesNow()
             val profile = profiles.firstOrNull { it.id == app.prefs.selectedProfileId.value } ?: profiles.firstOrNull() ?: return
-            val item = AdviceRules.forDay(app.content.advice.items, profile, today) ?: return
+            val item = AdviceRules.forDay(app.content.advice.items, profile, today, app.prefs.parent.value ?: Parent.MOTHER) ?: return
             val title = res.getString(if (item.kind == AdviceKind.QURAN) R.string.advice_title_quran else R.string.advice_title_hadith)
             val text = "${item.displayText}\n${item.source}"
             if (Notifications.post(context, key, title, text, profile.id, Routes.HOME)) app.prefs.markNotified(key)
