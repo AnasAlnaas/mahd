@@ -72,7 +72,18 @@ Libyan vaccine schedule or Libyan dialect. Plan: MVP first, add features over ti
   fields) rotates with the verses/hadith on the Home card ("معلومة علمية"). Each fact names a health body (WHO, NHS, AAP,
   ACOG, CDC) or a specific peer-reviewed study; it is medical content, so the card shows the draft line while that file's
   `reviewed` is false. Notifications stay verse/hadith only (the switch promises that). Removed in the same review:
-  the aqiqah hadith (Bukhari 5472 is mu'allaq, not a connected narration). Owner chose "sources only, no draft
+  the aqiqah hadith (Bukhari 5472 is mu'allaq, not a connected narration).
+- Context-aware advice and reminders (owner's request, 2026-10-10): `logic/LibyaCalendar` (offline) gives Libya's season
+  (winter Dec–Feb, spring Mar–May with the ghibli, summer Jun–Sep, autumn Oct–Nov), Islamic occasions from
+  `java.time.chrono.HijrahDate` (Umm al-Qura; Libya sights the moon, so Settings → التاريخ الهجري shifts it −1/0/+1 day:
+  `Prefs.hijriOffset` → `LibyaCalendar.hijriOffsetDays`, applied to Home, reminders and greetings alike) and
+  Libyan public holidays. Content items may carry `seasons`, `occasions` (ramadan, ramadan_last_ten, dhul_hijjah_ten,
+  arafah, eid_fitr, eid_adha, celebration = Eids/Mawlid/17 Feb) and `situations` (siblings, expecting, twins, preterm,
+  from all the profiles on the phone: `Situation.of`); such an item shows only when one applies. `AdviceRules.forDay`:
+  the Eids, Arafah, celebration days and the first days of Ramadan / last ten / Dhul Hijjah show their own items first;
+  otherwise contextual items come up on spaced days (none repeats within 14 days); the card label says why
+  ("معلومة علمية · في الصيف"). Advice notifications also go out on 1 Ramadan and the first day of each Eid with a
+  greeting title. Vaccine reminders add a line when the due day is a public holiday (centre may be closed) or in Ramadan. Owner chose "sources only, no draft
   note" in the UI — the reflections should still be read by a qualified person before release. Ornate brackets ﴿ ﴾ are drawn in the system font (Readex lacks them).
 - Mother or father (owner's request, 2026-10-09): asked on first open (`ParentChoiceScreen`, before onboarding; also once
   for existing installs), changeable in Settings (`Prefs.parent`, `LocalParent`). Father = blue palette (`FatherLight/Dark`

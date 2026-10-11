@@ -189,8 +189,35 @@
     <string name="advice_title_quran">من هدي القرآن</string>
     <string name="advice_title_hadith">من هدي النبي ﷺ</string>
     <string name="advice_title_fact">معلومة علمية</string>
+    <!-- Why today's item was chosen, after its kind on the Home card: "معلومة علمية · في الصيف". -->
+    <string name="advice_reason_ramadan">رمضان كريم</string>
+    <string name="advice_reason_ramadan_last_ten">العشر الأواخر</string>
+    <string name="advice_reason_eid_fitr">عيد فطر مبارك</string>
+    <string name="advice_reason_dhul_hijjah_ten">العشر من ذي الحجة</string>
+    <string name="advice_reason_arafah">يوم عرفة</string>
+    <string name="advice_reason_eid_adha">عيد أضحى مبارك</string>
+    <string name="advice_reason_celebration">أيام الاحتفال</string>
+    <string name="advice_reason_winter">في الشتاء</string>
+    <string name="advice_reason_spring">في الربيع</string>
+    <string name="advice_reason_summer">في الصيف</string>
+    <string name="advice_reason_autumn">في الخريف</string>
+    <string name="advice_reason_siblings">للإخوة</string>
+    <string name="advice_reason_expecting">مع قدوم مولود جديد</string>
+    <string name="advice_reason_twins">للتوأم</string>
+    <string name="advice_reason_preterm">للمولود المبكر</string>
+    <!-- Libyan public holidays, named in vaccine reminders. -->
+    <string name="holiday_eid_fitr">عيد الفطر</string>
+    <string name="holiday_arafah">يوم عرفة</string>
+    <string name="holiday_eid_adha">عيد الأضحى</string>
+    <string name="holiday_mawlid">المولد النبوي</string>
+    <string name="holiday_hijri_new_year">رأس السنة الهجرية</string>
+    <string name="holiday_revolution">ذكرى ثورة 17 فبراير</string>
+    <string name="holiday_labour">عيد العمال</string>
+    <string name="holiday_martyrs">يوم الشهيد</string>
+    <string name="holiday_liberation">يوم التحرير</string>
+    <string name="holiday_independence">عيد الاستقلال</string>
     <string name="advice_switch">آية أو حديث مرتين في الأسبوع</string>
-    <string name="advice_switch_hint">نصيحة من القرآن الكريم أو من صحيحي البخاري ومسلم، تناسب حملكِ أو عمر طفلكِ.</string>
+    <string name="advice_switch_hint">نصيحة من القرآن الكريم أو من صحيحي البخاري ومسلم، تناسب حملكِ أو عمر طفلكِ، وتصلكِ أيضًا في أول يوم من رمضان ومن كل عيد.</string>
     <string name="latest_measurement_on">آخر قياس (%1$s)</string>
     <string name="tile_vaccine_in">للتطعيمة القادمة</string>
     <string name="tile_vaccine_today_value">اليوم</string>
@@ -380,6 +407,28 @@
     <string name="theme_light">فاتح</string>
     <string name="theme_dark">داكن</string>
     <string name="theme_hint">«تلقائي» يتبع إعداد الهاتف. الداكن أريح للعين في رضعات الليل.</string>
+    <string name="settings_hijri">التاريخ الهجري</string>
+    <string name="hijri_today">اليوم في التطبيق: %1$s</string>
+    <!-- day, month name, year -->
+    <string name="hijri_date">%1$s %2$s %3$s هـ</string>
+    <string-array name="hijri_months">
+        <item>محرم</item>
+        <item>صفر</item>
+        <item>ربيع الأول</item>
+        <item>ربيع الآخر</item>
+        <item>جمادى الأولى</item>
+        <item>جمادى الآخرة</item>
+        <item>رجب</item>
+        <item>شعبان</item>
+        <item>رمضان</item>
+        <item>شوال</item>
+        <item>ذو القعدة</item>
+        <item>ذو الحجة</item>
+    </string-array>
+    <string name="hijri_minus">يوم أقل</string>
+    <string name="hijri_none">بلا تعديل</string>
+    <string name="hijri_plus">يوم أكثر</string>
+    <string name="hijri_hint">يحسب التطبيق التاريخ الهجري بتقويم أم القرى، وقد يختلف عن إعلان ليبيا بيوم. إن اختلف، عدّليه هنا ليظهر رمضان والعيد وتذكيراتهما في موعدها الصحيح.</string>
     <string name="backup_explain">بياناتك محفوظة على هذا الهاتف. قد يحفظ أندرويد نسخة منها في حسابك على جوجل، لكن الأضمن أن تحفظي نسخة بنفسك من وقت لآخر (مثلًا أرسليها لنفسك على واتساب)، حتى تستعيديها إذا ضاع الهاتف أو تغيّر.</string>
     <string name="backup_save">حفظ نسخة في ملف</string>
     <string name="backup_share">إرسال النسخة (واتساب، درايف…)</string>
@@ -417,4 +466,7 @@
     <string name="notify_vaccine_soon">%1$s: باقي %2$s على الموعد.</string>
     <string name="notify_vaccine_today">%1$s: موعدها اليوم.</string>
     <string name="notify_vaccine_late">%1$s: مضى على موعدها %2$s. إذا أخذها طفلك، سجّليها في التطبيق.</string>
+    <string name="notify_vaccine_holiday_due">يوافق موعدها %1$s، وقد يكون مركز التطعيم مغلقًا؛ اسألي عن أقرب يوم يعمل فيه.</string>
+    <string name="notify_vaccine_holiday_today">اليوم %1$s، وقد يكون مركز التطعيم مغلقًا؛ اسألي عن أقرب يوم يعمل فيه.</string>
+    <string name="notify_vaccine_ramadan">ساعات عمل مراكز التطعيم تتغير غالبًا في رمضان؛ تأكدي منها قبل الذهاب.</string>
 </resources>

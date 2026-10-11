@@ -5,6 +5,7 @@ import androidx.core.content.edit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import ly.mahd.app.logic.LibyaCalendar
 import java.time.LocalDate
 
 /** Small settings, kept in Android's built-in SharedPreferences. */
@@ -63,6 +64,24 @@ class Prefs(context: Context) {
         _themeMode.value = mode
     }
 
+    /**
+     * Days added to the built-in Umm al-Qura Hijri date (−1, 0 or +1), for when Libya's moon sighting puts Ramadan
+     * or an Eid a day earlier or later. Applied to [LibyaCalendar] at once, so Home and the reminders follow it.
+     */
+    private val _hijriOffset = MutableStateFlow(sp.getInt(KEY_HIJRI_OFFSET, 0).coerceIn(-1, 1))
+    val hijriOffset: StateFlow<Int> = _hijriOffset.asStateFlow()
+
+    init {
+        LibyaCalendar.hijriOffsetDays = _hijriOffset.value
+    }
+
+    fun setHijriOffset(days: Int) {
+        val value = days.coerceIn(-1, 1)
+        sp.edit { putInt(KEY_HIJRI_OFFSET, value) }
+        LibyaCalendar.hijriOffsetDays = value
+        _hijriOffset.value = value
+    }
+
     var notificationPermissionAsked: Boolean
         get() = sp.getBoolean(KEY_PERMISSION_ASKED, false)
         set(value) = sp.edit { putBoolean(KEY_PERMISSION_ASKED, value) }
@@ -112,6 +131,7 @@ class Prefs(context: Context) {
         private const val KEY_REMINDERS = "reminders_enabled"
         private const val KEY_ADVICE_NOTIFICATIONS = "advice_notifications"
         private const val KEY_THEME = "theme_mode"
+        private const val KEY_HIJRI_OFFSET = "hijri_offset"
         private const val KEY_PARENT = "parent"
         private const val KEY_PERMISSION_ASKED = "notification_permission_asked"
         private const val KEY_REMINDER_PROMPT_DISMISSED = "reminder_prompt_dismissed"

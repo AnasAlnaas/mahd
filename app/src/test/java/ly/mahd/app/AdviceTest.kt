@@ -7,6 +7,9 @@ import ly.mahd.app.data.Profile
 import ly.mahd.app.data.ProfileKind
 import ly.mahd.app.data.Sex
 import ly.mahd.app.logic.AdviceRules
+import ly.mahd.app.logic.Occasion
+import ly.mahd.app.logic.Season
+import ly.mahd.app.logic.Situation
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -105,8 +108,82 @@ class AdviceTest {
     }
 
     @Test
-    fun notificationsTwiceAWeek() {
+    fun notificationsTwiceAWeekAndOnTheFirstDayOfRamadanAndTheEids() {
         val week = (0L until 7L).map { today.plusDays(it) }
         assertEquals(2, week.count(AdviceRules::isNotificationDay))
+        assertTrue(AdviceRules.isNotificationDay(LocalDate.of(2026, 2, 18))) // 1 Ramadan, a Wednesday
+        assertTrue(AdviceRules.isNotificationDay(LocalDate.of(2026, 5, 27))) // Eid al-Adha, a Wednesday
+    }
+
+    private fun childOn(day: LocalDate, months: Long, id: Long = 2) =
+        Profile(id, ProfileKind.CHILD, "", Sex.BOY, day.minusMonths(months).minusDays(1), null, null)
+
+    @Test
+    fun contextCodesAreKnown() {
+        val seasons = Season.entries.map { it.code }.toSet()
+        val occasions = Occasion.entries.map { it.code }.toSet()
+        val situations = Situation.entries.map { it.code }.toSet()
+        items.forEach { a ->
+            assertTrue("${a.id}: season", seasons.containsAll(a.seasons))
+            assertTrue("${a.id}: occasion", occasions.containsAll(a.occasions))
+            assertTrue("${a.id}: situation", situations.containsAll(a.situations))
+        }
+    }
+
+    @Test
+    fun seasonalItemsFollowTheWeather() {
+        val summer = LocalDate.of(2026, 7, 15)
+        val winter = LocalDate.of(2027, 1, 15)
+        assertTrue(AdviceRules.eligible(items, childOn(summer, 12), summer).any { it.id == "s_drowning" })
+        assertTrue(AdviceRules.eligible(items, childOn(winter, 12), winter).none { it.id == "s_drowning" })
+        assertTrue(AdviceRules.eligible(items, childOn(winter, 12), winter).any { it.id == "s_carbon_monoxide" })
+        // A seasonal item does come up within a fortnight, and still no text twice.
+        val p = childOn(summer, 12)
+        val fortnight = (0L until 14L).map { AdviceRules.forDay(items, p, summer.plusDays(it))!! }
+        assertTrue(fortnight.any { "summer" in it.seasons })
+        assertEquals(14, fortnight.toSet().size)
+        assertEquals("summer", AdviceRules.reason(items.first { it.id == "s_drowning" }, p, summer))
+    }
+
+    @Test
+    fun ramadanAndTheEids() {
+        // The first three days of Ramadan show Ramadan's own items, a different one each day.
+        val ramadan = LocalDate.of(2026, 2, 18)
+        val preg = Profile(1, ProfileKind.PREGNANCY, "", null, null, ramadan.plusWeeks(20), null)
+        val first = (0L until 3L).map { AdviceRules.forDay(items, preg, ramadan.plusDays(it))!! }
+        assertTrue(first.all { "ramadan" in it.occasions })
+        assertEquals(3, first.toSet().size)
+
+        // Each day of Eid al-Fitr shows an Eid item; none of them, nor Ramadan's, after it.
+        val eid = LocalDate.of(2026, 3, 20)
+        val child = childOn(eid, 12)
+        val eidDays = (0L until 3L).map { AdviceRules.forDay(items, child, eid.plusDays(it))!! }
+        assertTrue(eidDays.all { "eid_fitr" in it.occasions || "celebration" in it.occasions })
+        assertEquals(3, eidDays.toSet().size)
+        assertTrue(AdviceRules.eligible(items, child, eid.plusDays(10)).none { it.occasions.isNotEmpty() })
+        // Fireworks on an Eid are labelled with the Eid.
+        assertEquals("eid_fitr", AdviceRules.reason(items.first { it.id == "s_fireworks" }, child, eid))
+
+        val arafah = LocalDate.of(2026, 5, 26)
+        assertEquals("h_arafah", AdviceRules.forDay(items, childOn(arafah, 12), arafah)!!.id)
+    }
+
+    @Test
+    fun familyItemsFollowTheProfilesOnThePhone() {
+        val one = child(12)
+        val older = child(40, id = 3)
+        val twin = child(12, id = 4)
+        assertTrue(AdviceRules.eligible(items, one, today).none { it.situations.isNotEmpty() })
+        val withSibling = AdviceRules.eligible(items, one, today, family = listOf(one, older))
+        assertTrue(withSibling.any { it.id == "h_adl" })
+        assertTrue(withSibling.none { "twins" in it.situations })
+        assertTrue(AdviceRules.eligible(items, one, today, family = listOf(one, twin)).any { it.id == "s_twins_pace" })
+
+        val preg = pregnancy(20)
+        assertTrue(AdviceRules.eligible(items, preg, today, family = listOf(preg, one)).any { it.id == "s_new_sibling" })
+        assertTrue(AdviceRules.eligible(items, preg, today).none { it.id == "s_new_sibling" })
+
+        val preterm = Profile(5, ProfileKind.CHILD, "", Sex.GIRL, today.minusMonths(1).minusDays(1), null, 32)
+        assertTrue(AdviceRules.eligible(items, preterm, today).any { it.id == "s_preterm_kangaroo" })
     }
 }

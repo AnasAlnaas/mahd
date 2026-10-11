@@ -191,7 +191,7 @@ private fun TabsScaffold(app: MahdApp, nav: Navigator, profiles: List<Profile>, 
                 // A fresh screen for each profile, so nothing of the previous child shows while the new data loads.
                 key(selected.id) {
                     when (current) {
-                        Routes.HOME -> HomeScreen(app, selected, nav)
+                        Routes.HOME -> HomeScreen(app, selected, profiles, nav)
                         Routes.PREGNANCY -> PregnancyScreen(app, selected, nav, initialWeek = null, standalone = false)
                         Routes.VACCINES -> VaccinesScreen(app, selected)
                         Routes.GROWTH -> GrowthScreen(app, selected)

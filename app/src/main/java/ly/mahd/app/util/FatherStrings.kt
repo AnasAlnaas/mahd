@@ -77,4 +77,8 @@ internal val FATHER_STRINGS: Map<Int, Int> = mapOf(
     R.string.notify_new_week_title to R.string.notify_new_week_title_m,
     R.string.notify_new_week_text to R.string.notify_new_week_text_m,
     R.string.notify_vaccine_late to R.string.notify_vaccine_late_m,
+    R.string.hijri_hint to R.string.hijri_hint_m,
+    R.string.notify_vaccine_holiday_due to R.string.notify_vaccine_holiday_due_m,
+    R.string.notify_vaccine_holiday_today to R.string.notify_vaccine_holiday_today_m,
+    R.string.notify_vaccine_ramadan to R.string.notify_vaccine_ramadan_m,
 )

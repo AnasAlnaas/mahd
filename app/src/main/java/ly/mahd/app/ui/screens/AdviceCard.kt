@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,34 +32,69 @@ import ly.mahd.app.ui.components.LocalParent
 import ly.mahd.app.ui.components.LocalToday
 import ly.mahd.app.ui.components.MoonPhase
 
-/** Today's verse or hadith for this profile (a different one each day), or null when none fits. */
+/** Today's item and why it was chosen (an occasion, season or family code; null for a year-round item). */
+data class TodaysAdvice(val item: AdviceItem, val reason: String?)
+
+/**
+ * Today's verse, hadith or fact for this profile (a different one each day), chosen with the season, the occasion
+ * and the whole [family] on the phone in mind; null when none fits.
+ */
 @Composable
-fun rememberTodaysAdvice(app: MahdApp, profile: Profile): AdviceItem? {
+fun rememberTodaysAdvice(app: MahdApp, profile: Profile, family: List<Profile>): TodaysAdvice? {
     val today = LocalToday.current
     val parent = LocalParent.current
-    return remember(profile, today, parent) { AdviceRules.forDay(app.content.advice.items, profile, today, parent) }
+    val hijriOffset by app.prefs.hijriOffset.collectAsState() // Ramadan and the Eids move with it
+    return remember(profile, family, today, parent, hijriOffset) {
+        AdviceRules.forDay(app.content.advice.items, profile, today, parent, family)?.let {
+            TodaysAdvice(it, AdviceRules.reason(it, profile, today, family))
+        }
+    }
+}
+
+/** The label of an occasion, season or family situation code (see [AdviceRules.reason]). */
+fun adviceReasonLabel(code: String?): Int? = when (code) {
+    "ramadan" -> R.string.advice_reason_ramadan
+    "ramadan_last_ten" -> R.string.advice_reason_ramadan_last_ten
+    "eid_fitr" -> R.string.advice_reason_eid_fitr
+    "dhul_hijjah_ten" -> R.string.advice_reason_dhul_hijjah_ten
+    "arafah" -> R.string.advice_reason_arafah
+    "eid_adha" -> R.string.advice_reason_eid_adha
+    "celebration" -> R.string.advice_reason_celebration
+    "winter" -> R.string.advice_reason_winter
+    "spring" -> R.string.advice_reason_spring
+    "summer" -> R.string.advice_reason_summer
+    "autumn" -> R.string.advice_reason_autumn
+    "siblings" -> R.string.advice_reason_siblings
+    "expecting" -> R.string.advice_reason_expecting
+    "twins" -> R.string.advice_reason_twins
+    "preterm" -> R.string.advice_reason_preterm
+    else -> null
 }
 
 /**
  * A verse, hadith or science fact with its exact source, then a short word for the mother. A verse is set larger,
  * between the Qur'anic brackets; a hadith or fact (usually longer) at body size. A fact is medical content, so it
- * carries the draft line until a doctor has reviewed the facts file.
+ * carries the draft line until a doctor has reviewed the facts file. The heading says why a seasonal, occasion or
+ * family item is shown ("في الصيف", "رمضان كريم").
  */
 @Composable
-fun AdviceCard(item: AdviceItem, factsReviewed: Boolean, modifier: Modifier = Modifier) {
+fun AdviceCard(advice: TodaysAdvice, factsReviewed: Boolean, modifier: Modifier = Modifier) {
+    val item = advice.item
     val quran = item.kind == AdviceKind.QURAN
     AppCard(modifier) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             MoonPhase(0.3f, size = 16.dp, animate = false)
             Spacer(Modifier.width(8.dp))
+            val kind = stringResource(
+                when (item.kind) {
+                    AdviceKind.QURAN -> R.string.advice_title_quran
+                    AdviceKind.HADITH -> R.string.advice_title_hadith
+                    AdviceKind.FACT -> R.string.advice_title_fact
+                },
+            )
+            val reason = adviceReasonLabel(advice.reason)?.let { stringResource(it) }
             Text(
-                stringResource(
-                    when (item.kind) {
-                        AdviceKind.QURAN -> R.string.advice_title_quran
-                        AdviceKind.HADITH -> R.string.advice_title_hadith
-                        AdviceKind.FACT -> R.string.advice_title_fact
-                    },
-                ),
+                if (reason != null) "$kind · $reason" else kind,
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary,
             )

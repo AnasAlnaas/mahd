@@ -1,6 +1,6 @@
 {
   "reviewed": false,
-  "note": "Qur'an verses and hadith from Sahih al-Bukhari and Sahih Muslim only. Bukhari numbers follow the Fath al-Bari numbering, Muslim numbers follow Muhammad Fu'ad Abd al-Baqi. Every text is checked word for word by tools/verify_islamic_texts.ps1 (verses: api.quran.com; hadith: the full Arabic Bukhari and Muslim). Hadith texts are the narration's own words: only an opening attribution may be ours, and … marks a shortening. Deliberately left out: weak or disputed narrations (e.g. the adhan in the newborn's ear), and texts that clash with medical safety (tahnik with a chewed date, honey under one year). for = pregnancy | child | all; minWeeks/maxWeeks (inclusive) apply to a pregnancy; minMonths and maxMonths to a child's age (shown from minMonths, and while younger than maxMonths); sex = boy | girl limits an item to that child. parent = mother (default) | father | both: who sees the item; a 'both' item shows 'adviceFather' to the father (or 'advice' when that is already neutral), and a 'father' item's 'advice' is written to him.",
+  "note": "Qur'an verses and hadith from Sahih al-Bukhari and Sahih Muslim only. Bukhari numbers follow the Fath al-Bari numbering, Muslim numbers follow Muhammad Fu'ad Abd al-Baqi. Every text is checked word for word by tools/verify_islamic_texts.ps1 (verses: api.quran.com; hadith: the full Arabic Bukhari and Muslim). Hadith texts are the narration's own words: only an opening attribution may be ours, and … marks a shortening. Deliberately left out: weak or disputed narrations (e.g. the adhan in the newborn's ear), and texts that clash with medical safety (tahnik with a chewed date, honey under one year). for = pregnancy | child | all; minWeeks/maxWeeks (inclusive) apply to a pregnancy; minMonths and maxMonths to a child's age (shown from minMonths, and while younger than maxMonths); sex = boy | girl limits an item to that child. parent = mother (default) | father | both: who sees the item; a 'both' item shows 'adviceFather' to the father (or 'advice' when that is already neutral), and a 'father' item's 'advice' is written to him. Context (logic/LibyaCalendar, AdviceRules): seasons = winter | spring | summer | autumn (Libya); occasions = ramadan | ramadan_last_ten | dhul_hijjah_ten | arafah | eid_fitr | eid_adha | celebration (Hijri dates from the Umm al-Qura calendar, celebration = Eids, Mawlid, 17 February); situations = siblings | expecting | twins | preterm (from the profiles on the phone). An item with any of these shows only when one applies.",
   "items": [
     {
       "id": "q_luqman_14",
@@ -531,14 +531,15 @@
       "advice": "احمل طفلك على كتفيك، وقل له إنك تحبه، وادعُ له؛ كما فعل النبي ﷺ مع حفيده."
     },
     {
-      "id": "f_adl",
+      "id": "h_adl",
       "kind": "hadith",
       "for": "child",
-      "parent": "father",
-      "minMonths": 24,
+      "parent": "both",
+      "situations": ["siblings"],
       "text": "عن النعمان بن بشير رضي الله عنهما قال: أَعْطَانِي أَبِي عَطِيَّةً … فَأَتَى رَسُولَ اللَّهِ ﷺ … قَالَ: «أَعْطَيْتَ سَائِرَ وَلَدِكَ مِثْلَ هَذَا؟» قَالَ: لَا. قَالَ: «فَاتَّقُوا اللَّهَ، وَاعْدِلُوا بَيْنَ أَوْلَادِكُمْ».",
       "source": "متفق عليه: البخاري (2587) ومسلم (1623)، واللفظ للبخاري",
-      "advice": "إذا أعطيت أحد أولادك هدية أو عطية، فأعطِ إخوته مثلها؛ هكذا أمر النبي ﷺ والد النعمان. العدل بينهم يحفظ المحبة بين الإخوة."
+      "advice": "إذا أعطيتِ أحد أولادكِ هدية أو عطية، فأعطي إخوته مثلها؛ هكذا أمر النبي ﷺ والد النعمان. العدل بينهم يحفظ المحبة بين الإخوة.",
+      "adviceFather": "إذا أعطيت أحد أولادك هدية أو عطية، فأعطِ إخوته مثلها؛ هكذا أمر النبي ﷺ والد النعمان. العدل بينهم يحفظ المحبة بين الإخوة."
     },
     {
       "id": "f_kullukum_raa",
@@ -617,6 +618,184 @@
       "text": "وَعَلَى الْمَوْلُودِ لَهُ رِزْقُهُنَّ وَكِسْوَتُهُنَّ بِالْمَعْرُوفِ",
       "source": "سورة البقرة: 233",
       "advice": "في آية الرضاعة نفسها جعل الله على الأب نفقة الأم المرضعة وكسوتها بالمعروف. رضاعة طفلك عمل مشترك بينكما."
+    },
+    {
+      "id": "q_baqarah_185_ramadan",
+      "kind": "quran",
+      "for": "all",
+      "occasions": ["ramadan"],
+      "text": "شَهْرُ رَمَضَانَ الَّذِي أُنزِلَ فِيهِ الْقُرْآنُ هُدًى لِّلنَّاسِ وَبَيِّنَاتٍ مِّنَ الْهُدَىٰ وَالْفُرْقَانِ",
+      "source": "سورة البقرة: 185",
+      "advice": "رمضان شهر القرآن. اقرئي كل يوم ولو آيات قليلة، ولو وأنتِ ترضعين أو تهدهدين طفلكِ؛ فيألف صوتكِ بالقرآن.",
+      "parent": "both",
+      "adviceFather": "رمضان شهر القرآن. اقرأ كل يوم ولو آيات قليلة، بصوت يسمعه أهل بيتك؛ فيألف طفلك القرآن بصوتك."
+    },
+    {
+      "id": "q_baqarah_185_yusr",
+      "kind": "quran",
+      "for": "all",
+      "maxMonths": 24,
+      "occasions": ["ramadan"],
+      "text": "وَمَن كَانَ مَرِيضًا أَوْ عَلَىٰ سَفَرٍ فَعِدَّةٌ مِّنْ أَيَّامٍ أُخَرَ ۗ يُرِيدُ اللَّهُ بِكُمُ الْيُسْرَ وَلَا يُرِيدُ بِكُمُ الْعُسْرَ",
+      "source": "سورة البقرة: 185",
+      "advice": "رخّص الله في الفطر للمريض والمسافر، وأخبر أنه يريد بنا اليسر. وللحامل والمرضع التي تخاف على نفسها أو على طفلها رخصة يبيّنها أهل العلم؛ فاسألي طبيبتكِ عن قدرتكِ على الصيام، واسألي أهل العلم عن حكمه، ولا تحمّلي نفسكِ ما يضرّكِ.",
+      "parent": "both",
+      "adviceFather": "رخّص الله في الفطر للمريض والمسافر، وأخبر أنه يريد بنا اليسر. إن كانت زوجتك حاملًا أو مرضعًا، فلا تضغط عليها لتصوم؛ شجّعها على سؤال الطبيبة وأهل العلم، ويسّر عليها."
+    },
+    {
+      "id": "h_ramadan_iman",
+      "kind": "hadith",
+      "for": "all",
+      "occasions": ["ramadan"],
+      "text": "قال رسول الله ﷺ: «مَنْ صَامَ رَمَضَانَ إِيمَانًا وَاحْتِسَابًا غُفِرَ لَهُ مَا تَقَدَّمَ مِنْ ذَنْبِهِ».",
+      "source": "متفق عليه: البخاري (38) ومسلم (760)",
+      "advice": "صومي إيمانًا واحتسابًا إن استطعتِ. وإن أفطرتِ لعذر الحمل أو الرضاعة فلا تحزني؛ رخصة الله رحمة، وفي رمضان أبواب خير كثيرة: الذكر والدعاء والصدقة.",
+      "parent": "both",
+      "adviceFather": "صم إيمانًا واحتسابًا، واجعل من احتسابك أن تيسّر رمضان على أهل بيتك: في السحور والإفطار والمساعدة في البيت."
+    },
+    {
+      "id": "h_sibyan_sawm",
+      "kind": "hadith",
+      "for": "child",
+      "minMonths": 36,
+      "occasions": ["ramadan"],
+      "text": "عن الرُّبَيِّع بنت مُعَوِّذ رضي الله عنها قالت: … فَكُنَّا نَصُومُهُ بَعْدُ، وَنُصَوِّمُ صِبْيَانَنَا، وَنَجْعَلُ لَهُمُ اللُّعْبَةَ مِنَ الْعِهْنِ، فَإِذَا بَكَى أَحَدُهُمْ عَلَى الطَّعَامِ أَعْطَيْنَاهُ ذَاكَ، حَتَّى يَكُونَ عِنْدَ الْإِفْطَارِ.",
+      "source": "متفق عليه: البخاري (1960) ومسلم (1136)، واللفظ للبخاري",
+      "advice": "تحكي الصحابية عن صيام يوم عاشوراء: كانوا يعوّدون صغارهم الصيام برفق، ويصنعون لهم ألعابًا من الصوف تشغلهم حتى الإفطار. طفلكِ ما زال صغيرًا على الصيام؛ ابدئي بأن يحب رمضان: يشارككم السحور أو الإفطار والتمر والدعاء.",
+      "parent": "both",
+      "adviceFather": "تحكي الصحابية عن صيام يوم عاشوراء: كانوا يعوّدون صغارهم الصيام برفق، ويصنعون لهم ألعابًا من الصوف تشغلهم حتى الإفطار. طفلك ما زال صغيرًا على الصيام؛ ابدأ بأن يحب رمضان: يجلس معكم على الإفطار، ويرافقك إلى المسجد."
+    },
+    {
+      "id": "q_qadr_3",
+      "kind": "quran",
+      "for": "all",
+      "occasions": ["ramadan_last_ten"],
+      "text": "لَيْلَةُ الْقَدْرِ خَيْرٌ مِّنْ أَلْفِ شَهْرٍ",
+      "source": "سورة القدر: 3",
+      "advice": "ليلة واحدة خير من ألف شهر. وإن كان طفلكِ يوقظكِ، فادعي وأنتِ ترضعينه أو تهدهدينه؛ فلعل سهركِ يوافق ليلة القدر.",
+      "parent": "both",
+      "adviceFather": "ليلة خير من ألف شهر. تولَّ طفلك ساعة من الليل لتصلي زوجتك أو ترتاح، ثم خذ أنت نصيبك من القيام والدعاء."
+    },
+    {
+      "id": "h_ashr_awakhir",
+      "kind": "hadith",
+      "for": "all",
+      "occasions": ["ramadan_last_ten"],
+      "text": "عن عائشة رضي الله عنها قالت: كَانَ النَّبِيُّ ﷺ إِذَا دَخَلَ الْعَشْرُ شَدَّ مِئْزَرَهُ، وَأَحْيَا لَيْلَهُ، وَأَيْقَظَ أَهْلَهُ.",
+      "source": "متفق عليه: البخاري (2024) ومسلم (1174)، واللفظ للبخاري",
+      "advice": "كان النبي ﷺ يوقظ أهله في العشر الأواخر. اجعلي لبيتكِ نصيبًا من هذه الليالي: ركعتين أو دعاء قصيرًا مع زوجكِ، ولو كان طفلكِ في حضنكِ.",
+      "parent": "both",
+      "adviceFather": "كان النبي ﷺ يوقظ أهله في العشر الأواخر. أيقظ أهل بيتك برفق لركعتين أو دعاء قصير، وكن أنت من يبدأ."
+    },
+    {
+      "id": "h_qiyam_qadr",
+      "kind": "hadith",
+      "for": "all",
+      "occasions": ["ramadan_last_ten"],
+      "text": "قال رسول الله ﷺ: «مَنْ قَامَ لَيْلَةَ الْقَدْرِ إِيمَانًا وَاحْتِسَابًا غُفِرَ لَهُ مَا تَقَدَّمَ مِنْ ذَنْبِهِ».",
+      "source": "متفق عليه: البخاري (1901) ومسلم (760)",
+      "advice": "ليس شرط القيام أن يطول. صلّي ما تيسّر بعد أن ينام طفلكِ، بإيمان واحتساب.",
+      "parent": "both",
+      "adviceFather": "صلِّ ما تيسّر من الليل بإيمان واحتساب، وأعن زوجتك على طفلكما لتصلي هي أيضًا."
+    },
+    {
+      "id": "q_baqarah_185_takbir",
+      "kind": "quran",
+      "for": "all",
+      "occasions": ["eid_fitr"],
+      "text": "وَلِتُكْمِلُوا الْعِدَّةَ وَلِتُكَبِّرُوا اللَّهَ عَلَىٰ مَا هَدَاكُمْ وَلَعَلَّكُمْ تَشْكُرُونَ",
+      "source": "سورة البقرة: 185",
+      "advice": "أتممنا الشهر، فلنكبّر الله ونشكره. ردّدي التكبير في البيت صباح العيد؛ فيسمعه طفلكِ ويفرح به.",
+      "parent": "both",
+      "adviceFather": "أتممنا الشهر، فلنكبّر الله ونشكره. ردّد التكبير صباح العيد بصوت يسمعه أهل بيتك، وخذ أولادك معك إلى المصلّى متى استطعت."
+    },
+    {
+      "id": "h_eid_tamarat",
+      "kind": "hadith",
+      "for": "all",
+      "occasions": ["eid_fitr"],
+      "text": "عن أنس رضي الله عنه قال: كَانَ رَسُولُ اللَّهِ ﷺ لَا يَغْدُو يَوْمَ الْفِطْرِ حَتَّى يَأْكُلَ تَمَرَاتٍ.",
+      "source": "رواه البخاري (953)",
+      "advice": "من السنة أكل تمرات صباح عيد الفطر قبل الخروج إلى الصلاة. اجعليها عادة في بيتكِ يكبر عليها أولادكِ.",
+      "parent": "both",
+      "adviceFather": "من السنة أكل تمرات صباح عيد الفطر قبل الخروج إلى الصلاة. اجعلها عادة في بيتك يكبر عليها أولادك، وتمرة الصغير منزوعة النواة ومقطّعة."
+    },
+    {
+      "id": "h_eid_habasha",
+      "kind": "hadith",
+      "for": "all",
+      "occasions": ["eid_fitr", "eid_adha"],
+      "text": "عن عائشة رضي الله عنها قالت: جَاءَ حَبَشٌ يَزْفِنُونَ فِي يَوْمِ عِيدٍ فِي الْمَسْجِدِ، فَدَعَانِي النَّبِيُّ ﷺ، فَوَضَعْتُ رَأْسِي عَلَى مَنْكِبِهِ، فَجَعَلْتُ أَنْظُرُ إِلَى لَعِبِهِمْ، حَتَّى كُنْتُ أَنَا الَّتِي أَنْصَرِفُ عَنِ النَّظَرِ إِلَيْهِمْ.",
+      "source": "رواه مسلم (892)",
+      "advice": "العيد يوم فرح ولعب. صبر النبي ﷺ على عائشة وهي تنظر إلى اللعب حتى اكتفت هي. أفسحي لطفلكِ في فرحة العيد ولعبه، ولا تستعجليه.",
+      "parent": "both",
+      "adviceFather": "العيد يوم فرح ولعب. صبر النبي ﷺ على عائشة وهي تنظر إلى اللعب حتى اكتفت هي. العب مع أولادك يوم العيد، ولا تستعجلهم."
+    },
+    {
+      "id": "h_arafah",
+      "kind": "hadith",
+      "for": "all",
+      "occasions": ["dhul_hijjah_ten", "arafah"],
+      "text": "قال رسول الله ﷺ: «… صِيَامُ يَوْمِ عَرَفَةَ أَحْتَسِبُ عَلَى اللَّهِ أَنْ يُكَفِّرَ السَّنَةَ الَّتِي قَبْلَهُ، وَالسَّنَةَ الَّتِي بَعْدَهُ».",
+      "source": "رواه مسلم (1162)",
+      "advice": "صيام يوم عرفة سنة لمن قدرت عليه. وإن كنتِ حاملًا أو مرضعًا ويشقّ عليكِ الصيام، فاملئي يومكِ بالذكر والدعاء؛ فالأمر واسع.",
+      "parent": "both",
+      "adviceFather": "صم يوم عرفة إن استطعت، وادعُ لأهل بيتك. وإن كانت زوجتك حاملًا أو مرضعًا فلا تحرج عليها؛ صيامه سنة لا فرض."
+    },
+    {
+      "id": "h_udhiyah",
+      "kind": "hadith",
+      "for": "all",
+      "occasions": ["dhul_hijjah_ten", "eid_adha"],
+      "text": "عن أنس رضي الله عنه قال: ضَحَّى النَّبِيُّ ﷺ بِكَبْشَيْنِ أَمْلَحَيْنِ أَقْرَنَيْنِ، ذَبَحَهُمَا بِيَدِهِ، وَسَمَّى وَكَبَّرَ، وَوَضَعَ رِجْلَهُ عَلَى صِفَاحِهِمَا.",
+      "source": "متفق عليه: البخاري (5565) ومسلم (1966)، واللفظ للبخاري",
+      "advice": "ضحّى النبي ﷺ بيده وسمّى وكبّر. علّمي طفلكِ «بسم الله والله أكبر» في هذه الأيام، وأبعديه عن السكاكين ومكان الذبح.",
+      "parent": "both",
+      "adviceFather": "ضحّى النبي ﷺ بيده وسمّى وكبّر. إن ذبحت أضحيتك، فأبعد الأطفال الصغار عن السكاكين ومكان الذبح، وعلّمهم «بسم الله والله أكبر»."
+    },
+    {
+      "id": "q_hajj_28",
+      "kind": "quran",
+      "for": "all",
+      "occasions": ["eid_adha"],
+      "text": "فَكُلُوا مِنْهَا وَأَطْعِمُوا الْبَائِسَ الْفَقِيرَ",
+      "source": "سورة الحج: 28",
+      "advice": "أمر الله أن نأكل من الأضاحي ونطعم المحتاج. دعي طفلكِ يرافقكِ وأنتِ تعطين الجيران والمحتاجين نصيبهم؛ فيتعلم العطاء بالمشاهدة.",
+      "parent": "both",
+      "adviceFather": "أمر الله أن نأكل من الأضاحي ونطعم المحتاج. خذ طفلك معك وأنت توزّع اللحم على الجيران والمحتاجين؛ فيتعلم العطاء منك."
+    },
+    {
+      "id": "h_matar",
+      "kind": "hadith",
+      "for": "all",
+      "seasons": ["autumn", "winter"],
+      "text": "عن عائشة رضي الله عنها: أَنَّ رَسُولَ اللَّهِ ﷺ كَانَ إِذَا رَأَى الْمَطَرَ قَالَ: «صَيِّبًا نَافِعًا».",
+      "source": "رواه البخاري (1032)",
+      "advice": "إذا نزل المطر فقولي: «صيّبًا نافعًا»، أي مطرًا نافعًا. ردّديها مع طفلكِ عند النافذة؛ فيتعلم أن يفرح بالمطر ويذكر الله.",
+      "parent": "both",
+      "adviceFather": "إذا نزل المطر فقل: «صيّبًا نافعًا»، أي مطرًا نافعًا. ردّدها مع طفلك عند النافذة؛ فيتعلم أن يفرح بالمطر ويذكر الله."
+    },
+    {
+      "id": "h_rih",
+      "kind": "hadith",
+      "for": "all",
+      "seasons": ["spring"],
+      "text": "عن عائشة رضي الله عنها قالت: كَانَ النَّبِيُّ ﷺ إِذَا عَصَفَتِ الرِّيحُ قَالَ: «اللَّهُمَّ إِنِّي أَسْأَلُكَ خَيْرَهَا، وَخَيْرَ مَا فِيهَا، وَخَيْرَ مَا أُرْسِلَتْ بِهِ، وَأَعُوذُ بِكَ مِنْ شَرِّهَا، وَشَرِّ مَا فِيهَا، وَشَرِّ مَا أُرْسِلَتْ بِهِ».",
+      "source": "رواه مسلم (899)",
+      "advice": "في أيام القبلي والرياح، قولي هذا الدعاء، وأغلقي النوافذ واحمي طفلكِ من الغبار.",
+      "parent": "both",
+      "adviceFather": "في أيام القبلي والرياح، قل هذا الدعاء، وأغلق النوافذ واحمِ أهل بيتك من الغبار."
+    },
+    {
+      "id": "q_yusuf_8",
+      "kind": "quran",
+      "for": "all",
+      "situations": ["siblings", "expecting"],
+      "text": "إِذْ قَالُوا لَيُوسُفُ وَأَخُوهُ أَحَبُّ إِلَىٰ أَبِينَا مِنَّا وَنَحْنُ عُصْبَةٌ",
+      "source": "سورة يوسف: 8",
+      "advice": "حتى في بيت نبي، ظنّ الإخوة أن أخاهم أحبّ إلى أبيهم منهم، فقادتهم الغيرة إلى ما قادتهم إليه. الأطفال يراقبون كيف توزَّع المحبة؛ فأعطي كل واحد منهم وقته وكلمته الطيبة.",
+      "parent": "both",
+      "adviceFather": "حتى في بيت نبي، ظنّ الإخوة أن أخاهم أحبّ إلى أبيهم منهم، فقادتهم الغيرة إلى ما قادتهم إليه. الأطفال يراقبون كيف توزَّع المحبة؛ فأعطِ كل واحد منهم وقته وكلمته الطيبة."
     }
   ]
 }

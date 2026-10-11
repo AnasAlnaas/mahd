@@ -206,6 +206,9 @@ class ContentRepository(private val opener: (String) -> InputStream) {
                 sex = if (a.has("sex") && !a.isNull("sex")) a.getString("sex") else null,
                 parent = a.optString("parent", "mother"),
                 adviceFather = if (a.has("adviceFather")) a.getString("adviceFather") else null,
+                seasons = a.optJSONArray("seasons")?.strings()?.toSet() ?: emptySet(),
+                occasions = a.optJSONArray("occasions")?.strings()?.toSet() ?: emptySet(),
+                situations = a.optJSONArray("situations")?.strings()?.toSet() ?: emptySet(),
             )
         },
     )
@@ -266,7 +269,16 @@ data class AdviceItem(
     val parent: String = "mother",
     /** For a "both" item: the word for the father (when [advice] is written to the mother). */
     val adviceFather: String? = null,
+    /** Shown only in these seasons ("summer", …; see logic.Season). Empty = all year. */
+    val seasons: Set<String> = emptySet(),
+    /** Shown only during one of these occasions ("ramadan", "eid_fitr", …; see logic.Occasion). */
+    val occasions: Set<String> = emptySet(),
+    /** Shown only to a family in one of these situations ("siblings", "twins", …; see logic.Situation). */
+    val situations: Set<String> = emptySet(),
 ) {
+    /** True for an item tied to the season, an occasion or the family, rather than shown all year to everyone. */
+    val isContextual: Boolean get() = seasons.isNotEmpty() || occasions.isNotEmpty() || situations.isNotEmpty()
+
     /** The text as shown: a verse between the Qur'anic brackets ﴿ ﴾, a hadith as written. */
     val displayText: String get() = if (kind == AdviceKind.QURAN) "﴿$text﴾" else text
 }

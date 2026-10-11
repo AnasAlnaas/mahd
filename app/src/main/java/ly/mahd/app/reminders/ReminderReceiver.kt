@@ -11,6 +11,9 @@ import ly.mahd.app.content.AdviceKind
 import ly.mahd.app.data.Parent
 import ly.mahd.app.data.Profile
 import ly.mahd.app.logic.AdviceRules
+import ly.mahd.app.logic.Holiday
+import ly.mahd.app.logic.LibyaCalendar
+import ly.mahd.app.logic.Occasion
 import ly.mahd.app.logic.PregnancyMath
 import ly.mahd.app.logic.ReminderRules
 import ly.mahd.app.logic.VaccinePlanner
@@ -81,7 +84,8 @@ class ReminderReceiver : BroadcastReceiver() {
         }
 
         /**
-         * Twice a week, a verse or hadith for the profile she is following (from the same rotation as Home).
+         * Twice a week, and on the first day of Ramadan and of each Eid (with a greeting as the title), a verse or
+         * hadith for the profile she is following, from the same rotation as Home (season, occasion, family).
          * Missed days are not caught up: unlike a vaccine reminder, nothing is lost if one is skipped.
          */
         private fun sendAdvice(context: Context, res: Resources, today: LocalDate) {
@@ -93,10 +97,45 @@ class ReminderReceiver : BroadcastReceiver() {
             val profile = profiles.firstOrNull { it.id == app.prefs.selectedProfileId.value } ?: profiles.firstOrNull() ?: return
             // The switch promises a verse or hadith, so the science facts stay on Home.
             val islamic = app.content.advice.items.filter { it.kind != AdviceKind.FACT }
-            val item = AdviceRules.forDay(islamic, profile, today, app.prefs.parent.value ?: Parent.MOTHER) ?: return
-            val title = res.getString(if (item.kind == AdviceKind.QURAN) R.string.advice_title_quran else R.string.advice_title_hadith)
+            val item = AdviceRules.forDay(islamic, profile, today, app.prefs.parent.value ?: Parent.MOTHER, profiles) ?: return
+            val title = when (LibyaCalendar.greeting(today)) {
+                Occasion.RAMADAN -> res.getString(R.string.advice_reason_ramadan)
+                Occasion.EID_FITR -> res.getString(R.string.advice_reason_eid_fitr)
+                Occasion.EID_ADHA -> res.getString(R.string.advice_reason_eid_adha)
+                else -> res.getString(if (item.kind == AdviceKind.QURAN) R.string.advice_title_quran else R.string.advice_title_hadith)
+            }
             val text = "${item.displayText}\n${item.source}"
             if (Notifications.post(context, key, title, text, profile.id, Routes.HOME)) app.prefs.markNotified(key)
+        }
+
+        /**
+         * A word on the day she would go: the due date if it is still ahead, otherwise today. A public holiday
+         * (the centre may be closed) or Ramadan (opening hours often change). Empty on an ordinary day.
+         */
+        private fun vaccineDayNote(res: Resources, today: LocalDate, daysUntilDue: Int): String {
+            val day = if (daysUntilDue > 0) today.plusDays(daysUntilDue.toLong()) else today
+            val holiday = LibyaCalendar.holiday(day)
+            return when {
+                holiday != null -> " " + res.getString(
+                    if (daysUntilDue > 0) R.string.notify_vaccine_holiday_due else R.string.notify_vaccine_holiday_today,
+                    res.getString(holidayName(holiday)),
+                )
+                LibyaCalendar.isRamadan(day) -> " " + res.getString(R.string.notify_vaccine_ramadan)
+                else -> ""
+            }
+        }
+
+        private fun holidayName(holiday: Holiday): Int = when (holiday) {
+            Holiday.EID_FITR -> R.string.holiday_eid_fitr
+            Holiday.ARAFAH -> R.string.holiday_arafah
+            Holiday.EID_ADHA -> R.string.holiday_eid_adha
+            Holiday.MAWLID -> R.string.holiday_mawlid
+            Holiday.HIJRI_NEW_YEAR -> R.string.holiday_hijri_new_year
+            Holiday.REVOLUTION -> R.string.holiday_revolution
+            Holiday.LABOUR -> R.string.holiday_labour
+            Holiday.MARTYRS -> R.string.holiday_martyrs
+            Holiday.LIBERATION -> R.string.holiday_liberation
+            Holiday.INDEPENDENCE -> R.string.holiday_independence
         }
 
         private fun checkProfile(context: Context, res: Resources, profile: Profile, today: LocalDate) {
@@ -131,7 +170,7 @@ class ReminderReceiver : BroadcastReceiver() {
                         d > 0 -> res.getString(R.string.notify_vaccine_soon, plan.visit.title, Format.days(res, d))
                         d == 0 -> res.getString(R.string.notify_vaccine_today, plan.visit.title)
                         else -> res.getString(R.string.notify_vaccine_late, plan.visit.title, Format.days(res, -d))
-                    }
+                    } + vaccineDayNote(res, today, d)
                     // Only mark as sent if it was really shown, so a reminder is not lost
                     // when notifications are blocked and later allowed.
                     if (Notifications.post(context, key, title, text, profile.id, Routes.VACCINES)) prefs.markNotified(key)

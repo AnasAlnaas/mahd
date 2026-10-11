@@ -68,8 +68,8 @@ import java.time.LocalDate
 import java.time.LocalTime
 
 @Composable
-fun HomeScreen(app: MahdApp, profile: Profile, nav: Navigator) {
-    if (profile.isPregnancy) PregnancyHome(app, profile, nav) else ChildHome(app, profile, nav)
+fun HomeScreen(app: MahdApp, profile: Profile, family: List<Profile>, nav: Navigator) {
+    if (profile.isPregnancy) PregnancyHome(app, profile, family, nav) else ChildHome(app, profile, family, nav)
 }
 
 @Composable
@@ -102,9 +102,9 @@ private fun greeting(): String =
 // ----- Pregnancy -----
 
 @Composable
-private fun PregnancyHome(app: MahdApp, profile: Profile, nav: Navigator) {
+private fun PregnancyHome(app: MahdApp, profile: Profile, family: List<Profile>, nav: Navigator) {
     val askForReminders = shouldAskForReminders(app)
-    val advice = rememberTodaysAdvice(app, profile)
+    val advice = rememberTodaysAdvice(app, profile, family)
     val today = LocalToday.current
     val res = LocalContext.current.resources
     val due = profile.dueDate ?: return
@@ -195,7 +195,7 @@ private fun BabyBornCard(profile: Profile, nav: Navigator) {
 // ----- Child -----
 
 @Composable
-private fun ChildHome(app: MahdApp, profile: Profile, nav: Navigator) {
+private fun ChildHome(app: MahdApp, profile: Profile, family: List<Profile>, nav: Navigator) {
     val today = LocalToday.current
     val res = LocalContext.current.resources
     val birth = profile.birthDate ?: return
@@ -207,7 +207,7 @@ private fun ChildHome(app: MahdApp, profile: Profile, nav: Navigator) {
     val months = ChildAge.referenceMonths(birth, profile.weeksAtBirth, today)
     val group = app.content.milestones.groupForAge(months)
     val askForReminders = shouldAskForReminders(app)
-    val advice = rememberTodaysAdvice(app, profile)
+    val advice = rememberTodaysAdvice(app, profile, family)
 
     val lines = buildList {
         add(stringResource(R.string.born_on, Format.date(birth)))

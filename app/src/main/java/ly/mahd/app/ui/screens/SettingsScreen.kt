@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
@@ -43,6 +44,7 @@ import ly.mahd.app.data.Repository
 import ly.mahd.app.data.Parent
 import ly.mahd.app.data.ThemeMode
 import ly.mahd.app.reminders.Notifications
+import ly.mahd.app.logic.LibyaCalendar
 import ly.mahd.app.ui.Navigator
 import ly.mahd.app.ui.Routes
 import ly.mahd.app.ui.components.AppCard
@@ -74,6 +76,7 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
     val reminders by app.prefs.remindersEnabled.collectAsState()
     val advice by app.prefs.adviceNotifications.collectAsState()
     val themeMode by app.prefs.themeMode.collectAsState()
+    val hijriOffset by app.prefs.hijriOffset.collectAsState()
     val canPost = rememberCanPostNotifications()
     var pendingRestore by remember { mutableStateOf<Repository.Snapshot?>(null) }
 
@@ -189,6 +192,44 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
                         )
                         Text(
                             stringResource(R.string.theme_hint),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+
+            // ----- Hijri date (Ramadan, the Eids) -----
+            item { SectionTitle(stringResource(R.string.settings_hijri), Modifier.padding(top = 12.dp)) }
+            item {
+                val offsets = listOf(-1, 0, 1)
+                val today = LocalToday.current
+                val months = stringArrayResource(R.array.hijri_months)
+                // Read with the current setting (the key makes it follow a change at once).
+                val hijri = remember(today, hijriOffset) { LibyaCalendar.hijri(today) }
+                ListGroup {
+                    GroupRow(spacing = 12.dp) {
+                        hijri?.let {
+                            Text(
+                                stringResource(
+                                    R.string.hijri_today,
+                                    stringResource(R.string.hijri_date, it.day.toString(), months[it.month - 1], it.year.toString()),
+                                ),
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                        }
+                        ConnectedChoice(
+                            options = listOf(
+                                stringResource(R.string.hijri_minus),
+                                stringResource(R.string.hijri_none),
+                                stringResource(R.string.hijri_plus),
+                            ),
+                            selected = offsets.indexOf(hijriOffset),
+                            onSelect = { app.prefs.setHijriOffset(offsets[it]) },
+                            unselectedColor = LocalSurfaces.current.inset,
+                        )
+                        Text(
+                            stringResource(R.string.hijri_hint),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

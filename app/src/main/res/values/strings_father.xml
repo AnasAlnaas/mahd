@@ -38,7 +38,7 @@
     <string name="this_is_your_week_m">هذا هو الأسبوع الحالي</string>
     <string name="back_to_current_week_m">العودة إلى الأسبوع الحالي</string>
 
-    <string name="advice_switch_hint_m">نصيحة من القرآن الكريم أو من صحيحي البخاري ومسلم، تناسب مرحلة الحمل أو عمر طفلك، وتخاطبك كأب.</string>
+    <string name="advice_switch_hint_m">نصيحة من القرآن الكريم أو من صحيحي البخاري ومسلم، تناسب مرحلة الحمل أو عمر طفلك، وتخاطبك كأب، وتصلك أيضًا في أول يوم من رمضان ومن كل عيد.</string>
     <string name="tile_weight_none_m">أضف قياسًا</string>
     <string name="all_vaccines_done_m">أحسنت! تم تسجيل كل التطعيمات في الجدول.</string>
     <string name="growth_card_empty_m">لم تُسجَّل أي قياسات بعد. سجّل الوزن والطول بعد كل زيارة للطبيب.</string>
@@ -88,4 +88,8 @@
     <string name="notify_new_week_title_m">بدأ الأسبوع %1$s من حمل زوجتك</string>
     <string name="notify_new_week_text_m">اعرف ما تمرّ به زوجتك هذا الأسبوع، وكيف تدعمها.</string>
     <string name="notify_vaccine_late_m">%1$s: مضى على موعدها %2$s. إذا أخذها طفلك، سجّلها في التطبيق.</string>
+    <string name="hijri_hint_m">يحسب التطبيق التاريخ الهجري بتقويم أم القرى، وقد يختلف عن إعلان ليبيا بيوم. إن اختلف، عدّله هنا ليظهر رمضان والعيد وتذكيراتهما في موعدها الصحيح.</string>
+    <string name="notify_vaccine_holiday_due_m">يوافق موعدها %1$s، وقد يكون مركز التطعيم مغلقًا؛ اسأل عن أقرب يوم يعمل فيه.</string>
+    <string name="notify_vaccine_holiday_today_m">اليوم %1$s، وقد يكون مركز التطعيم مغلقًا؛ اسأل عن أقرب يوم يعمل فيه.</string>
+    <string name="notify_vaccine_ramadan_m">ساعات عمل مراكز التطعيم تتغير غالبًا في رمضان؛ تأكد منها قبل الذهاب.</string>
 </resources>
