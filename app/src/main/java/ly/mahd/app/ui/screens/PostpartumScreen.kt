@@ -2,8 +2,6 @@ package ly.mahd.app.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,10 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -33,13 +28,9 @@ import ly.mahd.app.content.PostpartumContent
 import ly.mahd.app.data.BirthType
 import ly.mahd.app.data.Parent
 import ly.mahd.app.data.Profile
-import ly.mahd.app.logic.MoodCheck
-import ly.mahd.app.logic.MoodResult
 import ly.mahd.app.logic.PostpartumRules
 import ly.mahd.app.ui.Navigator
 import ly.mahd.app.ui.Routes
-import ly.mahd.app.ui.components.AppCard
-import ly.mahd.app.ui.components.AppFilterChip
 import ly.mahd.app.ui.components.BulletList
 import ly.mahd.app.ui.components.ConnectedChoice
 import ly.mahd.app.ui.components.DraftNotice
@@ -167,15 +158,8 @@ fun PostpartumScreen(app: MahdApp, child: Profile, onBack: () -> Unit) {
             item { CheckupsGroup(content, birth, day) }
 
             item { SectionTitle(stringResource(R.string.postpartum_mood_title)) }
-            item {
-                when {
-                    father -> ListGroup { GroupRow { BulletList(content.moodFather) } }
-                    day < MoodCheck.FROM_DAY -> ListGroup {
-                        GroupRow { Text(stringResource(R.string.mood_early), style = MaterialTheme.typography.bodyLarge) }
-                    }
-                    else -> MoodCheckCard(day)
-                }
-            }
+            // Information only: the app asks the mother no questions (the owner's choice).
+            item { ListGroup { GroupRow { BulletList(if (father) content.moodFather else content.moodMother) } } }
 
             item { SectionTitle(stringResource(R.string.postpartum_customs_title)) }
             item {
@@ -211,67 +195,6 @@ private fun CheckupsGroup(content: PostpartumContent, birth: LocalDate, day: Int
                 headline = c.title,
                 supporting = "${stringResource(R.string.checkup_dates, Format.date(from), Format.date(to))}\n${c.text}",
             )
-        }
-    }
-}
-
-/** Three questions, answered on the spot; nothing is saved. */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun MoodCheckCard(day: Int) {
-    var interest by rememberSaveable { mutableStateOf<Int?>(null) }
-    var low by rememberSaveable { mutableStateOf<Int?>(null) }
-    var harm by rememberSaveable { mutableStateOf<Boolean?>(null) }
-    val answers = listOf(R.string.mood_a_0, R.string.mood_a_1, R.string.mood_a_2, R.string.mood_a_3).map { stringResource(it) }
-
-    Column {
-        ListGroup {
-            GroupRow(spacing = 12.dp) {
-                Text(stringResource(R.string.mood_intro), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(stringResource(R.string.mood_q_interest), style = MaterialTheme.typography.titleMedium)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    answers.forEachIndexed { i, a -> AppFilterChip(selected = interest == i, onClick = { interest = i }, label = a) }
-                }
-                Text(stringResource(R.string.mood_q_low), style = MaterialTheme.typography.titleMedium)
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    answers.forEachIndexed { i, a -> AppFilterChip(selected = low == i, onClick = { low = i }, label = a) }
-                }
-                Text(stringResource(R.string.mood_q_harm), style = MaterialTheme.typography.titleMedium)
-                ConnectedChoice(
-                    options = listOf(stringResource(R.string.mood_yes), stringResource(R.string.mood_no)),
-                    selected = when (harm) { true -> 0; false -> 1; null -> null },
-                    onSelect = { harm = it == 0 },
-                    unselectedColor = LocalSurfaces.current.inset,
-                )
-                Text(stringResource(R.string.mood_source), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-        }
-        val i = interest
-        val l = low
-        val h = harm
-        // Thoughts of harm are answered at once, whatever the other answers.
-        val result = when {
-            h == true -> MoodResult.URGENT
-            i != null && l != null && h != null -> MoodCheck.result(i, l, h, day)
-            else -> null
-        }
-        when (result) {
-            MoodResult.URGENT -> WarningCard(title = stringResource(R.string.mood_result_urgent_title), modifier = Modifier.padding(top = 12.dp)) {
-                Text(stringResource(R.string.mood_result_urgent), style = MaterialTheme.typography.bodyLarge)
-            }
-            null -> {}
-            else -> AppCard(modifier = Modifier.padding(top = 12.dp), containerColor = MaterialTheme.colorScheme.surfaceContainer) {
-                Text(
-                    stringResource(
-                        when (result) {
-                            MoodResult.OK -> R.string.mood_result_ok
-                            MoodResult.BABY_BLUES -> R.string.mood_result_blues
-                            else -> R.string.mood_result_doctor
-                        },
-                    ),
-                    style = MaterialTheme.typography.bodyLarge,
-                )
-            }
         }
     }
 }

@@ -200,6 +200,7 @@ class ContentRepository(private val opener: (String) -> InputStream) {
         checkups = o.getJSONArray("checkups").objects().map { c ->
             PostnatalCheckup(c.getString("id"), c.getInt("fromDay"), c.getInt("toDay"), c.getString("title"), c.getString("text"))
         }.sortedBy { it.fromDay },
+        moodMother = o.getJSONArray("moodMother").strings(),
         moodFather = o.getJSONArray("moodFather").strings(),
         customs = o.getJSONArray("customs").objects().map { c ->
             PostpartumCustom(c.getString("id"), c.getString("title"), c.getString("verdict"), c.getString("text"), c.getString("source"))
@@ -308,6 +309,8 @@ data class PostpartumContent(
     val emergencySignsCaesarean: List<String>,
     val soonSigns: List<String>,
     val checkups: List<PostnatalCheckup>,
+    /** Written to the mother: when low mood needs help (information only; the app asks her no questions). */
+    val moodMother: List<String>,
     /** For the father: how to tell whether his wife's low mood needs help. */
     val moodFather: List<String>,
     val customs: List<PostpartumCustom>,

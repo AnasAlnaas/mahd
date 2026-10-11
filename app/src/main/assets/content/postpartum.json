@@ -1,6 +1,6 @@
 {
   "reviewed": false,
-  "note": "الأربعين: the mother's own recovery after birth (DRAFT, medical content: the screen shows the draft notice while reviewed is false). Days are counted from the day of birth = day 1. 'normal' is what is expected after any birth, 'natural' / 'caesarean' only after that kind of birth (both are shown when the mother has not said). normal/natural/caesarean, signs, checkups and customs speak to neither parent; 'tips' are written to the mother, 'tipsFather' to the father. Sources: NHS (your body after the birth, caesarean recovery, baby blues, postnatal depression), WHO recommendations on maternal and newborn care for a positive postnatal experience (2022), WHO report on birth spacing (2005), LactMed (fenugreek), NICE NG3 (diabetes in pregnancy), US FDA (kohl), AAP (swaddling).",
+  "note": "الأربعين: the mother's own recovery after birth (DRAFT, medical content: the screen shows the draft notice while reviewed is false). Days are counted from the day of birth = day 1. 'normal' is what is expected after any birth, 'natural' / 'caesarean' only after that kind of birth (both are shown when the mother has not said). normal/natural/caesarean, signs, checkups and customs speak to neither parent; 'tips' and 'moodMother' are written to the mother, 'tipsFather' and 'moodFather' to the father. The app asks the mother no questions here (owner's decision): mood is information only. Sources: NHS (your body after the birth, caesarean recovery, baby blues, postnatal depression), WHO recommendations on maternal and newborn care for a positive postnatal experience (2022), WHO report on birth spacing (2005), LactMed (fenugreek), NICE NG3 (diabetes in pregnancy), US FDA (kohl), AAP (swaddling).",
   "stages": [
     {
       "fromDay": 1,
@@ -157,6 +157,12 @@
       "title": "فحص الأسبوع السادس",
       "text": "فحص للأم في الأسبوع السادس: صحتها، ونفسيتها، والمباعدة بين الولادات."
     }
+  ],
+  "moodMother": [
+    "البكاء والقلق في الأسبوعين الأولين شائعان عند كثير من الأمهات، ويزولان عادة.",
+    "إن استمر حزنكِ أكثر من أسبوعين، أو فقدتِ اهتمامكِ بكل شيء، أو صرتِ لا تنامين حتى حين ينام طفلكِ، فكلّمي طبيبتكِ؛ اكتئاب ما بعد الولادة شائع وله علاج.",
+    "إن راودتكِ أفكار بإيذاء نفسكِ أو طفلكِ، فأخبري زوجكِ أو شخصًا تثقين به الآن، واذهبي إلى الطبيب أو الطوارئ اليوم.",
+    "طلب المساعدة ليس ضعفًا ولا تقصيرًا."
   ],
   "moodFather": [
     "البكاء والقلق في الأسبوعين الأولين شائعان ويزولان عادة.",

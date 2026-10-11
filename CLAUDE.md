@@ -45,8 +45,9 @@ Libyan vaccine schedule or Libyan dialect. Plan: MVP first, add features over ti
   birth = day 1), Home shows a الأربعين card (a moon filling over 40 days) opening `PostpartumScreen`: what's normal per
   stage and per birth type (both when unknown; the type can be set there too), tips (mother) / how to help (father),
   the mother's emergency and same-day danger signs, the WHO postnatal check-ups (day 3, days 8–15, week 6) with one
-  reminder each (keyed by birth date so twins share it), a mood check (PHQ-2 + a question on thoughts of harm, from day 8,
-  nothing saved; the father sees signs to watch instead) and Libyan الأربعين customs weighed against evidence. Content:
+  reminder each (keyed by birth date so twins share it), mood as information only (`moodMother` / `moodFather`: when low
+  mood needs help) and Libyan الأربعين customs weighed against evidence. The app asks the mother NO questions in الأربعين
+  (owner's decision, 2026-10-11: the PHQ-2 mood check was removed; don't add questionnaires back). Content:
   `postpartum.json` (DRAFT, reviewed false); shared text speaks to neither parent (PostpartumTest checks).
 - Hospital bag (owner's request, 2026-10-11): `hospital_bag.json`, a general list for a Muslim woman (modest clothing,
   dhikr; no bottles). No country-specific items unless the owner approves them. Shown on pregnancy Home from week 28;

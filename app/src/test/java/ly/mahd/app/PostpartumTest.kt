@@ -1,8 +1,6 @@
 package ly.mahd.app
 
 import ly.mahd.app.content.ContentRepository
-import ly.mahd.app.logic.MoodCheck
-import ly.mahd.app.logic.MoodResult
 import ly.mahd.app.logic.PostpartumRules
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -71,11 +69,10 @@ class PostpartumTest {
     }
 
     @Test
-    fun moodCheck() {
-        assertEquals(MoodResult.OK, MoodCheck.result(1, 1, harmThoughts = false, day = 20))
-        assertEquals(MoodResult.BABY_BLUES, MoodCheck.result(2, 1, harmThoughts = false, day = 10))
-        assertEquals(MoodResult.TALK_TO_DOCTOR, MoodCheck.result(2, 1, harmThoughts = false, day = 20))
-        assertEquals(MoodResult.URGENT, MoodCheck.result(0, 0, harmThoughts = true, day = 5))
+    fun moodIsInformationOnlyForBothParents() {
+        // The app asks the mother no questions (owner's decision); she reads when to ask for help.
+        assertTrue(postpartum.moodMother.isNotEmpty() && postpartum.moodFather.isNotEmpty())
+        assertTrue(postpartum.moodMother.none { it.trimEnd().endsWith("؟") })
     }
 
     @Test

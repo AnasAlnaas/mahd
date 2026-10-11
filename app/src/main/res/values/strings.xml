@@ -165,24 +165,7 @@
     <string name="checkup_now">حان وقته</string>
     <string name="checkup_upcoming">قادم</string>
     <string name="checkup_past">مضى وقته</string>
-    <string name="postpartum_mood_title">كيف حالكِ النفسية؟</string>
-    <string name="mood_early">في الأيام الأولى يكثر البكاء والقلق عند كثير من الأمهات، وهذا شائع. بعد الأسبوع الأول تظهر هنا أسئلة قصيرة عن نفسيتكِ. وإن راودتكِ في أي وقت أفكار بإيذاء نفسكِ أو طفلكِ، فاطلبي المساعدة فورًا.</string>
-    <string name="mood_intro">ثلاثة أسئلة عن الأسبوعين الماضيين. إجاباتكِ لا تُحفظ في التطبيق، ولا تشخّص مرضًا، لكنها تقول متى يفيد الحديث مع طبيبة.</string>
-    <string name="mood_q_interest">كم مرة شعرتِ بقلة الاهتمام أو المتعة في فعل الأشياء؟</string>
-    <string name="mood_q_low">كم مرة شعرتِ بالحزن أو الإحباط أو اليأس؟</string>
-    <string name="mood_a_0">أبدًا</string>
-    <string name="mood_a_1">عدة أيام</string>
-    <string name="mood_a_2">أكثر من نصف الأيام</string>
-    <string name="mood_a_3">كل يوم تقريبًا</string>
-    <string name="mood_q_harm">هل تراودكِ أفكار بإيذاء نفسكِ أو طفلكِ؟</string>
-    <string name="mood_yes">نعم</string>
-    <string name="mood_no">لا</string>
-    <string name="mood_source">السؤالان الأولان من استبيان PHQ-2 (Kroenke وزملاؤه، 2003).</string>
-    <string name="mood_result_ok">يبدو أن نفسيتكِ بخير الآن. أعيدي هذه الأسئلة بعد أسبوعين، وتحدّثي إلى من تثقين به إن تغيّر شعوركِ.</string>
-    <string name="mood_result_blues">قد تكون هذه «كآبة ما بعد الولادة» التي تصيب كثيرًا من الأمهات في الأسبوعين الأولين ثم تزول. إن استمرت بعد أسبوعين أو اشتدت، فكلّمي طبيبتكِ.</string>
-    <string name="mood_result_doctor">يُستحسن أن تتحدثي مع طبيبتكِ عن شعوركِ. اكتئاب ما بعد الولادة شائع وله علاج، وطلب المساعدة ليس ضعفًا ولا تقصيرًا.</string>
-    <string name="mood_result_urgent_title">اطلبي المساعدة اليوم</string>
-    <string name="mood_result_urgent">هذه الأفكار علامة مرض له علاج، وليست ذنبًا منكِ. أخبري زوجكِ أو شخصًا تثقين به الآن، واذهبي إلى الطبيب أو الطوارئ اليوم.</string>
+    <string name="postpartum_mood_title">نفسيتكِ</string>
     <string name="postpartum_customs_title">عادات الأربعين في ميزان العلم</string>
 
     <!-- Hospital bag -->
