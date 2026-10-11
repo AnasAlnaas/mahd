@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import ly.mahd.app.MahdApp
 import ly.mahd.app.R
+import ly.mahd.app.data.BirthType
 import ly.mahd.app.data.Profile
 import ly.mahd.app.data.ProfileKind
 import ly.mahd.app.data.Sex
@@ -356,7 +357,8 @@ private fun PrematureFields(premature: Boolean, onPremature: (Boolean) -> Unit, 
 }
 
 // ---------------------------------------------------------------------------------------------
-// "My baby is born" — turns a pregnancy into a child profile, keeping its id and due date.
+// "My baby is born" — first how the baby was born (for the mother's الأربعين), then the baby's details;
+// turns a pregnancy into a child profile, keeping its id and due date.
 // ---------------------------------------------------------------------------------------------
 
 @Composable
@@ -364,9 +366,16 @@ fun BabyBornScreen(app: MahdApp, pregnancy: Profile, onDone: () -> Unit, onClose
     val today = LocalToday.current
     val scope = rememberCoroutineScope()
     val due = pregnancy.dueDate ?: today
+    var birthTypeCode by rememberSaveable { mutableStateOf<String?>(null) }
     var name by rememberSaveable { mutableStateOf(pregnancy.name) }
     var sex by rememberSaveable { mutableStateOf<String?>(null) }
     var birth by rememberSaveable(stateSaver = dateSaver) { mutableStateOf<LocalDate?>(today) }
+
+    val birthType = BirthType.fromCode(birthTypeCode)
+    if (birthType == null) {
+        BirthTypeDecision(onPick = { birthTypeCode = it.code }, onClose = onClose)
+        return
+    }
 
     val weeksAtBirth = birth?.let { PregnancyMath.gestationalAge(due, it).weeks }
     val valid = name.isNotBlank() && sex != null && birth != null
@@ -378,6 +387,19 @@ fun BabyBornScreen(app: MahdApp, pregnancy: Profile, onDone: () -> Unit, onClose
 
                 Text(stringResource(R.string.baby_born_congrats), style = MaterialTheme.typography.headlineMedium)
                 Text(stringResource(R.string.baby_born_text), style = MaterialTheme.typography.bodyLarge)
+            }
+            AppCard(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        stringResource(
+                            R.string.baby_born_type_line,
+                            stringResource(if (birthType == BirthType.NATURAL) R.string.birth_natural else R.string.birth_caesarean),
+                        ),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.weight(1f),
+                    )
+                    TextButton(onClick = { birthTypeCode = null }) { Text(stringResource(R.string.action_change)) }
+                }
             }
             ChildBasicsFields(name = name, onName = { name = it }, sex = sex, onSex = { sex = it })
             DateField(
@@ -410,6 +432,7 @@ fun BabyBornScreen(app: MahdApp, pregnancy: Profile, onDone: () -> Unit, onClose
                                 sex = s,
                                 birthDate = b,
                                 weeksAtBirth = weeksAtBirth,
+                                birthType = birthType,
                             ),
                         )
                         onDone()
@@ -418,6 +441,36 @@ fun BabyBornScreen(app: MahdApp, pregnancy: Profile, onDone: () -> Unit, onClose
                 enabled = valid,
                 modifier = Modifier.fillMaxWidth().height(56.dp),
             ) { Text(stringResource(R.string.action_save)) }
+            TextButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.action_cancel))
+            }
+        }
+    }
+}
+
+/** The first step of "my baby is born": a natural birth or a caesarean (طبيعية أو عملية). */
+@Composable
+private fun BirthTypeDecision(onPick: (BirthType) -> Unit, onClose: () -> Unit) {
+    SubScreen(title = stringResource(R.string.baby_born_title), onBack = onClose) { padding ->
+        FormColumn(padding) {
+            AppCard(containerColor = MaterialTheme.colorScheme.primaryContainer) {
+                MoonPhase(1f, size = 40.dp)
+                Text(stringResource(R.string.baby_born_congrats), style = MaterialTheme.typography.headlineMedium)
+            }
+            Text(stringResource(R.string.baby_born_type_question), style = MaterialTheme.typography.titleLarge)
+            Text(
+                stringResource(R.string.baby_born_type_hint),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            ExpressiveButton(
+                onClick = { onPick(BirthType.NATURAL) },
+                modifier = Modifier.fillMaxWidth().height(64.dp),
+            ) { Text(stringResource(R.string.birth_natural_long)) }
+            ExpressiveButton(
+                onClick = { onPick(BirthType.CAESAREAN) },
+                modifier = Modifier.fillMaxWidth().height(64.dp),
+            ) { Text(stringResource(R.string.birth_caesarean_long)) }
             TextButton(onClick = onClose, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.action_cancel))
             }

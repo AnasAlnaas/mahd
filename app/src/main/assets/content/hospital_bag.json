@@ -1,0 +1,68 @@
+{
+  "note": "Hospital bag for a Muslim woman (general, no country-specific items: those wait for the owner's approval). Based on the NHS list 'Pack your bag for labour', with modest clothing and dhikr added; no bottles or formula (breastfeeding only). Item ids are stored when ticked: never reuse or rename an id. Texts speak to neither parent.",
+  "groups": [
+    {
+      "id": "papers",
+      "title": "الأوراق",
+      "items": [
+        { "id": "id_cards", "text": "بطاقات الهوية للأم والزوج" },
+        { "id": "pregnancy_file", "text": "ملف متابعة الحمل: التحاليل وصور الأشعة وتقارير الطبيبة" },
+        { "id": "hospital_papers", "text": "ما يطلبه المستشفى للتسجيل أو للتأمين" },
+        { "id": "medicines", "text": "الأدوية التي تأخذها الأم بانتظام، مع أسمائها وجرعاتها" }
+      ]
+    },
+    {
+      "id": "mother_clothes",
+      "title": "ملابس الأم",
+      "items": [
+        { "id": "labour_clothes", "text": "ملابس واسعة مريحة للولادة" },
+        { "id": "isdal", "text": "إسدال أو جلباب واسع ساتر، سهل اللبس أمام الطاقم الطبي والزوار" },
+        { "id": "hijab", "text": "حجابان أو خماران سهلا اللبس" },
+        { "id": "socks", "text": "جوارب دافئة" },
+        { "id": "nightwear", "text": "2–3 أطقم نوم بفتحة للرضاعة" },
+        { "id": "nursing_bras", "text": "2–3 حمالات صدر للرضاعة" },
+        { "id": "underwear", "text": "5–6 ملابس داخلية قطنية واسعة" },
+        { "id": "slippers", "text": "شبشب" },
+        { "id": "going_home_mother", "text": "ملابس الخروج من المستشفى" }
+      ]
+    },
+    {
+      "id": "mother_care",
+      "title": "عناية الأم",
+      "items": [
+        { "id": "maternity_pads", "text": "فوط نفاس كبيرة (عبوتان تقريبًا)" },
+        { "id": "breast_pads", "text": "فوط للثدي" },
+        { "id": "toiletries", "text": "فرشاة ومعجون أسنان، ومشط، وصابون، ومزيل عرق، ومرطب شفاه، وربطات شعر" },
+        { "id": "towel", "text": "منشفة" },
+        { "id": "tissues", "text": "مناديل ومناديل مبللة" },
+        { "id": "dhikr", "text": "الأذكار ودعاء الكرب، مكتوبة أو في الهاتف" },
+        { "id": "snacks", "text": "تمر وماء ووجبات خفيفة للمخاض وبعده" },
+        { "id": "charger", "text": "شاحن الهاتف" }
+      ]
+    },
+    {
+      "id": "baby",
+      "title": "للمولود",
+      "items": [
+        { "id": "bodysuits", "text": "4–6 قطع ملابس داخلية (بادي) وأطقم نوم بمقاس المولود" },
+        { "id": "hat_socks", "text": "طاقية وجوارب" },
+        { "id": "nappies", "text": "حفاضات للمولود الجديد (عبوة)" },
+        { "id": "wipes", "text": "مناديل مبللة خفيفة للأطفال، أو قطن" },
+        { "id": "muslins", "text": "قطع قماش قطنية للتجشئة" },
+        { "id": "blanket", "text": "بطانية خفيفة أو لفافة" },
+        { "id": "going_home_baby", "text": "ملابس الخروج للمولود" },
+        { "id": "car_seat", "text": "مقعد سيارة للمولود، مركّب في السيارة قبل يوم الخروج" }
+      ]
+    },
+    {
+      "id": "companion",
+      "title": "للمرافق",
+      "items": [
+        { "id": "companion_food", "text": "ماء وطعام خفيف" },
+        { "id": "money", "text": "نقود وشاحن إضافي" },
+        { "id": "prayer_mat", "text": "سجادة صلاة صغيرة" },
+        { "id": "companion_clothes", "text": "ملابس إضافية إن طالت الإقامة" }
+      ]
+    }
+  ]
+}

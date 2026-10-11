@@ -10,6 +10,7 @@
     <!-- General actions -->
     <string name="action_back">رجوع</string>
     <string name="action_cancel">إلغاء</string>
+    <string name="action_change">تغيير</string>
     <string name="action_ok">موافق</string>
     <string name="action_save">حفظ</string>
     <string name="action_delete">حذف</string>
@@ -140,6 +141,54 @@
     <string name="baby_born_hint">عند الولادة، انقلي هذه المتابعة إلى متابعة الطفل.</string>
     <string name="baby_born_overdue_hint">مضى على موعد الولادة المتوقع أكثر من أسبوع. إذا وصل طفلك، سجّلي ذلك هنا لتبدأ متابعة التطعيمات والنمو والمهارات.</string>
     <string name="baby_born_button">نعم، وصل طفلي</string>
+    <string name="baby_born_type_question">كيف كانت الولادة؟</string>
+    <string name="baby_born_type_hint">نسألكِ لنعرض لكِ في «الأربعين» ما يخص تعافيكِ.</string>
+    <string name="baby_born_type_line">الولادة: %1$s</string>
+    <string name="birth_natural">طبيعية</string>
+    <string name="birth_caesarean">عملية</string>
+    <string name="birth_natural_long">ولادة طبيعية</string>
+    <string name="birth_caesarean_long">ولادة بعملية (قيصرية)</string>
+
+    <!-- الأربعين: the mother's recovery after birth -->
+    <string name="postpartum_title">الأربعين</string>
+    <string name="postpartum_day">اليوم %1$s من 40</string>
+    <string name="postpartum_done">انتهت الأربعين</string>
+    <string name="postpartum_card_hint">ما الطبيعي الآن، وعلامات الخطر، وفحوصكِ بعد الولادة.</string>
+    <string name="postpartum_birth_type">نوع الولادة</string>
+    <string name="postpartum_birth_type_hint">اختاري نوع الولادة ليظهر ما يخصّها فقط.</string>
+    <string name="postpartum_normal_title">ما الطبيعي الآن</string>
+    <string name="postpartum_tips_title">نصائح لكِ</string>
+    <string name="postpartum_emergency_title">إلى الطوارئ فورًا إذا ظهر أيّ من هذه</string>
+    <string name="postpartum_soon_title">راجعي الطبيبة في اليوم نفسه إذا ظهر</string>
+    <string name="postpartum_checkups_title">فحوص ما بعد الولادة</string>
+    <string name="checkup_dates">من %1$s إلى %2$s</string>
+    <string name="checkup_now">حان وقته</string>
+    <string name="checkup_upcoming">قادم</string>
+    <string name="checkup_past">مضى وقته</string>
+    <string name="postpartum_mood_title">كيف حالكِ النفسية؟</string>
+    <string name="mood_early">في الأيام الأولى يكثر البكاء والقلق عند كثير من الأمهات، وهذا شائع. بعد الأسبوع الأول تظهر هنا أسئلة قصيرة عن نفسيتكِ. وإن راودتكِ في أي وقت أفكار بإيذاء نفسكِ أو طفلكِ، فاطلبي المساعدة فورًا.</string>
+    <string name="mood_intro">ثلاثة أسئلة عن الأسبوعين الماضيين. إجاباتكِ لا تُحفظ في التطبيق، ولا تشخّص مرضًا، لكنها تقول متى يفيد الحديث مع طبيبة.</string>
+    <string name="mood_q_interest">كم مرة شعرتِ بقلة الاهتمام أو المتعة في فعل الأشياء؟</string>
+    <string name="mood_q_low">كم مرة شعرتِ بالحزن أو الإحباط أو اليأس؟</string>
+    <string name="mood_a_0">أبدًا</string>
+    <string name="mood_a_1">عدة أيام</string>
+    <string name="mood_a_2">أكثر من نصف الأيام</string>
+    <string name="mood_a_3">كل يوم تقريبًا</string>
+    <string name="mood_q_harm">هل تراودكِ أفكار بإيذاء نفسكِ أو طفلكِ؟</string>
+    <string name="mood_yes">نعم</string>
+    <string name="mood_no">لا</string>
+    <string name="mood_source">السؤالان الأولان من استبيان PHQ-2 (Kroenke وزملاؤه، 2003).</string>
+    <string name="mood_result_ok">يبدو أن نفسيتكِ بخير الآن. أعيدي هذه الأسئلة بعد أسبوعين، وتحدّثي إلى من تثقين به إن تغيّر شعوركِ.</string>
+    <string name="mood_result_blues">قد تكون هذه «كآبة ما بعد الولادة» التي تصيب كثيرًا من الأمهات في الأسبوعين الأولين ثم تزول. إن استمرت بعد أسبوعين أو اشتدت، فكلّمي طبيبتكِ.</string>
+    <string name="mood_result_doctor">يُستحسن أن تتحدثي مع طبيبتكِ عن شعوركِ. اكتئاب ما بعد الولادة شائع وله علاج، وطلب المساعدة ليس ضعفًا ولا تقصيرًا.</string>
+    <string name="mood_result_urgent_title">اطلبي المساعدة اليوم</string>
+    <string name="mood_result_urgent">هذه الأفكار علامة مرض له علاج، وليست ذنبًا منكِ. أخبري زوجكِ أو شخصًا تثقين به الآن، واذهبي إلى الطبيب أو الطوارئ اليوم.</string>
+    <string name="postpartum_customs_title">عادات الأربعين في ميزان العلم</string>
+
+    <!-- Hospital bag -->
+    <string name="bag_title">حقيبة المستشفى</string>
+    <string name="bag_progress">%1$s من %2$s جاهزة</string>
+    <string name="bag_hint">جهّزيها قبل موعد الولادة بأسابيع؛ فقد تأتي الولادة مبكرًا.</string>
 
     <!-- Home: pregnancy -->
     <string name="pregnancy_week_number">الأسبوع %1$s</string>
@@ -469,4 +518,6 @@
     <string name="notify_vaccine_holiday_due">يوافق موعدها %1$s، وقد يكون مركز التطعيم مغلقًا؛ اسألي عن أقرب يوم يعمل فيه.</string>
     <string name="notify_vaccine_holiday_today">اليوم %1$s، وقد يكون مركز التطعيم مغلقًا؛ اسألي عن أقرب يوم يعمل فيه.</string>
     <string name="notify_vaccine_ramadan">ساعات عمل مراكز التطعيم تتغير غالبًا في رمضان؛ تأكدي منها قبل الذهاب.</string>
+    <!-- The check-up's own text (from postpartum.json), then what to do. -->
+    <string name="notify_checkup_text">%1$s اتصلي بطبيبتكِ أو بالمركز الصحي لموعده.</string>
 </resources>

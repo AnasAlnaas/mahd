@@ -50,6 +50,8 @@ import ly.mahd.app.ui.components.MoonPhase
 import ly.mahd.app.logic.PregnancyMath
 import ly.mahd.app.ui.screens.AboutScreen
 import ly.mahd.app.ui.screens.BabyBornScreen
+import ly.mahd.app.ui.screens.HospitalBagScreen
+import ly.mahd.app.ui.screens.PostpartumScreen
 import ly.mahd.app.ui.screens.ChildDangerSignsScreen
 import ly.mahd.app.ui.screens.ChildFormScreen
 import ly.mahd.app.ui.screens.CompareScreen
@@ -136,6 +138,13 @@ private fun MainNav(app: MahdApp, nav: Navigator, profiles: List<Profile>, selec
         "week" -> PregnancyScreen(app, selected, nav, initialWeek = arg?.toIntOrNull(), standalone = true)
         Routes.DANGER_SIGNS -> DangerSignsScreen(app, onBack = nav::back)
         Routes.CHILD_DANGER_SIGNS -> ChildDangerSignsScreen(app, selected, onBack = nav::back)
+        // Opened from Home or from a check-up reminder; back goes Home (see BackHandler above).
+        Routes.POSTPARTUM ->
+            if (selected.isChild) PostpartumScreen(app, selected, onBack = { if (nav.canGoBack) nav.back() else nav.selectTab(Routes.HOME) })
+            else LaunchedEffect(route) { nav.selectTab(Routes.HOME) }
+        Routes.HOSPITAL_BAG ->
+            if (selected.isPregnancy) HospitalBagScreen(app, selected, onBack = nav::back)
+            else LaunchedEffect(route) { nav.selectTab(Routes.HOME) }
         "photo" -> {
             val id = arg?.toLongOrNull()
             if (id == null) LaunchedEffect(route) { nav.back() } else PhotoScreen(app, selected, id, nav)

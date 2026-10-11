@@ -82,6 +82,23 @@ class Prefs(context: Context) {
         _hijriOffset.value = value
     }
 
+    /** Hospital bag items already packed, per pregnancy profile. A small checklist, so not part of the backup file. */
+    private val _hospitalBag = MutableStateFlow(loadHospitalBag())
+    val hospitalBag: StateFlow<Map<Long, Set<String>>> = _hospitalBag.asStateFlow()
+
+    fun setBagItem(profileId: Long, itemId: String, packed: Boolean) {
+        val before = _hospitalBag.value[profileId].orEmpty()
+        val after = if (packed) before + itemId else before - itemId
+        sp.edit { putStringSet("$BAG_PREFIX$profileId", after) }
+        _hospitalBag.value = _hospitalBag.value + (profileId to after)
+    }
+
+    private fun loadHospitalBag(): Map<Long, Set<String>> = sp.all.mapNotNull { (key, value) ->
+        val id = if (key.startsWith(BAG_PREFIX)) key.removePrefix(BAG_PREFIX).toLongOrNull() else null
+        val items = (value as? Set<*>)?.filterIsInstance<String>()?.toSet()
+        if (id != null && items != null) id to items else null
+    }.toMap()
+
     var notificationPermissionAsked: Boolean
         get() = sp.getBoolean(KEY_PERMISSION_ASKED, false)
         set(value) = sp.edit { putBoolean(KEY_PERMISSION_ASKED, value) }
@@ -132,6 +149,7 @@ class Prefs(context: Context) {
         private const val KEY_ADVICE_NOTIFICATIONS = "advice_notifications"
         private const val KEY_THEME = "theme_mode"
         private const val KEY_HIJRI_OFFSET = "hijri_offset"
+        private const val BAG_PREFIX = "bag_"
         private const val KEY_PARENT = "parent"
         private const val KEY_PERMISSION_ASKED = "notification_permission_asked"
         private const val KEY_REMINDER_PROMPT_DISMISSED = "reminder_prompt_dismissed"

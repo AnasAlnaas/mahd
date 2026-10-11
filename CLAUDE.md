@@ -40,6 +40,20 @@ Libyan vaccine schedule or Libyan dialect. Plan: MVP first, add features over ti
 - Feeding (owner's decision, 2026-10-10): the app promotes breastfeeding only. Never mention formula, bottles or
   "breast or bottle" as a choice in any content or string. A feeding problem is sent to the doctor (e.g. `s_enough_milk`:
   wet nappies and weight), never solved with formula in the app's own words.
+- الأربعين (owner's request, 2026-10-11): "my baby is born" first asks طبيعية / عملية (`BirthType`, column
+  `profiles.birth_type`, DB v4, in backups as optional "birthType"). For a child from the day of birth to day 43 (day of
+  birth = day 1), Home shows a الأربعين card (a moon filling over 40 days) opening `PostpartumScreen`: what's normal per
+  stage and per birth type (both when unknown; the type can be set there too), tips (mother) / how to help (father),
+  the mother's emergency and same-day danger signs, the WHO postnatal check-ups (day 3, days 8–15, week 6) with one
+  reminder each (keyed by birth date so twins share it), a mood check (PHQ-2 + a question on thoughts of harm, from day 8,
+  nothing saved; the father sees signs to watch instead) and Libyan الأربعين customs weighed against evidence. Content:
+  `postpartum.json` (DRAFT, reviewed false); shared text speaks to neither parent (PostpartumTest checks).
+- Hospital bag (owner's request, 2026-10-11): `hospital_bag.json`, a general list for a Muslim woman (modest clothing,
+  dhikr; no bottles). No country-specific items unless the owner approves them. Shown on pregnancy Home from week 28;
+  ticks live in `Prefs.hospitalBag` (not in backups). Item ids are stored: never rename one.
+- Rejected / postponed by the owner (2026-10-11): no feeding/nappy/sleep log (the owner does not want parents opening the
+  app many times a day); no contraction timer; "can I eat it?" postponed until there is more information; a mother &
+  child health booklet with a doctor report kept for later.
 - Danger signs: pregnancy (`pregnancy.json`) and children (`child_danger_signs.json`, DRAFT from WHO IMCI + NICE fever
   rule for under 3 months). A section with `maxAgeMonths` is shown first for a younger child. No "call ambulance"
   button until a doctor confirms the number (owner's decision).
@@ -116,9 +130,9 @@ growth (WHO charts, plain-language bands, corrected age for preterm); milestones
 backup save/share/restore as JSON; settings/about.
 
 ## Later (v1.1+)
-Libyan-dialect audio, kick counter, contraction timer, appointment/medicine reminders, Hijri dates,
-Ramadan & fasting guidance, starting solids with Libyan foods, photo diary, WhatsApp milestone
-cards, printable doctor report, feeding/sleep log. v2 (optional internet): family sharing,
+Libyan-dialect audio, kick counter, appointment/medicine reminders,
+starting solids with Libyan foods / "can I eat it?" (postponed), photo diary, WhatsApp milestone
+cards, mother & child health booklet with a printable doctor report (later). v2 (optional internet): family sharing,
 content updates, web version, clinic directory.
 
 ## Open questions for the owner

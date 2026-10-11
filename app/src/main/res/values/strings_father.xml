@@ -88,6 +88,14 @@
     <string name="notify_new_week_title_m">بدأ الأسبوع %1$s من حمل زوجتك</string>
     <string name="notify_new_week_text_m">اعرف ما تمرّ به زوجتك هذا الأسبوع، وكيف تدعمها.</string>
     <string name="notify_vaccine_late_m">%1$s: مضى على موعدها %2$s. إذا أخذها طفلك، سجّلها في التطبيق.</string>
+    <string name="baby_born_type_hint_m">نسألك لنعرض لك في «الأربعين» ما يخص تعافي زوجتك.</string>
+    <string name="postpartum_card_hint_m">كيف تساعد زوجتك، وعلامات الخطر، وفحوصها بعد الولادة.</string>
+    <string name="postpartum_birth_type_hint_m">اختر نوع الولادة ليظهر ما يخصّها فقط.</string>
+    <string name="postpartum_tips_title_m">كيف تساعدها</string>
+    <string name="postpartum_soon_title_m">خذها إلى الطبيبة في اليوم نفسه إذا ظهر</string>
+    <string name="postpartum_mood_title_m">نفسية زوجتك</string>
+    <string name="notify_checkup_text_m">%1$s اتصل بطبيبتها أو بالمركز الصحي لموعده.</string>
+    <string name="bag_hint_m">جهّزها مع زوجتك قبل موعد الولادة بأسابيع؛ فقد تأتي الولادة مبكرًا.</string>
     <string name="hijri_hint_m">يحسب التطبيق التاريخ الهجري بتقويم أم القرى، وقد يختلف عن إعلان ليبيا بيوم. إن اختلف، عدّله هنا ليظهر رمضان والعيد وتذكيراتهما في موعدها الصحيح.</string>
     <string name="notify_vaccine_holiday_due_m">يوافق موعدها %1$s، وقد يكون مركز التطعيم مغلقًا؛ اسأل عن أقرب يوم يعمل فيه.</string>
     <string name="notify_vaccine_holiday_today_m">اليوم %1$s، وقد يكون مركز التطعيم مغلقًا؛ اسأل عن أقرب يوم يعمل فيه.</string>

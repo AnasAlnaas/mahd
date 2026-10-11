@@ -302,6 +302,7 @@ private fun Cursor.toProfile() = Profile(
     birthDate = date("birth_date"),
     dueDate = date("due_date"),
     weeksAtBirth = intOrNull("weeks_at_birth"),
+    birthType = BirthType.fromCode(string("birth_type")),
 )
 
 private fun Cursor.toGrowth() = GrowthEntry(
@@ -333,6 +334,7 @@ private fun Profile.toValues() = ContentValues().apply {
     put("birth_date", birthDate?.toString())
     put("due_date", dueDate?.toString())
     if (weeksAtBirth != null) put("weeks_at_birth", weeksAtBirth) else putNull("weeks_at_birth")
+    put("birth_type", birthType?.code)
 }
 
 private fun GrowthEntry.toValues() = ContentValues().apply {

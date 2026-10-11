@@ -24,6 +24,16 @@ enum class Sex(val code: String) {
     }
 }
 
+/** How the baby was born, asked when "my baby is born" is pressed (for the mother's الأربعين). */
+enum class BirthType(val code: String) {
+    NATURAL("natural"),
+    CAESAREAN("caesarean");
+
+    companion object {
+        fun fromCode(code: String?) = entries.firstOrNull { it.code == code }
+    }
+}
+
 data class Profile(
     val id: Long,
     val kind: ProfileKind,
@@ -35,6 +45,8 @@ data class Profile(
     val dueDate: LocalDate?,
     /** Completed weeks of pregnancy at birth. Null when unknown or born at term. */
     val weeksAtBirth: Int?,
+    /** Natural birth or caesarean; null when not told (children added before this was asked). */
+    val birthType: BirthType? = null,
 ) {
     val isPregnancy get() = kind == ProfileKind.PREGNANCY
     val isChild get() = kind == ProfileKind.CHILD && birthDate != null

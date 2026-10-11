@@ -46,6 +46,7 @@ import ly.mahd.app.data.Profile
 import ly.mahd.app.logic.ChildAge
 import ly.mahd.app.logic.GrowthMath
 import ly.mahd.app.logic.MilestoneFocus
+import ly.mahd.app.logic.PostpartumRules
 import ly.mahd.app.logic.PregnancyMath
 import ly.mahd.app.logic.VaccinePlanner
 import ly.mahd.app.ui.Navigator
@@ -154,6 +155,7 @@ private fun PregnancyHome(app: MahdApp, profile: Profile, family: List<Profile>,
                         Text(stage.support, style = MaterialTheme.typography.bodyLarge)
                     }
                 }
+                if (ga.weeks >= HOSPITAL_BAG_FROM_WEEK) HospitalBagRow(app, profile, nav)
             }
         }
         item { BabyBornCard(profile, nav) }
@@ -233,6 +235,8 @@ private fun ChildHome(app: MahdApp, profile: Profile, family: List<Profile>, nav
                 lines = lines,
             )
         }
+        // The mother's own forty days, right under the baby's age (shown only until the six-week check-up).
+        if (PostpartumRules.isActive(birth, today, app.content.postpartum.lastDay)) item { PostpartumCard(app, profile, nav) }
         if (askForReminders) item { RemindersPrompt(app, profile) }
         advice?.let { item { AdviceCard(it, app.content.advice.factsReviewed) } }
         item {

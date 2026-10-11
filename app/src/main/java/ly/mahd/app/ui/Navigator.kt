@@ -46,6 +46,9 @@ object Routes {
     const val ADD_CHILD = "add_child"
     const val DANGER_SIGNS = "danger_signs"
     const val CHILD_DANGER_SIGNS = "child_danger_signs"
+    /** The mother's الأربعين, for the selected child. */
+    const val POSTPARTUM = "postpartum"
+    const val HOSPITAL_BAG = "hospital_bag"
     const val SETTINGS = "settings"
     const val ABOUT = "about"
 

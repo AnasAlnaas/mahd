@@ -6,6 +6,7 @@ import ly.mahd.app.content.VaccineDose
 import ly.mahd.app.content.VaccineSchedule
 import ly.mahd.app.content.VaccineVisit
 import ly.mahd.app.data.BackupFile
+import ly.mahd.app.data.BirthType
 import ly.mahd.app.data.DoseRecord
 import ly.mahd.app.data.GrowthEntry
 import ly.mahd.app.data.Profile
@@ -203,6 +204,15 @@ class BackupFileTest {
     @Test
     fun roundTrip() {
         assertEquals(snapshot, decode(encode(snapshot)))
+    }
+
+    @Test
+    fun theBirthTypeIsKeptAndOldBackupsWithoutItStillLoad() {
+        val withType = snapshot.copy(profiles = listOf(profile.copy(birthType = BirthType.CAESAREAN)))
+        assertEquals(withType, decode(encode(withType)))
+        assertEquals(null, decode(encode(snapshot)).profiles.single().birthType)
+        val unknown = encode(withType).replace("\"caesarean\"", "\"other\"")
+        assertThrows(IllegalArgumentException::class.java) { decode(unknown) }
     }
 
     @Test

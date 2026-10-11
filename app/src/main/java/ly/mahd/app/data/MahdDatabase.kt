@@ -26,7 +26,8 @@ class MahdDatabase(context: Context) : SQLiteOpenHelper(context, NAME, null, VER
                 sex TEXT,
                 birth_date TEXT,
                 due_date TEXT,
-                weeks_at_birth INTEGER
+                weeks_at_birth INTEGER,
+                birth_type TEXT
             )
             """.trimIndent()
         )
@@ -69,9 +70,10 @@ class MahdDatabase(context: Context) : SQLiteOpenHelper(context, NAME, null, VER
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         // Future migrations go here, e.g.:
-        // if (oldVersion < 4) db.execSQL("ALTER TABLE profiles ADD COLUMN note TEXT")
+        // if (oldVersion < 5) db.execSQL("ALTER TABLE profiles ADD COLUMN note TEXT")
         if (oldVersion < 2) createVaccineSkips(db)
         if (oldVersion < 3) createPhotos(db)
+        if (oldVersion < 4) db.execSQL("ALTER TABLE profiles ADD COLUMN birth_type TEXT") // natural / caesarean
     }
 
     /** The children's photos; the pictures themselves are files (see PhotoStore), this table says whose and when. */
@@ -104,6 +106,6 @@ class MahdDatabase(context: Context) : SQLiteOpenHelper(context, NAME, null, VER
 
     companion object {
         const val NAME = "mahd.db"
-        const val VERSION = 3
+        const val VERSION = 4
     }
 }

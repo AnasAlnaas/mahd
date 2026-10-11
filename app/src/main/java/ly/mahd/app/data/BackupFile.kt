@@ -26,7 +26,8 @@ object BackupFile {
                         .putOpt("sex", p.sex?.code)
                         .putOpt("birthDate", p.birthDate?.toString())
                         .putOpt("dueDate", p.dueDate?.toString())
-                        .putOpt("weeksAtBirth", p.weeksAtBirth))
+                        .putOpt("weeksAtBirth", p.weeksAtBirth)
+                        .putOpt("birthType", p.birthType?.code))
                 }
             })
             .put("growth", JSONArray().apply {
@@ -102,6 +103,10 @@ object BackupFile {
                 birthDate = o.optStringOrNull("birthDate")?.let(LocalDate::parse),
                 dueDate = o.optStringOrNull("dueDate")?.let(LocalDate::parse),
                 weeksAtBirth = if (o.has("weeksAtBirth") && !o.isNull("weeksAtBirth")) o.getInt("weeksAtBirth") else null,
+                // Not in backups made before the app asked how the baby was born.
+                birthType = o.optStringOrNull("birthType")?.let { code ->
+                    requireNotNull(BirthType.fromCode(code)) { "unknown birth type" }
+                },
             )
         }
         val growth = root.optJSONArray("growth").objects().map { o ->

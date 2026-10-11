@@ -115,6 +115,8 @@ class ContentRepository(private val opener: (String) -> InputStream) {
     val milestones: MilestoneContent by lazy { parseMilestones(readJson("content/milestones.json")) }
     val vaccines: VaccineSchedule by lazy { parseVaccines(readJson("content/vaccines_ly.json")) }
     val childDangerSigns: ChildDangerSigns by lazy { parseChildDangerSigns(readJson("content/child_danger_signs.json")) }
+    val postpartum: PostpartumContent by lazy { parsePostpartum(readJson("content/postpartum.json")) }
+    val hospitalBag: HospitalBag by lazy { parseHospitalBag(readJson("content/hospital_bag.json")) }
     /** Today's word on Home: the verses and hadith, then the science facts (each file has its own review flag). */
     val advice: AdviceContent by lazy {
         val islamic = parseAdvice(readJson("content/islamic_advice.json"))
@@ -176,6 +178,42 @@ class ContentRepository(private val opener: (String) -> InputStream) {
             )
         }.sortedBy { it.months },
         warnings = o.getJSONArray("warnings").strings(),
+    )
+
+    private fun parsePostpartum(o: JSONObject) = PostpartumContent(
+        reviewed = o.optBoolean("reviewed", false),
+        stages = o.getJSONArray("stages").objects().map { s ->
+            PostpartumStage(
+                fromDay = s.getInt("fromDay"),
+                toDay = s.getInt("toDay"),
+                title = s.getString("title"),
+                normal = s.getJSONArray("normal").strings(),
+                natural = s.getJSONArray("natural").strings(),
+                caesarean = s.getJSONArray("caesarean").strings(),
+                tips = s.getJSONArray("tips").strings(),
+                tipsFather = s.getJSONArray("tipsFather").strings(),
+            )
+        }.sortedBy { it.fromDay },
+        emergencySigns = o.getJSONArray("emergencySigns").strings(),
+        emergencySignsCaesarean = o.getJSONArray("emergencySignsCaesarean").strings(),
+        soonSigns = o.getJSONArray("soonSigns").strings(),
+        checkups = o.getJSONArray("checkups").objects().map { c ->
+            PostnatalCheckup(c.getString("id"), c.getInt("fromDay"), c.getInt("toDay"), c.getString("title"), c.getString("text"))
+        }.sortedBy { it.fromDay },
+        moodFather = o.getJSONArray("moodFather").strings(),
+        customs = o.getJSONArray("customs").objects().map { c ->
+            PostpartumCustom(c.getString("id"), c.getString("title"), c.getString("verdict"), c.getString("text"), c.getString("source"))
+        },
+    )
+
+    private fun parseHospitalBag(o: JSONObject) = HospitalBag(
+        groups = o.getJSONArray("groups").objects().map { g ->
+            BagGroup(
+                id = g.getString("id"),
+                title = g.getString("title"),
+                items = g.getJSONArray("items").objects().map { BagItem(it.getString("id"), it.getString("text")) },
+            )
+        },
     )
 
     private fun parseChildDangerSigns(o: JSONObject) = ChildDangerSigns(
@@ -241,6 +279,55 @@ private fun JSONArray.strings(): List<String> = (0 until length()).map { getStri
 
 private fun JSONObject.optNumber(key: String): Double? =
     if (has(key) && !isNull(key)) getDouble(key) else null
+
+// ---------- الأربعين: the mother's recovery after birth ----------
+
+/** Days [fromDay]..[toDay] after birth (the day of birth is day 1). */
+data class PostpartumStage(
+    val fromDay: Int,
+    val toDay: Int,
+    val title: String,
+    /** Expected after any birth. */
+    val normal: List<String>,
+    val natural: List<String>,
+    val caesarean: List<String>,
+    /** Written to the mother. */
+    val tips: List<String>,
+    val tipsFather: List<String>,
+)
+
+data class PostnatalCheckup(val id: String, val fromDay: Int, val toDay: Int, val title: String, val text: String)
+
+/** A الأربعين custom weighed against the evidence: [verdict] in a few words, then why. */
+data class PostpartumCustom(val id: String, val title: String, val verdict: String, val text: String, val source: String)
+
+data class PostpartumContent(
+    val reviewed: Boolean,
+    val stages: List<PostpartumStage>,
+    val emergencySigns: List<String>,
+    val emergencySignsCaesarean: List<String>,
+    val soonSigns: List<String>,
+    val checkups: List<PostnatalCheckup>,
+    /** For the father: how to tell whether his wife's low mood needs help. */
+    val moodFather: List<String>,
+    val customs: List<PostpartumCustom>,
+) {
+    /** The stage for day [day] of الأربعين (the last one after the end). */
+    fun stage(day: Int): PostpartumStage = stages.firstOrNull { day in it.fromDay..it.toDay } ?: stages.last()
+
+    /** The last day the الأربعين section is shown (just after the six-week check-up). */
+    val lastDay: Int get() = stages.maxOf { it.toDay }
+}
+
+// ---------- Hospital bag ----------
+
+data class BagItem(val id: String, val text: String)
+
+data class BagGroup(val id: String, val title: String, val items: List<BagItem>)
+
+data class HospitalBag(val groups: List<BagGroup>) {
+    val allIds: List<String> get() = groups.flatMap { g -> g.items.map { it.id } }
+}
 
 // ---------- Daily advice (Qur'an, authentic hadith, science facts) ----------
 

@@ -14,6 +14,7 @@ import ly.mahd.app.logic.AdviceRules
 import ly.mahd.app.logic.Holiday
 import ly.mahd.app.logic.LibyaCalendar
 import ly.mahd.app.logic.Occasion
+import ly.mahd.app.logic.PostpartumRules
 import ly.mahd.app.logic.PregnancyMath
 import ly.mahd.app.logic.ReminderRules
 import ly.mahd.app.logic.VaccinePlanner
@@ -24,7 +25,10 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.concurrent.thread
 
-/** Runs once a day: vaccine reminders, "a new pregnancy week has started", and twice a week a verse or hadith. */
+/**
+ * Runs once a day: vaccine reminders, the mother's postnatal check-ups, "a new pregnancy week has started", and
+ * twice a week a verse or hadith.
+ */
 class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val pending = goAsync()
@@ -174,6 +178,16 @@ class ReminderReceiver : BroadcastReceiver() {
                     // Only mark as sent if it was really shown, so a reminder is not lost
                     // when notifications are blocked and later allowed.
                     if (Notifications.post(context, key, title, text, profile.id, Routes.VACCINES)) prefs.markNotified(key)
+                }
+
+                // The mother's postnatal check-ups (WHO): one reminder each, keyed by the birth date so twins share it.
+                val checkup = PostpartumRules.checkupDue(app.content.postpartum.checkups, PostpartumRules.day(birth, today))
+                if (checkup != null) {
+                    val key = "postnatal:$birth:${checkup.id}"
+                    if (!prefs.wasNotified(key)) {
+                        val text = res.getString(R.string.notify_checkup_text, checkup.text)
+                        if (Notifications.post(context, key, checkup.title, text, profile.id, Routes.POSTPARTUM)) prefs.markNotified(key)
+                    }
                 }
             }
         }
