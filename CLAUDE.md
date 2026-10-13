@@ -53,8 +53,11 @@ Libyan vaccine schedule or Libyan dialect. Plan: MVP first, add features over ti
   dhikr; no bottles). No country-specific items unless the owner approves them. Shown on pregnancy Home from week 28;
   ticks live in `Prefs.hospitalBag` (not in backups). Item ids are stored: never rename one.
 - Rejected / postponed by the owner (2026-10-11): no feeding/nappy/sleep log (the owner does not want parents opening the
-  app many times a day); no contraction timer; "can I eat it?" postponed until there is more information; a mother &
-  child health booklet with a doctor report kept for later.
+  app many times a day); no contraction timer; a mother & child health booklet with a doctor report kept for later.
+- "ماذا آكل؟" (owner's request, 2026-10-13; it was postponed before): a DRAFT list of general and Libyan foods and drinks for
+  pregnancy and breastfeeding is in `drafts/what_to_eat_draft.md`, sourced from NHS/FDA/CDC/WHO/NCCIH with an evidence column.
+  The owner reviews and edits it first: do NOT add it to the app (no JSON, no screen) until they approve the list. Then make
+  `what_to_eat.json` with `"reviewed": false`, stable ids, and feeding rules above (no bottles/formula, drop such source remarks).
 - Danger signs: pregnancy (`pregnancy.json`) and children (`child_danger_signs.json`, DRAFT from WHO IMCI + NICE fever
   rule for under 3 months). A section with `maxAgeMonths` is shown first for a younger child. No "call ambulance"
   button until a doctor confirms the number (owner's decision).
@@ -121,8 +124,11 @@ Libyan vaccine schedule or Libyan dialect. Plan: MVP first, add features over ti
   flash); Home reads one `Repository.childRecords()`; each profile gets a fresh screen (`key(selected.id)`).
 - Content files are covered by `ContentFilesTest`; run `gradlew testDebugUnitTest` after every content edit.
 - App name: "أطوار" (Atwar), from the verse ﴿وَقَدْ خَلَقَكُمْ أَطْوَارًا﴾ (Nuh 71:14) — stages of growth. Decided by the owner.
-  The package `ly.mahd.app`, the `Mahd` class/theme names and the backup marker `"app": "mahd"` are still the old working name:
-  keep the backup marker forever (old backups), change `applicationId` before the first Play release (see build.gradle.kts).
+  The source namespace `ly.mahd.app`, the `Mahd` class/theme names and the backup marker `"app": "mahd"` are still the old working name:
+  keep the backup marker forever (old backups). `applicationId` is `ly.atwar.app` (owner's choice, 2026-10-12): permanent, never change it.
+- Distribution (owner, 2026-10-12): first store is Aptoide (signed APK only, no AAB; Play comes later). Release signing: `keystore.properties`
+  (git-ignored) points to `D:\code\mahd-keys\atwar-release.jks`; `gradlew assembleRelease` gives a signed `app-release.apk`. The key must be
+  backed up by the owner and used for every update (a different key cannot update an installed app).
 
 ## MVP scope (v1.0)
 Onboarding + disclaimer; pregnancy and child profiles (several allowed); "Today" home;
