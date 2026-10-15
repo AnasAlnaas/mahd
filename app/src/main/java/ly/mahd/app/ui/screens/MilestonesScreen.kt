@@ -62,6 +62,8 @@ import ly.mahd.app.ui.components.MoonPhase
 import ly.mahd.app.ui.components.SectionTitle
 import ly.mahd.app.ui.components.SparkBurst
 import ly.mahd.app.ui.components.WarningCard
+import ly.mahd.app.ui.Navigator
+import ly.mahd.app.ui.Routes
 import ly.mahd.app.ui.profileName
 import ly.mahd.app.ui.theme.AppMotion
 import ly.mahd.app.ui.theme.LocalStatusColors
@@ -72,6 +74,29 @@ import ly.mahd.app.util.ShareCard
 
 /** How long a skill answered "yes" stays where it was, for its little firework, before gliding down. */
 private const val CELEBRATION_MS = 1000L
+
+/**
+ * The skills tab: the skills, and growth (weight, length, head) as its second part. Which part is shown lives in the
+ * route ([Routes.GROWTH] opens the growth part), so Home's growth row and screen rotation keep it.
+ */
+@Composable
+fun SkillsAndGrowth(app: MahdApp, profile: Profile, nav: Navigator, growth: Boolean) {
+    val colors = MaterialTheme.colorScheme
+    Column(Modifier.fillMaxSize()) {
+        ConnectedChoice(
+            options = listOf(stringResource(R.string.tab_milestones), stringResource(R.string.tab_growth)),
+            selected = if (growth) 1 else 0,
+            onSelect = { nav.selectTab(if (it == 1) Routes.GROWTH else Routes.MILESTONES) },
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp),
+            height = 44.dp,
+            // Each part in its own area colour: skills gold, growth teal.
+            selectedColors = { i -> if (i == 0) colors.tertiary to colors.onTertiary else colors.secondary to colors.onSecondary },
+        )
+        Box(Modifier.weight(1f)) {
+            if (growth) GrowthScreen(app, profile) else MilestonesScreen(app, profile)
+        }
+    }
+}
 
 /**
  * Milestones (1 month to 4 years). Only the skills of the ages the child has reached are shown; the mother answers
@@ -191,6 +216,17 @@ fun MilestonesScreen(app: MahdApp, profile: Profile) {
 
         if (lists.done.isNotEmpty()) {
             sectionTitle("done-title", "${res.getString(R.string.milestones_done_title)} · ${lists.done.size}")
+            // Earlier ages may have been counted as done when the child was added: say they can be changed.
+            if (lists.done.any { it.group.id != currentGroup.id }) {
+                item(key = "done-hint") {
+                    Text(
+                        stringResource(R.string.milestones_done_hint),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 8.dp, end = 8.dp, bottom = 8.dp).animateItem(),
+                    )
+                }
+            }
             skillRows(lists.done, currentGroup, shown, ::answer)
         }
 

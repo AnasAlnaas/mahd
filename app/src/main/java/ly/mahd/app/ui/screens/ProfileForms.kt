@@ -40,6 +40,8 @@ import ly.mahd.app.data.BirthType
 import ly.mahd.app.data.Profile
 import ly.mahd.app.data.ProfileKind
 import ly.mahd.app.data.Sex
+import ly.mahd.app.logic.ChildAge
+import ly.mahd.app.logic.MilestoneFocus
 import ly.mahd.app.logic.PregnancyMath
 import ly.mahd.app.ui.components.AppCard
 import ly.mahd.app.ui.components.AppFilterChip
@@ -268,8 +270,11 @@ fun ChildFormScreen(app: MahdApp, existing: Profile?, onClose: () -> Unit) {
                     val weeks = if (premature) weeksAtBirth else existing?.weeksAtBirth?.takeIf { it >= 37 }
                     scope.launch {
                         if (existing == null) {
-                            val id = app.repository.addProfile(
+                            // An older child: the skills of the earlier ages count as done, only the newest list is empty.
+                            val months = ChildAge.referenceMonths(b, weeks, today)
+                            val id = app.repository.addChild(
                                 Profile(0, ProfileKind.CHILD, name.trim(), s, b, null, weeks),
+                                MilestoneFocus.presumedDone(app.content.milestones, months),
                             )
                             app.prefs.selectProfile(id)
                         } else {

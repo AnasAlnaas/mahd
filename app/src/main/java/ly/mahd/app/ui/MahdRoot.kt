@@ -56,9 +56,9 @@ import ly.mahd.app.ui.screens.ChildDangerSignsScreen
 import ly.mahd.app.ui.screens.ChildFormScreen
 import ly.mahd.app.ui.screens.CompareScreen
 import ly.mahd.app.ui.screens.DangerSignsScreen
-import ly.mahd.app.ui.screens.GrowthScreen
+import ly.mahd.app.ui.screens.ExercisesScreen
 import ly.mahd.app.ui.screens.HomeScreen
-import ly.mahd.app.ui.screens.MilestonesScreen
+import ly.mahd.app.ui.screens.SkillsAndGrowth
 import ly.mahd.app.ui.screens.OnboardingFlow
 import ly.mahd.app.ui.screens.ParentChoiceScreen
 import ly.mahd.app.ui.screens.PhotoScreen
@@ -109,7 +109,7 @@ fun MahdRoot(app: MahdApp, openRequest: OpenRequest?, onOpenHandled: () -> Unit)
 
 private fun tabsFor(profile: Profile): List<String> =
     if (profile.isPregnancy) listOf(Routes.HOME, Routes.PREGNANCY)
-    else listOf(Routes.HOME, Routes.VACCINES, Routes.GROWTH, Routes.MILESTONES, Routes.PHOTOS)
+    else listOf(Routes.HOME, Routes.VACCINES, Routes.MILESTONES, Routes.PHOTOS)
 
 @Composable
 private fun MainNav(app: MahdApp, nav: Navigator, profiles: List<Profile>, selected: Profile) {
@@ -145,6 +145,7 @@ private fun MainNav(app: MahdApp, nav: Navigator, profiles: List<Profile>, selec
         Routes.HOSPITAL_BAG ->
             if (selected.isPregnancy) HospitalBagScreen(app, selected, onBack = nav::back)
             else LaunchedEffect(route) { nav.selectTab(Routes.HOME) }
+        Routes.EXERCISES -> ExercisesScreen(app, selected, onBack = nav::back)
         "photo" -> {
             val id = arg?.toLongOrNull()
             if (id == null) LaunchedEffect(route) { nav.back() } else PhotoScreen(app, selected, id, nav)
@@ -159,8 +160,10 @@ private fun MainNav(app: MahdApp, nav: Navigator, profiles: List<Profile>, selec
 @Composable
 private fun TabsScaffold(app: MahdApp, nav: Navigator, profiles: List<Profile>, selected: Profile, route: String) {
     val tabs = tabsFor(selected)
-    val tab = if (route in tabs) route else Routes.HOME
-    if (tab != route) LaunchedEffect(route, selected.id) { nav.selectTab(Routes.HOME) }
+    // Growth is the second part of the skills tab, not a tab of its own.
+    val shown = if (route == Routes.GROWTH) Routes.MILESTONES else route
+    val tab = if (shown in tabs) shown else Routes.HOME
+    if (tab != shown) LaunchedEffect(route, selected.id) { nav.selectTab(Routes.HOME) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -203,8 +206,7 @@ private fun TabsScaffold(app: MahdApp, nav: Navigator, profiles: List<Profile>, 
                         Routes.HOME -> HomeScreen(app, selected, profiles, nav)
                         Routes.PREGNANCY -> PregnancyScreen(app, selected, nav, initialWeek = null, standalone = false)
                         Routes.VACCINES -> VaccinesScreen(app, selected)
-                        Routes.GROWTH -> GrowthScreen(app, selected)
-                        Routes.MILESTONES -> MilestonesScreen(app, selected)
+                        Routes.MILESTONES -> SkillsAndGrowth(app, selected, nav, growth = route == Routes.GROWTH)
                         Routes.PHOTOS -> PhotosScreen(app, selected, nav)
                     }
                 }
@@ -216,7 +218,6 @@ private fun TabsScaffold(app: MahdApp, nav: Navigator, profiles: List<Profile>, 
 private fun tabIcon(tab: String): Int = when (tab) {
     Routes.PREGNANCY -> R.drawable.ic_pregnancy
     Routes.VACCINES -> R.drawable.ic_vaccine
-    Routes.GROWTH -> R.drawable.ic_growth
     Routes.MILESTONES -> R.drawable.ic_milestones
     Routes.PHOTOS -> R.drawable.ic_photos
     else -> R.drawable.ic_home
@@ -225,7 +226,6 @@ private fun tabIcon(tab: String): Int = when (tab) {
 private fun tabLabel(tab: String): Int = when (tab) {
     Routes.PREGNANCY -> R.string.tab_pregnancy
     Routes.VACCINES -> R.string.tab_vaccines
-    Routes.GROWTH -> R.string.tab_growth
     Routes.MILESTONES -> R.string.tab_milestones
     Routes.PHOTOS -> R.string.tab_photos
     else -> R.string.tab_home

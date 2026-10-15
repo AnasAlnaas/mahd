@@ -19,3 +19,6 @@ keystore.properties
 *.apk
 *.aab
 app/release/
+
+# Original exercise pictures (large); tools/prepare_exercise_pictures.ps1 puts the small WebP copies in the app
+drafts/exercise_pictures/

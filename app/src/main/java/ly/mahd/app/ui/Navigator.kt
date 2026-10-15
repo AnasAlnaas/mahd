@@ -37,6 +37,7 @@ object Routes {
     const val HOME = "home"
     const val PREGNANCY = "pregnancy"
     const val VACCINES = "vaccines"
+    /** Not a tab of its own: the skills tab, opened on its growth part. */
     const val GROWTH = "growth"
     const val MILESTONES = "milestones"
     const val PHOTOS = "photos"
@@ -49,6 +50,8 @@ object Routes {
     /** The mother's الأربعين, for the selected child. */
     const val POSTPARTUM = "postpartum"
     const val HOSPITAL_BAG = "hospital_bag"
+    /** The mother's exercises, in pregnancy and after birth. */
+    const val EXERCISES = "exercises"
     const val SETTINGS = "settings"
     const val ABOUT = "about"
 

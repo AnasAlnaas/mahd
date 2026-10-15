@@ -47,6 +47,19 @@ class Repository(private val database: MahdDatabase) {
 
     suspend fun addProfile(profile: Profile): Long = write { it.insertOrThrow("profiles", null, profile.toValues()) }
 
+    /** Adds a child together with the skills already counted as done ([doneSkills] answered "yes"), in one write. */
+    suspend fun addChild(profile: Profile, doneSkills: Collection<String>): Long = write { db ->
+        val id = db.insertOrThrow("profiles", null, profile.toValues())
+        doneSkills.forEach { itemId ->
+            db.insertWithOnConflict("milestone_answers", null, ContentValues().apply {
+                put("profile_id", id)
+                put("item_id", itemId)
+                put("answer", MilestoneAnswer.YES.code)
+            }, SQLiteDatabase.CONFLICT_REPLACE)
+        }
+        id
+    }
+
     suspend fun updateProfile(profile: Profile) = write {
         it.update("profiles", profile.toValues(), "id = ?", arrayOf(profile.id.toString()))
     }

@@ -170,6 +170,22 @@
 
     <!-- Hospital bag -->
     <string name="bag_title">حقيبة المستشفى</string>
+
+    <!-- The mother's exercises (content: assets/content/exercises.json). Neutral wording: no father versions needed. -->
+    <string name="exercises_title">تمارين الأم</string>
+    <string name="exercises_row_pregnancy">حركة آمنة في الحمل، وتمارين للحوض والظهر</string>
+    <string name="exercises_row_postpartum">العودة إلى الحركة بعد الولادة، خطوة خطوة</string>
+    <string name="exercises_part_pregnancy">في الحمل</string>
+    <string name="exercises_part_postpartum">بعد الولادة</string>
+    <string name="exercises_intro_title">قبل البدء</string>
+    <string name="exercises_birth_title">حسب نوع الولادة</string>
+    <string name="exercises_stage_now">المرحلة الحالية</string>
+    <string name="exercises_warning_label">تنبيه</string>
+    <string name="exercises_father_title">كيف تساعدها</string>
+    <string name="exercises_avoid_title">ما يُتجنَّب</string>
+    <string name="exercises_stop_title">علامات توجب التوقف ومراجعة الطبيب</string>
+    <string name="exercises_source">المصادر: %1$s</string>
+    <string name="exercises_picture_credit">الصور: %1$s</string>
     <string name="bag_progress">%1$s من %2$s جاهزة</string>
     <string name="bag_hint">جهّزيها قبل موعد الولادة بأسابيع؛ فقد تأتي الولادة مبكرًا.</string>
 
@@ -212,6 +228,7 @@
     <!-- Home: child -->
     <string name="child_age_title">عمر %1$s</string>
     <string name="born_on">تاريخ الميلاد: %1$s</string>
+    <string name="age_in_days">بالأيام: %1$s</string>
     <string name="due_on">موعد الولادة: %1$s</string>
     <string name="corrected_age_line">العمر المصحَّح: %1$s</string>
     <string name="corrected_age_before_term">العمر المصحَّح: قبل موعد الولادة المتوقع (باقي %1$s)</string>
@@ -358,6 +375,7 @@
     <string name="milestones_intro">معظم الأطفال (75 من كل 100) يقومون بهذه الأشياء في عمرها. راقبي طفلك واختاري لكل مهارة: نعم، أو ليس بعد، أو يحاول. ما يتقنه ينزل إلى الأسفل.</string>
     <string name="milestones_focus_title">راقبيها الآن</string>
     <string name="milestones_done_title">أتقنها</string>
+    <string name="milestones_done_hint">عند إضافة طفل أكبر سنًّا تُحسب مهارات الأعمار السابقة متقنة، ويمكن تغيير أي إجابة هنا.</string>
     <string name="milestones_from_age">من مهارات %1$s</string>
     <string name="milestones_all_done">ما شاء الله! ظهرت كل المهارات حتى هذا العمر.</string>
     <string name="milestones_next_list">القائمة التالية عند %1$s، بعد %2$s.</string>

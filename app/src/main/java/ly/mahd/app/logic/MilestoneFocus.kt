@@ -38,6 +38,13 @@ object MilestoneFocus {
         return Lists(focus, done)
     }
 
+    /**
+     * For a child added at an older age: every skill of the ages before the current one, counted as done ("yes"),
+     * so the mother only fills in the newest list. She can still change any of them.
+     */
+    fun presumedDone(content: MilestoneContent, months: Double): List<String> =
+        content.reachedGroups(months).dropLast(1).flatMap { g -> g.items.map { it.id } }
+
     /** Whole days until the child reaches [group] (0 if already there). */
     fun daysUntil(group: MilestoneGroup, months: Double): Int =
         ceil((group.months - months) * ChildAge.DAYS_PER_MONTH).toInt().coerceAtLeast(0)

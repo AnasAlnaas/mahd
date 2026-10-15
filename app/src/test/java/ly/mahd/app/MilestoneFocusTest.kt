@@ -37,6 +37,20 @@ class MilestoneFocusTest {
     }
 
     @Test
+    fun anOlderChildStartsWithOnlyTheNewestListToFill() {
+        // Added at 7 months: the 1-, 2- and 4-month skills count as done, the 6-month list is left to fill.
+        val done = MilestoneFocus.presumedDone(content, 7.0).toSet()
+        val entries = MilestoneFocus.revealed(content, 7.0)
+        val lists = MilestoneFocus.split(entries, done.associateWith { MilestoneAnswer.YES })
+        val newest = content.reachedGroups(7.0).last()
+        assertEquals(newest.items.map { it.id }.toSet(), lists.focus.map { it.item.id }.toSet())
+        assertTrue(lists.done.none { it.group.id == newest.id })
+        // A baby on the first list (or before it) has nothing counted as done.
+        assertTrue(MilestoneFocus.presumedDone(content, 1.5).isEmpty())
+        assertTrue(MilestoneFocus.presumedDone(content, 0.2).isEmpty())
+    }
+
+    @Test
     fun newestAgeComesFirstThenEarlierOnes() {
         val shown = MilestoneFocus.revealed(content, 9.2)
         val ages = shown.map { it.group.months }

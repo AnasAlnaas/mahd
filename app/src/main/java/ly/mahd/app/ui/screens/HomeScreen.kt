@@ -83,13 +83,14 @@ private fun HomeList(content: LazyListScope.() -> Unit) {
     )
 }
 
-/** The top of Home: no card, just the one number that matters today, large. */
+/** The top of Home: no card, just the one number that matters today, large ([sub] in a smaller line right under it). */
 @Composable
-private fun Hero(overline: String, title: String?, big: String, lines: List<String>) {
+private fun Hero(overline: String, title: String?, big: String, lines: List<String>, sub: String? = null) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp)) {
         Text(overline, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
         title?.let { Text(it, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 4.dp)) }
         Text(big, style = MaterialTheme.typography.displayMedium, color = MaterialTheme.colorScheme.onSurface)
+        sub?.let { Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         lines.forEach {
             Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
@@ -156,6 +157,7 @@ private fun PregnancyHome(app: MahdApp, profile: Profile, family: List<Profile>,
                     }
                 }
                 if (ga.weeks >= HOSPITAL_BAG_FROM_WEEK) HospitalBagRow(app, profile, nav)
+                ExercisesRow(pregnancy = true, nav)
             }
         }
         item { BabyBornCard(profile, nav) }
@@ -211,6 +213,13 @@ private fun ChildHome(app: MahdApp, profile: Profile, family: List<Profile>, nav
     val askForReminders = shouldAskForReminders(app)
     val advice = rememberTodaysAdvice(app, profile, family)
 
+    // The age in days too (the big line already says it in days during the first month).
+    val ageDays = ChildAge.days(birth, today).toInt()
+    val daysLine = if (ChildAge.period(birth, today).toTotalMonths() >= 1) {
+        stringResource(R.string.age_in_days, Format.days(res, ageDays))
+    } else {
+        null
+    }
     val lines = buildList {
         add(stringResource(R.string.born_on, Format.date(birth)))
         if (ChildAge.usesCorrectedAge(birth, profile.weeksAtBirth, today)) {
@@ -232,6 +241,7 @@ private fun ChildHome(app: MahdApp, profile: Profile, family: List<Profile>, nav
                 overline = greeting(),
                 title = stringResource(R.string.child_age_title, profileName(profile)),
                 big = Format.age(res, ChildAge.period(birth, today)),
+                sub = daysLine,
                 lines = lines,
             )
         }
@@ -244,6 +254,8 @@ private fun ChildHome(app: MahdApp, profile: Profile, family: List<Profile>, nav
                 NextVaccineRow(plans, nav)
                 MilestonesRow(app.content.milestones, months, data, nav)
                 GrowthRow(app, profile, birth, data.growth, nav)
+                // The mother's exercises after the birth, during the baby's first months.
+                if (ChildAge.days(birth, today) < EXERCISES_UNTIL_DAY) ExercisesRow(pregnancy = false, nav)
             }
         }
         item { TipBlock(group) }

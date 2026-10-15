@@ -120,6 +120,22 @@ Libyan vaccine schedule or Libyan dialect. Plan: MVP first, add features over ti
   holds the skill in place ~1 s before it glides down (`animateItem`); the page keeps its scroll position (a lazy list
   would otherwise follow the moved key). A 1-month list (AAP, not CDC) is first; before 1 month the tab and Home show a
   countdown moon instead of skills.
+- Owner's edits (2026-10-15): Home shows the child's age in days on a smaller line under the age (from 1 month on).
+  Growth is no longer a tab: it is the second part of the skills tab (`SkillsAndGrowth`, a ConnectedChoice
+  المهارات / النمو; `Routes.GROWTH` opens the skills tab on its growth part). Adding a child older than the first list
+  saves "yes" for every skill of the earlier ages (`MilestoneFocus.presumedDone`, `Repository.addChild`), so only the
+  newest list is empty; a note under "أتقنها" says any answer can be changed.
+- Mother's exercises (owner's request, 2026-10-15): `exercises.json` (DRAFT, reviewed false) holds the owner's 17
+  exercises (her guide, after the Pregnancy and Postpartum TV channel) in stages: الثلث الأول/الثاني/الثالث (weeks 1–13,
+  14–27, 28–42; the current trimester is shown first) and بعد الولادة; safety notes follow ACOG 2020, WHO 2020, NHS and
+  Goom 2019. `ExercisesScreen`: في الحمل / بعد الولادة switch, natural/caesarean advice from `birthType` (an exercise's
+  `caesarean` note shows unless the birth was natural), stop signs, a father part. Shown on pregnancy Home and on child
+  Home for the first 6 months (`EXERCISES_UNTIL_DAY`). Shared text speaks to neither parent (ExercisesTest).
+  Pictures (AI-drawn by the owner from `drafts/exercise_pose_prompts.md`): each exercise lists its `images` (one or two
+  poses, `<id>`, `<id>_1`/`_2`, plus the shared optional `pelvic_floor_diagram`); files are
+  `assets/exercises/<name>.webp`, made by `tools/prepare_exercise_pictures.ps1` (ffmpeg: ≤1000 px WebP, from the
+  git-ignored `drafts/exercise_pictures/`). A missing picture is simply not shown; pictures sit on a fixed light panel in
+  both themes. Fill `"pictureCredit"` if the drawing tool's licence asks for a credit. Never rename ids or picture names.
 - Screens collect database flows with `initial = null` and draw nothing until loaded (no "everything is late"
   flash); Home reads one `Repository.childRecords()`; each profile gets a fresh screen (`key(selected.id)`).
 - Content files are covered by `ContentFilesTest`; run `gradlew testDebugUnitTest` after every content edit.

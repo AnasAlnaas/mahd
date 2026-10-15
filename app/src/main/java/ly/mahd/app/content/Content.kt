@@ -117,6 +117,7 @@ class ContentRepository(private val opener: (String) -> InputStream) {
     val childDangerSigns: ChildDangerSigns by lazy { parseChildDangerSigns(readJson("content/child_danger_signs.json")) }
     val postpartum: PostpartumContent by lazy { parsePostpartum(readJson("content/postpartum.json")) }
     val hospitalBag: HospitalBag by lazy { parseHospitalBag(readJson("content/hospital_bag.json")) }
+    val exercises: ExercisesContent by lazy { parseExercises(readJson("content/exercises.json")) }
     /** Today's word on Home: the verses and hadith, then the science facts (each file has its own review flag). */
     val advice: AdviceContent by lazy {
         val islamic = parseAdvice(readJson("content/islamic_advice.json"))
@@ -216,6 +217,44 @@ class ContentRepository(private val opener: (String) -> InputStream) {
             )
         },
     )
+
+    private fun parseExercises(o: JSONObject): ExercisesContent {
+        fun part(p: JSONObject) = ExercisePart(
+            intro = p.getJSONArray("intro").strings(),
+            natural = p.getJSONArray("natural").strings(),
+            caesarean = p.getJSONArray("caesarean").strings(),
+            stages = p.getJSONArray("stages").objects().map { s ->
+                ExerciseStage(
+                    id = s.getString("id"),
+                    title = s.getString("title"),
+                    fromWeek = s.optIntOrNull("fromWeek"),
+                    toWeek = s.optIntOrNull("toWeek"),
+                    about = s.getString("about"),
+                    exercises = s.getJSONArray("exercises").objects().map { e ->
+                        Exercise(
+                            id = e.getString("id"),
+                            title = e.getString("title"),
+                            steps = e.getJSONArray("steps").strings(),
+                            dose = e.optStringOrNull("dose"),
+                            warning = e.optStringOrNull("warning"),
+                            caesarean = e.optStringOrNull("caesarean"),
+                            images = e.optJSONArray("images")?.strings().orEmpty(),
+                        )
+                    },
+                )
+            },
+            avoid = p.getJSONArray("avoid").strings(),
+            stopSigns = p.getJSONArray("stopSigns").strings(),
+            father = p.getJSONArray("father").strings(),
+            source = p.getString("source"),
+        )
+        return ExercisesContent(
+            reviewed = o.optBoolean("reviewed", false),
+            pregnancy = part(o.getJSONObject("pregnancy")),
+            postpartum = part(o.getJSONObject("postpartum")),
+            pictureCredit = o.optStringOrNull("pictureCredit")?.takeIf { it.isNotBlank() },
+        )
+    }
 
     private fun parseChildDangerSigns(o: JSONObject) = ChildDangerSigns(
         reviewed = o.optBoolean("reviewed", false),
@@ -322,6 +361,68 @@ data class PostpartumContent(
     val lastDay: Int get() = stages.maxOf { it.toDay }
 }
 
+// ---------- The mother's exercises, in pregnancy and after birth ----------
+
+/**
+ * One exercise: how to do it, step by step, how often ([dose]) and what to watch for ([warning]); [caesarean] is shown
+ * unless the birth was natural. [images] are picture names (assets/exercises/<name>.webp), one or two poses.
+ */
+data class Exercise(
+    val id: String,
+    val title: String,
+    val steps: List<String>,
+    val dose: String?,
+    val warning: String?,
+    val caesarean: String?,
+    val images: List<String>,
+)
+
+/** A group of exercises: a trimester (weeks [fromWeek]..[toWeek]) or the time after birth (no weeks). */
+data class ExerciseStage(
+    val id: String,
+    val title: String,
+    val fromWeek: Int?,
+    val toWeek: Int?,
+    val about: String,
+    val exercises: List<Exercise>,
+) {
+    fun covers(week: Int): Boolean = fromWeek != null && toWeek != null && week in fromWeek..toWeek
+}
+
+/** Exercises for one time (pregnancy or after birth). All text speaks to neither parent except [father]. */
+data class ExercisePart(
+    val intro: List<String>,
+    /** After a natural birth / a caesarean only (empty in pregnancy). */
+    val natural: List<String>,
+    val caesarean: List<String>,
+    val stages: List<ExerciseStage>,
+    val avoid: List<String>,
+    /** Stop and see the doctor. */
+    val stopSigns: List<String>,
+    /** For the father: how to help. */
+    val father: List<String>,
+    val source: String,
+) {
+    val exercises: List<Exercise> get() = stages.flatMap { it.exercises }
+
+    /** The stages in the order shown: the one for pregnancy week [week] first, then the others in order. */
+    fun stagesFor(week: Int?): List<ExerciseStage> {
+        val now = stages.firstOrNull { week != null && it.covers(week) } ?: return stages
+        return listOf(now) + (stages - now)
+    }
+}
+
+/** [pictureCredit]: who made the pictures, when their licence asks for a credit (shown under the sources). */
+data class ExercisesContent(
+    val reviewed: Boolean,
+    val pregnancy: ExercisePart,
+    val postpartum: ExercisePart,
+    val pictureCredit: String? = null,
+) {
+    /** Every picture name, in order. */
+    val pictureNames: List<String> get() = (pregnancy.exercises + postpartum.exercises).flatMap { it.images }
+}
+
 // ---------- Hospital bag ----------
 
 data class BagItem(val id: String, val text: String)
@@ -378,6 +479,9 @@ data class AdviceContent(val reviewed: Boolean, val items: List<AdviceItem>, val
 
 private fun JSONObject.optIntOrNull(key: String): Int? =
     if (has(key) && !isNull(key)) getInt(key) else null
+
+private fun JSONObject.optStringOrNull(key: String): String? =
+    if (has(key) && !isNull(key)) getString(key) else null
 
 /** One stage of the pregnancy for the father, weeks [fromWeek]..[toWeek] (inclusive). */
 data class FatherStage(val fromWeek: Int, val toWeek: Int, val wife: String, val support: String)
