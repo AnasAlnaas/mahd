@@ -6,7 +6,7 @@ Prepares the exercise pictures for the app.
 2. Run:  powershell -ExecutionPolicy Bypass -File tools\prepare_exercise_pictures.ps1
    (or pass another folder: -Source C:\path\to\pictures)
 
-Each picture is shrunk to at most 1000 px wide and saved as WebP (transparency kept) in app\src\main\assets\exercises.
+Each picture is shrunk to at most 1000 px wide, its near-white background made pure white, and saved as WebP (transparency kept) in app\src\main\assets\exercises.
 The script then lists the pictures still missing. Needs ffmpeg (winget install Gyan.FFmpeg).
 After it, run gradlew testDebugUnitTest: ExercisesTest checks every file in that folder belongs to an exercise.
 #>
@@ -14,7 +14,7 @@ param(
     [string]$Source = (Join-Path $PSScriptRoot "..\drafts\exercise_pictures"),
     [string]$Output = (Join-Path $PSScriptRoot "..\app\src\main\assets\exercises"),
     [int]$MaxWidth = 1000,
-    [int]$Quality = 80
+    [int]$Quality = 85
 )
 $ErrorActionPreference = "Stop"
 $root = Split-Path $PSScriptRoot -Parent
@@ -41,8 +41,11 @@ foreach ($file in $files) {
     $name = $file.BaseName.ToLowerInvariant()
     if ($expected -notcontains $name) { $unknown += $file.Name; continue }
     $target = Join-Path $Output "$name.webp"
+    # Near-white becomes pure white: JPEG noise would otherwise show as faint specks on the app's white picture panel.
+    $white = "if(gt(val,245),255,val)"
     & $ffmpeg.Source -hide_banner -loglevel error -y -i $file.FullName `
-        -vf "scale='min($MaxWidth,iw)':-2" -frames:v 1 -c:v libwebp -quality $Quality -pix_fmt yuva420p $target
+        -vf "scale='min($MaxWidth,iw)':-2,lutrgb=r='$white':g='$white':b='$white'" `
+        -frames:v 1 -c:v libwebp -quality $Quality -pix_fmt yuva420p $target
     if ($LASTEXITCODE -ne 0) { throw "ffmpeg failed on $($file.Name)" }
     $kb = [math]::Round((Get-Item $target).Length / 1KB)
     Write-Host ("OK       {0,-26} {1} KB" -f $name, $kb)

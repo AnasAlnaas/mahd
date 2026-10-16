@@ -65,10 +65,10 @@ const val EXERCISES_UNTIL_DAY = 183
 private const val PICTURE_DIR = "exercises"
 
 /**
- * Pictures sit on a light panel in both themes: drawn for a light page, they may keep a white background,
- * which would show as a white box on the dark page.
+ * Pictures sit on a white panel in both themes: they are drawn on white (the owner's AI pictures keep their white
+ * background), so on the light page they blend into the row, and on the dark page they read as one clean card.
  */
-private val PICTURE_PANEL = Color(0xFFF6F1EE)
+private val PICTURE_PANEL = Color.White
 
 /** Home's row: the mother's exercises, for the pregnancy or for after the birth. */
 @Composable
