@@ -121,8 +121,9 @@ Libyan vaccine schedule or Libyan dialect. Plan: MVP first, add features over ti
   would otherwise follow the moved key). A 1-month list (AAP, not CDC) is first; before 1 month the tab and Home show a
   countdown moon instead of skills.
 - Owner's edits (2026-10-15): Home shows the child's age in days on a smaller line under the age (from 1 month on).
-  Growth is no longer a tab: it is the second part of the skills tab (`SkillsAndGrowth`, a ConnectedChoice
-  المهارات / النمو; `Routes.GROWTH` opens the skills tab on its growth part). Adding a child older than the first list
+  Growth is no longer a tab of its own: skills and growth share one tab (`SkillsAndGrowth`, a ConnectedChoice
+  المهارات / النمو; `Routes.GROWTH` opens it on its growth part). The bottom bar names that tab "النمو" with the growth
+  chart icon (owner, 2026-10-16). Adding a child older than the first list
   saves "yes" for every skill of the earlier ages (`MilestoneFocus.presumedDone`, `Repository.addChild`), so only the
   newest list is empty; a note under "أتقنها" says any answer can be changed.
 - Mother's exercises (owner's request, 2026-10-15): `exercises.json` (DRAFT, reviewed false) holds the owner's 17
@@ -135,7 +136,9 @@ Libyan vaccine schedule or Libyan dialect. Plan: MVP first, add features over ti
   poses, `<id>`, `<id>_1`/`_2`, plus the shared optional `pelvic_floor_diagram`); files are
   `assets/exercises/<name>.webp`, made by `tools/prepare_exercise_pictures.ps1` (ffmpeg: ≤1000 px WebP, from the
   git-ignored `drafts/exercise_pictures/`). A missing picture is simply not shown; pictures sit on a fixed light panel in
-  both themes. Fill `"pictureCredit"` if the drawing tool's licence asks for a credit. Never rename ids or picture names.
+  both themes (white, matching the pictures' own white background). An exercise's own poses take turns in one frame
+  (`PoseFrame`: crossfade loop, the owner's exception to "nothing moves on its own"; still when animations are off, tap
+  for the next pose); the shared diagram sits beside them. All 27 pictures are in (Gemini, 2026-10-16). Fill `"pictureCredit"` if the drawing tool's licence asks for a credit. Never rename ids or picture names.
 - Screens collect database flows with `initial = null` and draw nothing until loaded (no "everything is late"
   flash); Home reads one `Repository.childRecords()`; each profile gets a fresh screen (`key(selected.id)`).
 - Content files are covered by `ContentFilesTest`; run `gradlew testDebugUnitTest` after every content edit.
@@ -184,8 +187,8 @@ JBR works). Keep the project outside OneDrive.
   and little else. Milestone domains use `domainAccent(id)`. Extra surface roles live in `LocalSurfaces`.
 - material3 1.4 keeps `MaterialExpressiveTheme`/`MotionScheme` internal, so the expressive springs are copied in
   `AppMotion` (Theme.kt). Swap to the official API when material3 1.5 is stable (not before: no beta libraries).
-- Tab icons are hand-drawn line icons (1.8 stroke, round caps): home = crescent, vaccines = syringe, growth = chart,
-  milestones = building blocks, photos = frame, pregnancy = heart.
+- Tab icons are hand-drawn line icons (1.8 stroke, round caps): home = crescent, vaccines = syringe, growth = chart
+  (the النمو tab), photos = frame, pregnancy = heart; `ic_milestones` (building blocks) is no longer on the bar.
 - Vaccines screen is a timeline: finished visits and all future visits except the next one fold into one quiet line.
 - Growth chart labels its curves (+3 … −3, with a left-to-right mark so the sign stays in front in Arabic),
   tags the latest value, can zoom to the recent months, and shows a trend line (`GrowthMath.trend`).

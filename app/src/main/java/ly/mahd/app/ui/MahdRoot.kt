@@ -218,7 +218,8 @@ private fun TabsScaffold(app: MahdApp, nav: Navigator, profiles: List<Profile>, 
 private fun tabIcon(tab: String): Int = when (tab) {
     Routes.PREGNANCY -> R.drawable.ic_pregnancy
     Routes.VACCINES -> R.drawable.ic_vaccine
-    Routes.MILESTONES -> R.drawable.ic_milestones
+    // The tab holds skills and growth, and is named النمو (owner's choice) with the growth chart icon.
+    Routes.MILESTONES -> R.drawable.ic_growth
     Routes.PHOTOS -> R.drawable.ic_photos
     else -> R.drawable.ic_home
 }
@@ -226,7 +227,7 @@ private fun tabIcon(tab: String): Int = when (tab) {
 private fun tabLabel(tab: String): Int = when (tab) {
     Routes.PREGNANCY -> R.string.tab_pregnancy
     Routes.VACCINES -> R.string.tab_vaccines
-    Routes.MILESTONES -> R.string.tab_milestones
+    Routes.MILESTONES -> R.string.tab_growth
     Routes.PHOTOS -> R.string.tab_photos
     else -> R.string.tab_home
 }

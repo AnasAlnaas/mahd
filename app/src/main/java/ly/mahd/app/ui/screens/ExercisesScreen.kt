@@ -1,8 +1,12 @@
 package ly.mahd.app.ui.screens
 
 import android.graphics.BitmapFactory
+import android.provider.Settings
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.produceState
@@ -35,6 +40,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import ly.mahd.app.MahdApp
 import ly.mahd.app.R
@@ -69,6 +75,12 @@ private const val PICTURE_DIR = "exercises"
  * background), so on the light page they blend into the row, and on the dark page they read as one clean card.
  */
 private val PICTURE_PANEL = Color.White
+
+private val PICTURE_SHAPE = RoundedCornerShape(16.dp)
+
+/** How long each pose holds before the next one (ms), and how long the fade between them takes. */
+private const val POSE_HOLD_MS = 1100L
+private const val POSE_FADE_MS = 450
 
 /** Home's row: the mother's exercises, for the pregnancy or for after the birth. */
 @Composable
@@ -195,17 +207,12 @@ private fun StageHeader(stage: ExerciseStage, now: Boolean) {
     }
 }
 
-/** One exercise: its name, its pictures (start and end pose side by side), the steps numbered, how often, and a warning. */
+/** One exercise: its name, its pictures (the poses taking turns), the steps numbered, how often, and a warning. */
 @Composable
 private fun ExerciseRow(exercise: Exercise, pictures: Set<String>, showCaesarean: Boolean) {
     GroupRow(spacing = 10.dp) {
         Text(exercise.title, style = MaterialTheme.typography.titleMedium)
-        val shown = exercise.images.filter { it in pictures }
-        if (shown.isNotEmpty()) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                shown.forEach { ExercisePicture(it, exercise.title, Modifier.weight(1f)) }
-            }
-        }
+        ExercisePictures(exercise, pictures)
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             exercise.steps.forEachIndexed { i, step ->
                 Row {
@@ -234,16 +241,77 @@ private fun ExerciseRow(exercise: Exercise, pictures: Set<String>, showCaesarean
     }
 }
 
-/** One pose, read from the app's files off the main thread; the panel keeps its place while it loads. */
+/**
+ * The exercise's own poses (`<id>`, `<id>_1`, `<id>_2`) play in one frame, taking turns so they read as one movement;
+ * any other picture (the shared pelvic floor diagram) sits beside them.
+ */
 @Composable
-private fun ExercisePicture(name: String, description: String, modifier: Modifier) {
+private fun ExercisePictures(exercise: Exercise, pictures: Set<String>) {
+    val shown = exercise.images.filter { it in pictures }
+    if (shown.isEmpty()) return
+    val (poses, others) = shown.partition { it == exercise.id || it.startsWith("${exercise.id}_") }
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (poses.isNotEmpty()) PoseFrame(poses, exercise.title, Modifier.weight(1f))
+        others.forEach { PicturePanel(rememberPicture(it), exercise.title, Modifier.weight(1f)) }
+    }
+}
+
+/**
+ * Two poses in one frame: each one holds for a moment, then fades into the other, like a tiny flip-book (the owner's
+ * request, an exception to "nothing moves on its own"). With the phone's animations turned off they stay still, and a
+ * tap shows the next pose; a tap also starts the count again.
+ */
+@Composable
+private fun PoseFrame(poses: List<String>, description: String, modifier: Modifier) {
+    val context = LocalContext.current
+    val bitmaps = poses.map { rememberPicture(it) }
+    var index by remember(poses) { mutableIntStateOf(0) }
+    var taps by remember { mutableIntStateOf(0) }
+    val moving = poses.size > 1
+    val animationsOn = remember {
+        Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) > 0f
+    }
+    if (moving && animationsOn) {
+        LaunchedEffect(poses, taps) {
+            while (true) {
+                delay(POSE_HOLD_MS)
+                index = (index + 1) % poses.size
+            }
+        }
+    }
+    val nextPose = stringResource(R.string.exercises_next_pose)
+    val tap = if (moving) {
+        Modifier.clickable(onClickLabel = nextPose) {
+            index = (index + 1) % poses.size
+            taps++
+        }
+    } else {
+        Modifier
+    }
+    Crossfade(
+        targetState = index,
+        animationSpec = tween(POSE_FADE_MS),
+        modifier = modifier.clip(PICTURE_SHAPE).then(tap),
+        label = "pose",
+    ) { i -> PicturePanel(bitmaps[i], description, Modifier.fillMaxWidth()) }
+}
+
+/** A picture read from the app's files off the main thread (null while it loads). */
+@Composable
+private fun rememberPicture(name: String): ImageBitmap? {
     val assets = LocalContext.current.assets
     val bitmap by produceState<ImageBitmap?>(null, name) {
         value = withContext(Dispatchers.IO) {
             runCatching { assets.open("$PICTURE_DIR/$name.webp").use { BitmapFactory.decodeStream(it) }?.asImageBitmap() }.getOrNull()
         }
     }
-    Box(modifier.aspectRatio(4f / 3f).clip(RoundedCornerShape(16.dp)).background(PICTURE_PANEL)) {
+    return bitmap
+}
+
+/** One picture on its panel; the panel keeps its place while the picture loads. */
+@Composable
+private fun PicturePanel(bitmap: ImageBitmap?, description: String, modifier: Modifier) {
+    Box(modifier.aspectRatio(4f / 3f).clip(PICTURE_SHAPE).background(PICTURE_PANEL)) {
         bitmap?.let { Image(it, contentDescription = description, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
     }
 }

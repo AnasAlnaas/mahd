@@ -44,7 +44,9 @@ Material 3 Expressive's springs (slight overshoot), as `AppMotion` in Theme.kt. 
 `MaterialExpressiveTheme`/`MotionScheme` internal, so the values are copied; when 1.5 is stable, switch to the official API.
 - Moons fill with the slow spatial spring when they appear or change (the signature moment).
 - Pressed buttons squash; selected choice segments round out.
-- Tabs crossfade. Nothing loops, nothing moves on its own.
+- Tabs crossfade. Nothing loops, nothing moves on its own — with one exception (owner's request, 2026-10-16): an
+  exercise with two pose pictures shows them in one frame, taking turns (hold ~1.1 s, fade 0.45 s) like a tiny
+  flip-book. It stays still when the phone's animations are off; a tap shows the next pose.
 
 ## Signature
 **`MoonPhase`**: a disc whose lit part grows from the start (right in Arabic, also how a waxing moon looks) as a real
