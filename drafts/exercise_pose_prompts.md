@@ -149,6 +149,16 @@ Flat vector illustration, minimal and calm, soft rounded shapes, no outlines, mu
 Flat vector illustration, minimal and calm, soft rounded shapes, no outlines, muted palette of dusty rose, warm beige and soft teal, plain white background, no text, landscape 4:3, full body centered, soft shadow under her only. The same character in every image: a young Arab woman in her late twenties, a few weeks after giving birth, with a soft flat tummy and no pregnant belly, wearing a loose long-sleeved top and loose long trousers in muted rose, a simple soft-grey hijab covering her hair and neck, plain socks. Pose: seated marching, side view facing left. She sits tall on the front edge of a plain chair, back straight and upright (not leaning back), hands holding the edge of the seat, one foot flat on the floor, the other knee lifted a few centimetres so the foot is just off the floor. A small arrow shows the knee lifting.
 ```
 
+## For the daily program (third trimester)
+
+### post_pelvic_floor_program
+Kegel in the pregnancy program. Until this picture exists the program shows only the pelvic floor diagram. When it is
+ready, run `tools/prepare_exercise_pictures.ps1`, then in `exercises.json` (stage `t3`, `routine`) change the Kegel
+step to `"images": ["post_pelvic_floor_program", "pelvic_floor_diagram"]`.
+```
+Flat vector illustration, minimal and calm, soft rounded shapes, no outlines, muted palette of dusty rose, warm beige and soft teal, plain white background, no text, landscape 4:3, full body centered, soft shadow under her only. The same character in every image: a young Arab woman in her late twenties, late pregnancy with a clearly rounded belly, wearing a loose long-sleeved top and loose long trousers in muted rose, a simple soft-grey hijab covering her hair and neck, plain socks. Pose: pelvic floor exercise, front three-quarter view. She sits upright and relaxed on a plain chair, feet flat on the floor, hands resting on her thighs, calm face with eyes softly closed. No baby, no cot, nothing else in the picture.
+```
+
 ## Optional extra
 
 ### pelvic_floor_diagram

@@ -45,6 +45,7 @@ import ly.mahd.app.data.MilestoneAnswer
 import ly.mahd.app.data.Parent
 import ly.mahd.app.data.Profile
 import ly.mahd.app.logic.ChildAge
+import ly.mahd.app.logic.ExerciseRoutine
 import ly.mahd.app.logic.GrowthMath
 import ly.mahd.app.logic.MilestoneFocus
 import ly.mahd.app.logic.PostpartumRules
@@ -137,6 +138,10 @@ private fun PregnancyHome(app: MahdApp, profile: Profile, family: List<Profile>,
     val ga = PregnancyMath.gestationalAge(due, today)
     val week = app.content.pregnancy.week(ga.weeks.coerceAtLeast(1))
     val daysLeft = PregnancyMath.daysUntilDue(due, today)
+    // Today's share of the daily exercise program (third trimester), for the mother who ticks it.
+    val routineIds = if (LocalParent.current == Parent.MOTHER) app.content.exercises.routineFor(ga.weeks).map { it.first.id } else emptyList()
+    val exerciseLog by remember(profile.id) { app.repository.exerciseLog(profile.id) }.collectAsState(initial = null)
+    val programToday = exerciseLog?.takeIf { routineIds.isNotEmpty() }?.let { ExerciseRoutine.doneCount(it[today], routineIds) to routineIds.size }
 
     HomeList(profile) {
         block("hero") {
@@ -181,7 +186,7 @@ private fun PregnancyHome(app: MahdApp, profile: Profile, family: List<Profile>,
                     }
                 }
                 if (ga.weeks >= HOSPITAL_BAG_FROM_WEEK) HospitalBagRow(app, profile, nav)
-                ExercisesRow(pregnancy = true, nav)
+                ExercisesRow(pregnancy = true, nav, programToday)
             }
         }
         block("born") { BabyBornCard(profile, nav) }

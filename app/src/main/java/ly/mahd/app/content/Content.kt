@@ -241,6 +241,9 @@ class ContentRepository(private val opener: (String) -> InputStream) {
                             images = e.optJSONArray("images")?.strings().orEmpty(),
                         )
                     },
+                    routine = s.optJSONArray("routine")?.objects().orEmpty().map { r ->
+                        RoutineStep(r.getString("id"), r.getString("dose"), r.optJSONArray("images")?.strings())
+                    },
                 )
             },
             avoid = p.getJSONArray("avoid").strings(),
@@ -377,7 +380,16 @@ data class Exercise(
     val images: List<String>,
 )
 
-/** A group of exercises: a trimester (weeks [fromWeek]..[toWeek]) or the time after birth (no weeks). */
+/**
+ * One step of a daily program: exercise [exerciseId] (from either part), done [dose] each day. [images], when given,
+ * replace the exercise's own pictures in the program (Kegel's own picture is drawn after the birth, beside a cot).
+ */
+data class RoutineStep(val exerciseId: String, val dose: String, val images: List<String>? = null)
+
+/**
+ * A group of exercises: a trimester (weeks [fromWeek]..[toWeek]) or the time after birth (no weeks). [routine] is the
+ * stage's daily program, in the order to do it (empty when the stage has none).
+ */
 data class ExerciseStage(
     val id: String,
     val title: String,
@@ -385,6 +397,7 @@ data class ExerciseStage(
     val toWeek: Int?,
     val about: String,
     val exercises: List<Exercise>,
+    val routine: List<RoutineStep> = emptyList(),
 ) {
     fun covers(week: Int): Boolean = fromWeek != null && toWeek != null && week in fromWeek..toWeek
 }
@@ -419,8 +432,20 @@ data class ExercisesContent(
     val postpartum: ExercisePart,
     val pictureCredit: String? = null,
 ) {
-    /** Every picture name, in order. */
-    val pictureNames: List<String> get() = (pregnancy.exercises + postpartum.exercises).flatMap { it.images }
+    /** Every picture name, in order (the exercises' own, then the ones only a daily program uses). */
+    val pictureNames: List<String>
+        get() = ((pregnancy.exercises + postpartum.exercises).flatMap { it.images } +
+            (pregnancy.stages + postpartum.stages).flatMap { s -> s.routine.flatMap { it.images.orEmpty() } }).distinct()
+
+    /** The exercise [id], from either part (a daily program may use one from the other part, such as Kegel). */
+    fun exercise(id: String): Exercise? = (pregnancy.exercises + postpartum.exercises).firstOrNull { it.id == id }
+
+    /** The daily program for pregnancy week [week], with each step's exercise; empty when that stage has none. */
+    fun routineFor(week: Int): List<Pair<Exercise, String>> =
+        pregnancy.stages.firstOrNull { it.covers(week) }?.routine.orEmpty()
+            .mapNotNull { step ->
+                exercise(step.exerciseId)?.let { e -> (if (step.images != null) e.copy(images = step.images) else e) to step.dose }
+            }
 }
 
 // ---------- Hospital bag ----------

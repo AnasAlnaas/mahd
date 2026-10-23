@@ -167,6 +167,32 @@ class Repository(private val database: MahdDatabase) {
         }
     }
 
+    // ---------- The daily exercise program ----------
+
+    /** Which exercises were ticked on which day, for one pregnancy. */
+    fun exerciseLog(profileId: Long): Flow<Map<LocalDate, Set<String>>> = observe { db ->
+        db.rawQuery("SELECT date, exercise_id FROM exercise_log WHERE profile_id = ?", arrayOf(profileId.toString()))
+            .use { c -> c.mapRows { LocalDate.parse(it.getString(0)) to it.getString(1) } }
+            .groupBy({ it.first }, { it.second })
+            .mapValues { it.value.toSet() }
+    }
+
+    suspend fun setExerciseDone(profileId: Long, date: LocalDate, exerciseId: String, done: Boolean) = write { db ->
+        if (done) {
+            db.insertWithOnConflict("exercise_log", null, ContentValues().apply {
+                put("profile_id", profileId)
+                put("date", date.toString())
+                put("exercise_id", exerciseId)
+            }, SQLiteDatabase.CONFLICT_IGNORE)
+        } else {
+            db.delete(
+                "exercise_log",
+                "profile_id = ? AND date = ? AND exercise_id = ?",
+                arrayOf(profileId.toString(), date.toString(), exerciseId),
+            )
+        }
+    }
+
     // ---------- Photos ----------
 
     /** One child's photos, oldest first. */
@@ -224,6 +250,9 @@ class Repository(private val database: MahdDatabase) {
             skipped = db.rawQuery("SELECT * FROM vaccine_skips", null).use { c ->
                 c.mapRows { it.long("profile_id") to it.string("dose_id")!! }
             },
+            exerciseLog = db.rawQuery("SELECT * FROM exercise_log ORDER BY date", null).use { c ->
+                c.mapRows { ExerciseTick(it.long("profile_id"), it.date("date")!!, it.string("exercise_id")!!) }
+            },
         )
     }
 
@@ -239,6 +268,7 @@ class Repository(private val database: MahdDatabase) {
             .use { c -> c.mapRows { it.toPhoto() } }
             .filter { it.profileId in sameChildren }
         db.delete("photos", null, null)
+        db.delete("exercise_log", null, null)
         db.delete("milestone_answers", null, null)
         db.delete("vaccine_skips", null, null)
         db.delete("vaccine_doses", null, null)
@@ -270,6 +300,13 @@ class Repository(private val database: MahdDatabase) {
                 put("dose_id", doseId)
             })
         }
+        snapshot.exerciseLog.forEach { t ->
+            db.insertOrThrow("exercise_log", null, ContentValues().apply {
+                put("profile_id", t.profileId)
+                put("date", t.date.toString())
+                put("exercise_id", t.exerciseId)
+            })
+        }
         keptPhotos.forEach { p -> db.insertOrThrow("photos", null, p.toValues().apply { put("id", p.id) }) }
     }
 
@@ -281,6 +318,8 @@ class Repository(private val database: MahdDatabase) {
         val milestones: List<Triple<Long, String, Int>>,
         /** (profileId, doseId) of doses marked "skipped / not applicable" */
         val skipped: List<Pair<Long, String>> = emptyList(),
+        /** The daily exercise program's ticks. */
+        val exerciseLog: List<ExerciseTick> = emptyList(),
     )
 }
 

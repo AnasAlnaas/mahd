@@ -187,6 +187,13 @@
     <string name="exercises_stop_title">علامات توجب التوقف ومراجعة الطبيب</string>
     <string name="exercises_source">المصادر: %1$s</string>
     <string name="exercises_picture_credit">الصور: %1$s</string>
+    <!-- The daily program (third trimester). Shown to the mother only: she ticks her own exercises. -->
+    <string name="routine_title">برنامج اليوم</string>
+    <string name="routine_day_title">برنامج يوم %1$s</string>
+    <string name="routine_hint">نفّذي التمارين بالترتيب: صور التمرين الحالي أمامكِ، فإذا أنهيتِه اضغطي عليه لينتقل البرنامج إلى التالي. وللرجوع إلى التمرين السابق اضغطي عليه.</string>
+    <string name="routine_all_done">أحسنتِ، أنهيتِ تمارين هذا اليوم كلها.</string>
+    <string name="routine_missed">إذا فاتكِ يوم فلا بأس؛ تابعي في اليوم التالي دون مضاعفة التمارين. ومع اقتراب الولادة خفّفي الشدّة عند التعب، وركّزي على التنفّس.</string>
+    <string name="routine_home">برنامج اليوم: %1$s من %2$s</string>
     <string name="bag_progress">%1$s من %2$s جاهزة</string>
     <string name="bag_hint">جهّزيها قبل موعد الولادة بأسابيع؛ فقد تأتي الولادة مبكرًا.</string>
 

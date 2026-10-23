@@ -1,11 +1,15 @@
 package ly.mahd.app
 
 import ly.mahd.app.content.ContentRepository
+import ly.mahd.app.logic.ExerciseRoutine
+import ly.mahd.app.logic.PregnancyMath
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
+import java.time.LocalDate
 
 class ExercisesTest {
     private val exercises = ContentRepository { path -> File("src/main/assets/$path").inputStream() }.exercises
@@ -79,5 +83,60 @@ class ExercisesTest {
             assertTrue("${f.name}: pictures are WebP", f.name.endsWith(".webp"))
             assertTrue("${f.name}: no exercise uses this picture", f.name.removeSuffix(".webp") in known)
         }
+    }
+
+    @Test
+    fun theDailyProgramUsesOnlyExistingExercisesInTheThirdTrimester() {
+        val steps = parts.flatMap { p -> p.stages.flatMap { it.routine } }
+        steps.forEach { s ->
+            assertNotNull("routine step ${s.exerciseId} names no exercise (the owner adds no new ones)", exercises.exercise(s.exerciseId))
+            assertTrue(s.exerciseId, s.dose.isNotBlank() && "كِ" !in s.dose && "تِ" !in s.dose)
+        }
+        val ids = steps.map { it.exerciseId }
+        assertEquals("an exercise twice in one program", ids.size, ids.toSet().size)
+        // The owner's program (her PDF): weeks 28 to 42, in her order, without the two exercises the app does not have.
+        assertEquals(
+            listOf("preg_breathing", "post_pelvic_floor", "preg_cat_cow", "preg_butterfly", "preg_side_leg_lift", "preg_wall_pushup", "preg_squat"),
+            exercises.routineFor(34).map { it.first.id },
+        )
+        // A program's own pictures follow the same names; Kegel in pregnancy must not show the after-birth cot picture.
+        parts.flatMap { p -> p.stages.flatMap { it.routine } }.forEach { s ->
+            s.images?.forEach { name ->
+                assertTrue("$name does not belong to ${s.exerciseId}", name.startsWith("${s.exerciseId}_") || name == "pelvic_floor_diagram")
+            }
+        }
+        val kegel = exercises.routineFor(34).first { it.first.id == "post_pelvic_floor" }.first
+        assertTrue("post_pelvic_floor" !in kegel.images && kegel.images.isNotEmpty())
+        assertTrue("the full list keeps its own picture", "post_pelvic_floor" in exercises.exercise("post_pelvic_floor")!!.images)
+        assertEquals(7, exercises.routineFor(28).size)
+        assertEquals(7, exercises.routineFor(42).size)
+        assertTrue("no program before the third trimester", exercises.routineFor(27).isEmpty())
+        assertTrue(exercises.postpartum.stages.all { it.routine.isEmpty() })
+    }
+
+    @Test
+    fun theProgramsWeekIsThePregnancyWeekAndOnlyDaysThatCameCanBeTicked() {
+        val due = LocalDate.of(2026, 12, 6)
+        val today = LocalDate.of(2026, 10, 23) // week 33 + 5 days; the owner's PDF starts week 34 on 25/10 too
+        val days = ExerciseRoutine.weekDays(due, today)
+        assertEquals(7, days.size)
+        assertEquals(LocalDate.of(2026, 10, 18), days.first())
+        assertEquals(LocalDate.of(2026, 10, 25), days.last().plusDays(1))
+        assertTrue(today in days)
+        days.forEach { assertEquals(33, PregnancyMath.gestationalAge(due, it).weeks) }
+        assertTrue(ExerciseRoutine.canTick(days.first(), today))
+        assertFalse(ExerciseRoutine.canTick(today.plusDays(1), today))
+
+        val ids = listOf("a", "b", "c", "d")
+        assertEquals(0f, ExerciseRoutine.progress(null, ids))
+        assertEquals(2, ExerciseRoutine.doneCount(setOf("a", "c", "other"), ids))
+        assertEquals(0.5f, ExerciseRoutine.progress(setOf("a", "c", "other"), ids))
+        assertEquals(0f, ExerciseRoutine.progress(setOf("a"), emptyList()))
+
+        // In order: the exercise to do now is the first one not ticked; all done = past the end.
+        assertEquals(0, ExerciseRoutine.current(null, ids))
+        assertEquals(2, ExerciseRoutine.current(setOf("a", "b"), ids))
+        assertEquals(1, ExerciseRoutine.current(setOf("a", "c"), ids)) // a gap left by an older version
+        assertEquals(4, ExerciseRoutine.current(ids.toSet(), ids))
     }
 }

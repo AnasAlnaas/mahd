@@ -87,6 +87,13 @@ data class DoseRecord(
     val givenDate: LocalDate,
 )
 
+/** One exercise of the daily program, ticked as done on [date]. */
+data class ExerciseTick(
+    val profileId: Long,
+    val date: LocalDate,
+    val exerciseId: String,
+)
+
 /** Everything recorded for one child, read in one go so a screen gets it all at the same moment. */
 data class ChildRecords(
     /** Dose id -> date given. */

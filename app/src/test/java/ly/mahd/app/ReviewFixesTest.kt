@@ -8,6 +8,7 @@ import ly.mahd.app.content.VaccineVisit
 import ly.mahd.app.data.BackupFile
 import ly.mahd.app.data.BirthType
 import ly.mahd.app.data.DoseRecord
+import ly.mahd.app.data.ExerciseTick
 import ly.mahd.app.data.GrowthEntry
 import ly.mahd.app.data.Profile
 import ly.mahd.app.data.ProfileKind
@@ -195,9 +196,23 @@ class BackupFileTest {
         doses = listOf(DoseRecord(1, "bcg", LocalDate.of(2026, 1, 15))),
         milestones = listOf(Triple(1L, "m2_s1", 1)),
         skipped = listOf(1L to "rota_1"),
+        exerciseLog = listOf(ExerciseTick(1, LocalDate.of(2026, 1, 10), "preg_breathing")),
     )
 
     private fun decode(text: String) = BackupFile.decode(text, today)
+
+    @Test
+    fun exerciseTicksAreKeptAndOldBackupsWithoutThemStillLoad() {
+        val old = encode(snapshot.copy(exerciseLog = emptyList()))
+            .replace(Regex("\"exerciseLog\": \\[\\s*]"), "\"unknown\": []")
+        assertTrue(decode(old).exerciseLog.isEmpty())
+        val orphan = snapshot.copy(exerciseLog = listOf(ExerciseTick(99, today, "preg_breathing")))
+        assertThrows(IllegalArgumentException::class.java) { decode(encode(orphan)) }
+        val twice = snapshot.copy(exerciseLog = snapshot.exerciseLog + snapshot.exerciseLog)
+        assertThrows(IllegalArgumentException::class.java) { decode(encode(twice)) }
+        val farFuture = snapshot.copy(exerciseLog = listOf(ExerciseTick(1, LocalDate.of(3000, 1, 1), "preg_breathing")))
+        assertThrows(IllegalArgumentException::class.java) { decode(encode(farFuture)) }
+    }
 
     private fun encode(s: Repository.Snapshot) = BackupFile.encode(s, today)
 

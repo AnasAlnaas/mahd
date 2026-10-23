@@ -64,6 +64,14 @@ object BackupFile {
                         .put("doseId", doseId))
                 }
             })
+            .put("exerciseLog", JSONArray().apply {
+                snapshot.exerciseLog.forEach { t ->
+                    put(JSONObject()
+                        .put("profileId", t.profileId)
+                        .put("date", t.date.toString())
+                        .put("exerciseId", t.exerciseId))
+                }
+            })
         return root.toString(2)
     }
 
@@ -133,6 +141,10 @@ object BackupFile {
         val skipped = root.optJSONArray("skippedDoses").objects()
             .map { o -> o.getLong("profileId") to o.getString("doseId") }
             .filter { it !in givenKeys }
+        // Not in backups made before the daily exercise program.
+        val exerciseLog = root.optJSONArray("exerciseLog").objects().map { o ->
+            ExerciseTick(o.getLong("profileId"), LocalDate.parse(o.getString("date")), o.getString("exerciseId"))
+        }
 
         val profileIds = profiles.map { it.id }.toSet()
         require(profileIds.size == profiles.size) { "duplicate profile ids" }
@@ -144,8 +156,10 @@ object BackupFile {
         require(milestones.map { it.first to it.second }.toSet().size == milestones.size) { "duplicate milestones" }
         require(skipped.all { it.first in profileIds }) { "skipped dose without a profile" }
         require(skipped.toSet().size == skipped.size) { "duplicate skipped doses" }
+        require(exerciseLog.all { it.profileId in profileIds }) { "exercise tick without a profile" }
+        require(exerciseLog.toSet().size == exerciseLog.size) { "duplicate exercise ticks" }
 
-        return Repository.Snapshot(profiles, growth, doses, milestones, skipped)
+        return Repository.Snapshot(profiles, growth, doses, milestones, skipped, exerciseLog)
     }
 
     /** Checks that the values make sense; everything the app itself can save passes. */
@@ -179,6 +193,7 @@ object BackupFile {
             require(itemId.isId() && MilestoneAnswer.fromCode(answer) != null) { "bad milestone answer" }
         }
         s.skipped.forEach { (_, doseId) -> require(doseId.isId()) { "bad skipped dose" } }
+        s.exerciseLog.forEach { require(it.exerciseId.isId() && it.date.inRange()) { "bad exercise tick" } }
     }
 
     private fun JSONArray?.objects(): List<JSONObject> =

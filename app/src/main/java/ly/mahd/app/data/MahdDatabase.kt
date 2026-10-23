@@ -66,6 +66,7 @@ class MahdDatabase(context: Context) : SQLiteOpenHelper(context, NAME, null, VER
         )
         createVaccineSkips(db)
         createPhotos(db)
+        createExerciseLog(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
@@ -74,6 +75,21 @@ class MahdDatabase(context: Context) : SQLiteOpenHelper(context, NAME, null, VER
         if (oldVersion < 2) createVaccineSkips(db)
         if (oldVersion < 3) createPhotos(db)
         if (oldVersion < 4) db.execSQL("ALTER TABLE profiles ADD COLUMN birth_type TEXT") // natural / caesarean
+        if (oldVersion < 5) createExerciseLog(db)
+    }
+
+    /** The daily exercise program: which exercise was done on which day (one row per tick). */
+    private fun createExerciseLog(db: SQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS exercise_log (
+                profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+                date TEXT NOT NULL,
+                exercise_id TEXT NOT NULL,
+                PRIMARY KEY (profile_id, date, exercise_id)
+            )
+            """.trimIndent()
+        )
     }
 
     /** The children's photos; the pictures themselves are files (see PhotoStore), this table says whose and when. */
@@ -106,6 +122,6 @@ class MahdDatabase(context: Context) : SQLiteOpenHelper(context, NAME, null, VER
 
     companion object {
         const val NAME = "mahd.db"
-        const val VERSION = 4
+        const val VERSION = 5
     }
 }

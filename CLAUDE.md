@@ -138,7 +138,19 @@ Libyan vaccine schedule or Libyan dialect. Plan: MVP first, add features over ti
   git-ignored `drafts/exercise_pictures/`). A missing picture is simply not shown; pictures sit on a fixed light panel in
   both themes (white, matching the pictures' own white background). An exercise's own poses take turns in one frame
   (`PoseFrame`: crossfade loop, the owner's exception to "nothing moves on its own"; still when animations are off, tap
-  for the next pose); the shared diagram sits beside them. All 27 pictures are in (Gemini, 2026-10-16). Fill `"pictureCredit"` if the drawing tool's licence asks for a credit. Never rename ids or picture names.
+  for the next pose); the shared diagram sits beside them. All 27 pictures are in (Gemini, 2026-10-16).
+  Daily program (owner's PDF "برنامج التمارين اليومي للحامل", 2026-10-23): a stage may carry a `routine` (ordered
+  exercise ids + that day's dose; ids may come from either part, e.g. Kegel = `post_pelvic_floor`). Only `t3` has one
+  (weeks 28–42): the PDF's 9 minus ankle circles and walking — the owner said NO new exercises. `ExercisesScreen` shows
+  it first for the MOTHER only (she ticks her own exercises): a moon for the day, the pregnancy week as 7 day moons
+  (an earlier day can be opened to tick a forgotten exercise, `logic/ExerciseRoutine`), one tick per exercise per day
+  (Kegel too, not 3: owner doesn't want many opens a day). IN ORDER (owner, 2026-10-23): only the current exercise
+  (`ExerciseRoutine.current`, the first not ticked) can be ticked; it opens with its pictures (poses take turns) and
+  steps, which shrink away when ticked while the next one's rise in; later ones are locked; tapping the one just before
+  un-ticks it (one step back). A routine step may carry its own `images` (replacing the exercise's in the program only):
+  Kegel shows just `pelvic_floor_diagram`, because `post_pelvic_floor`'s picture has a cot; the owner will draw
+  `post_pelvic_floor_program` (prompt in drafts/exercise_pose_prompts.md). No reminder, no printable tracker (later). Ticks: table
+  `exercise_log` (DB v5), in backups as optional "exerciseLog". Pregnancy Home's exercises row shows today's count. Fill `"pictureCredit"` if the drawing tool's licence asks for a credit. Never rename ids or picture names.
 - Screens collect database flows with `initial = null` and draw nothing until loaded (no "everything is late"
   flash); Home reads one `Repository.childRecords()`; each profile gets a fresh screen (`key(selected.id)`).
 - Content files are covered by `ContentFilesTest`; run `gradlew testDebugUnitTest` after every content edit.
