@@ -1,6 +1,7 @@
 package ly.mahd.app.ui.screens
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -45,6 +46,7 @@ import ly.mahd.app.ui.components.GroupItem
 import ly.mahd.app.ui.components.GroupRow
 import ly.mahd.app.ui.components.ListGroup
 import ly.mahd.app.ui.components.MoonPhase
+import ly.mahd.app.ui.components.sharedAxisX
 
 /**
  * First run: welcome + disclaimer, then "I'm pregnant" or "I have a child", then the form.
@@ -65,23 +67,31 @@ fun OnboardingFlow(app: MahdApp) {
         }
     }
 
-    when (step) {
-        STEP_WELCOME -> WelcomeScreen(onContinue = {
-            app.prefs.acceptDisclaimer()
-            step = STEP_CHOOSE
-        })
-        STEP_CHOOSE -> ChooseStartScreen(
-            onPregnant = { step = STEP_PREGNANCY },
-            onChild = { step = STEP_CHILD },
-            onRestore = pickBackup,
-        )
-        STEP_PREGNANCY -> {
-            BackHandler { step = STEP_CHOOSE }
-            PregnancyFormScreen(app, existing = null, onClose = { step = STEP_CHOOSE })
-        }
-        STEP_CHILD -> {
-            BackHandler { step = STEP_CHOOSE }
-            ChildFormScreen(app, existing = null, onClose = { step = STEP_CHOOSE })
+    // The steps slide like pages, forward and back.
+    AnimatedContent(
+        targetState = step,
+        transitionSpec = { sharedAxisX(forward = stepOrder(targetState) > stepOrder(initialState)) },
+        label = "onboarding",
+    ) { shown ->
+        when (shown) {
+            STEP_WELCOME -> WelcomeScreen(onContinue = {
+                app.prefs.acceptDisclaimer()
+                step = STEP_CHOOSE
+            })
+            STEP_CHOOSE -> ChooseStartScreen(
+                onPregnant = { step = STEP_PREGNANCY },
+                onChild = { step = STEP_CHILD },
+                onRestore = pickBackup,
+            )
+            // Once saved, the main screens take over by themselves (MahdRoot), so the step stays as it is.
+            STEP_PREGNANCY -> {
+                BackHandler(enabled = shown == step) { step = STEP_CHOOSE }
+                PregnancyFormScreen(app, existing = null, onClose = { step = STEP_CHOOSE }, onSaved = {})
+            }
+            STEP_CHILD -> {
+                BackHandler(enabled = shown == step) { step = STEP_CHOOSE }
+                ChildFormScreen(app, existing = null, onClose = { step = STEP_CHOOSE }, onSaved = {})
+            }
         }
     }
 }
@@ -90,6 +100,13 @@ private const val STEP_WELCOME = "welcome"
 private const val STEP_CHOOSE = "choose"
 private const val STEP_PREGNANCY = "pregnancy"
 private const val STEP_CHILD = "child"
+
+/** Where a step lies in the first run, so moving to a later one slides forward. */
+private fun stepOrder(step: String) = when (step) {
+    STEP_WELCOME -> 0
+    STEP_CHOOSE -> 1
+    else -> 2
+}
 
 @Composable
 private fun WelcomeScreen(onContinue: () -> Unit) {

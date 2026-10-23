@@ -2,9 +2,9 @@ package ly.mahd.app.ui.screens
 
 import android.graphics.BitmapFactory
 import android.provider.Settings
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -46,6 +46,7 @@ import ly.mahd.app.MahdApp
 import ly.mahd.app.R
 import ly.mahd.app.content.Exercise
 import ly.mahd.app.content.ExerciseStage
+import ly.mahd.app.content.ExercisesContent
 import ly.mahd.app.data.BirthType
 import ly.mahd.app.data.Parent
 import ly.mahd.app.data.Profile
@@ -55,6 +56,8 @@ import ly.mahd.app.ui.Routes
 import ly.mahd.app.ui.components.BulletList
 import ly.mahd.app.ui.components.ConnectedChoice
 import ly.mahd.app.ui.components.DraftNotice
+import ly.mahd.app.ui.components.FadeInImage
+import ly.mahd.app.ui.components.sharedAxisX
 import ly.mahd.app.ui.components.GroupItem
 import ly.mahd.app.ui.components.GroupRow
 import ly.mahd.app.ui.components.ListGroup
@@ -107,87 +110,108 @@ fun ExercisesScreen(app: MahdApp, profile: Profile, onBack: () -> Unit) {
         assets.list(PICTURE_DIR).orEmpty().filter { it.endsWith(".webp") }.map { it.removeSuffix(".webp") }.toSet()
     }
     var partIndex by rememberSaveable { mutableIntStateOf(if (profile.isPregnancy) 0 else 1) }
-    val afterBirth = partIndex == 1
-    val part = if (afterBirth) content.postpartum else content.pregnancy
     val type = if (profile.isChild) profile.birthType else null
     val week = profile.dueDate?.takeIf { profile.isPregnancy }?.let { PregnancyMath.gestationalAge(it, today).weeks }
 
     SubScreen(title = stringResource(R.string.exercises_title), onBack = onBack) { padding ->
-        LazyColumn(
-            Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            ConnectedChoice(
+                options = listOf(stringResource(R.string.exercises_part_pregnancy), stringResource(R.string.exercises_part_postpartum)),
+                selected = partIndex,
+                onSelect = { partIndex = it },
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 4.dp),
+            )
+            // The two parts slide like neighbours: after the birth lies after the pregnancy.
+            AnimatedContent(
+                targetState = partIndex,
+                modifier = Modifier.weight(1f),
+                transitionSpec = { sharedAxisX(forward = targetState > initialState) },
+                label = "exercises-part",
+            ) { shownIndex ->
+                ExercisesPart(content, afterBirth = shownIndex == 1, type, week, father, pictures)
+            }
+        }
+    }
+}
+
+/** One part of the exercises: in pregnancy (by trimester, the current one first) or after the birth. */
+@Composable
+private fun ExercisesPart(
+    content: ExercisesContent,
+    afterBirth: Boolean,
+    type: BirthType?,
+    week: Int?,
+    father: Boolean,
+    pictures: Set<String>,
+) {
+    val part = if (afterBirth) content.postpartum else content.pregnancy
+    LazyColumn(
+        Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        if (!content.reviewed) item { DraftNotice() }
+
+        item { SectionTitle(stringResource(R.string.exercises_intro_title)) }
+        item { ListGroup { GroupRow { BulletList(part.intro) } } }
+
+        if (afterBirth) {
+            item { SectionTitle(stringResource(R.string.exercises_birth_title)) }
             item {
-                ConnectedChoice(
-                    options = listOf(stringResource(R.string.exercises_part_pregnancy), stringResource(R.string.exercises_part_postpartum)),
-                    selected = partIndex,
-                    onSelect = { partIndex = it },
+                ListGroup {
+                    // Both kinds of birth when the mother has not said which.
+                    if (type != BirthType.CAESAREAN) {
+                        GroupRow(spacing = 8.dp) {
+                            Text(stringResource(R.string.birth_natural_long), style = MaterialTheme.typography.titleMedium)
+                            BulletList(part.natural)
+                        }
+                    }
+                    if (type != BirthType.NATURAL) {
+                        GroupRow(spacing = 8.dp) {
+                            Text(stringResource(R.string.birth_caesarean_long), style = MaterialTheme.typography.titleMedium)
+                            BulletList(part.caesarean)
+                        }
+                    }
+                }
+            }
+        }
+
+        part.stagesFor(if (afterBirth) null else week).forEach { stage ->
+            val now = !afterBirth && week != null && stage.covers(week)
+            item(key = "title_${stage.id}") { StageHeader(stage, now) }
+            item(key = stage.id) {
+                ListGroup {
+                    stage.exercises.forEach { ExerciseRow(it, pictures, showCaesarean = afterBirth && type != BirthType.NATURAL) }
+                }
+            }
+        }
+
+        if (father && part.father.isNotEmpty()) {
+            item { SectionTitle(stringResource(R.string.exercises_father_title)) }
+            item { ListGroup { GroupRow { BulletList(part.father) } } }
+        }
+
+        item { SectionTitle(stringResource(R.string.exercises_avoid_title)) }
+        item { ListGroup { GroupRow { BulletList(part.avoid) } } }
+
+        item {
+            WarningCard(title = stringResource(R.string.exercises_stop_title)) {
+                BulletList(part.stopSigns, bullet = MaterialTheme.colorScheme.error)
+            }
+        }
+        item {
+            Column(Modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    stringResource(R.string.exercises_source, part.source),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
-            }
-            if (!content.reviewed) item { DraftNotice() }
-
-            item { SectionTitle(stringResource(R.string.exercises_intro_title)) }
-            item { ListGroup { GroupRow { BulletList(part.intro) } } }
-
-            if (afterBirth) {
-                item { SectionTitle(stringResource(R.string.exercises_birth_title)) }
-                item {
-                    ListGroup {
-                        // Both kinds of birth when the mother has not said which.
-                        if (type != BirthType.CAESAREAN) {
-                            GroupRow(spacing = 8.dp) {
-                                Text(stringResource(R.string.birth_natural_long), style = MaterialTheme.typography.titleMedium)
-                                BulletList(part.natural)
-                            }
-                        }
-                        if (type != BirthType.NATURAL) {
-                            GroupRow(spacing = 8.dp) {
-                                Text(stringResource(R.string.birth_caesarean_long), style = MaterialTheme.typography.titleMedium)
-                                BulletList(part.caesarean)
-                            }
-                        }
-                    }
-                }
-            }
-
-            part.stagesFor(if (afterBirth) null else week).forEach { stage ->
-                val now = !afterBirth && week != null && stage.covers(week)
-                item(key = "title_${stage.id}") { StageHeader(stage, now) }
-                item(key = stage.id) {
-                    ListGroup {
-                        stage.exercises.forEach { ExerciseRow(it, pictures, showCaesarean = afterBirth && type != BirthType.NATURAL) }
-                    }
-                }
-            }
-
-            if (father && part.father.isNotEmpty()) {
-                item { SectionTitle(stringResource(R.string.exercises_father_title)) }
-                item { ListGroup { GroupRow { BulletList(part.father) } } }
-            }
-
-            item { SectionTitle(stringResource(R.string.exercises_avoid_title)) }
-            item { ListGroup { GroupRow { BulletList(part.avoid) } } }
-
-            item {
-                WarningCard(title = stringResource(R.string.exercises_stop_title)) {
-                    BulletList(part.stopSigns, bullet = MaterialTheme.colorScheme.error)
-                }
-            }
-            item {
-                Column(Modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                content.pictureCredit?.let {
                     Text(
-                        stringResource(R.string.exercises_source, part.source),
+                        stringResource(R.string.exercises_picture_credit, it),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    content.pictureCredit?.let {
-                        Text(
-                            stringResource(R.string.exercises_picture_credit, it),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
                 }
             }
         }
@@ -312,6 +336,6 @@ private fun rememberPicture(name: String): ImageBitmap? {
 @Composable
 private fun PicturePanel(bitmap: ImageBitmap?, description: String, modifier: Modifier) {
     Box(modifier.aspectRatio(4f / 3f).clip(PICTURE_SHAPE).background(PICTURE_PANEL)) {
-        bitmap?.let { Image(it, contentDescription = description, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize()) }
+        FadeInImage(bitmap, contentDescription = description, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
     }
 }

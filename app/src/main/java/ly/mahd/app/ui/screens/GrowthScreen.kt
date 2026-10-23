@@ -1,5 +1,7 @@
 package ly.mahd.app.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -8,7 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 
@@ -28,6 +30,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -43,13 +46,16 @@ import ly.mahd.app.ui.components.AppCard
 import ly.mahd.app.ui.components.ConnectedChoice
 import ly.mahd.app.ui.components.ExpressiveButton
 import ly.mahd.app.ui.components.GroupItem
-import ly.mahd.app.ui.components.ListGroup
+import ly.mahd.app.ui.components.RollingText
 import ly.mahd.app.ui.components.SectionTitle
+import ly.mahd.app.ui.components.fadeAndResize
+import ly.mahd.app.ui.components.groupRowShape
 import ly.mahd.app.ui.components.AppIcon
 import ly.mahd.app.ui.components.ConfirmDialog
 import ly.mahd.app.ui.components.DateField
 import ly.mahd.app.ui.components.EmptyState
 import ly.mahd.app.ui.components.LocalToday
+import ly.mahd.app.ui.theme.AppMotion
 import ly.mahd.app.ui.theme.LocalSurfaces
 import ly.mahd.app.util.Format
 import java.time.LocalDate
@@ -81,7 +87,7 @@ fun GrowthScreen(app: MahdApp, profile: Profile) {
     val minMonth = if (zoomed) (ageNow - 5).toInt().coerceAtLeast(0) else 0
     val maxMonth = if (zoomed) maxOf(minMonth + 6, ceil(ageNow + 1).toInt()).coerceAtMost(60).coerceAtLeast(minMonth + 1) else allMax
 
-    fun valueOf(e: GrowthEntry): Double? = when (indicator) {
+    fun valueOf(e: GrowthEntry, of: GrowthIndicator = indicator): Double? = when (of) {
         GrowthIndicator.WEIGHT -> e.weightKg
         GrowthIndicator.LENGTH -> e.lengthCm
         GrowthIndicator.HEAD -> e.headCm
@@ -91,79 +97,101 @@ fun GrowthScreen(app: MahdApp, profile: Profile) {
     // due date (negative corrected age) are listed but not drawn or classified.
     fun beforeTerm(e: GrowthEntry) = ChildAge.isBeforeCorrectedTerm(birth, profile.weeksAtBirth, e.date)
 
-    val points = entries.mapNotNull { e ->
+    fun pointsOf(of: GrowthIndicator) = entries.mapNotNull { e ->
         if (beforeTerm(e)) null
-        else valueOf(e)?.let { ChildAge.referenceMonths(birth, profile.weeksAtBirth, e.date) to it }
+        else valueOf(e, of)?.let { ChildAge.referenceMonths(birth, profile.weeksAtBirth, e.date) to it }
     }
 
+    /** The latest value of [of], how it reads on the WHO chart, and how it moved since the measurement before. */
+    @Composable
+    fun LatestReading(of: GrowthIndicator) {
+        val childSex = sex ?: return
+        val latest = entries.lastOrNull { valueOf(it, of) != null } ?: return
+        val value = valueOf(latest, of) ?: return
+        val months = ChildAge.referenceMonths(birth, profile.weeksAtBirth, latest.date)
+        val latestBeforeTerm = beforeTerm(latest)
+        val lms = if (latestBeforeTerm) null else app.content.growth.lms(of, childSex.whoCode, months)
+        Column(Modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                stringResource(R.string.latest_measurement_on, Format.date(latest.date)),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            // A new measurement rolls the number to its value.
+            RollingText(
+                "${Format.decimal(value, 2)} ${stringResource(indicatorUnit(of))}",
+                style = MaterialTheme.typography.displaySmall,
+            )
+            if (latestBeforeTerm) {
+                Text(stringResource(R.string.growth_preterm_note), style = MaterialTheme.typography.bodyMedium)
+            } else if (lms != null) {
+                val z = lms.zScore(value)
+                GrowthBandText(GrowthMath.band(z))
+                val pct = GrowthMath.percentile(z).roundToInt().coerceIn(1, 99)
+                val notes = buildList {
+                    add(stringResource(R.string.percentile_plain, pct.toString()))
+                    // Compare with the measurement before this one (same indicator, both on the WHO charts).
+                    val usable = entries.filter { valueOf(it, of) != null && !beforeTerm(it) }
+                    val before = usable.getOrNull(usable.size - 2)
+                    val beforeValue = before?.let { valueOf(it, of) }
+                    if (before != null && beforeValue != null && usable.last() == latest) {
+                        val beforeLms = app.content.growth.lms(of, childSex.whoCode, ChildAge.referenceMonths(birth, profile.weeksAtBirth, before.date))
+                        if (beforeLms != null) {
+                            add(
+                                stringResource(
+                                    when (GrowthMath.trend(beforeLms.zScore(beforeValue), z)) {
+                                        GrowthMath.Trend.UP -> R.string.trend_up
+                                        GrowthMath.Trend.STEADY -> R.string.trend_steady
+                                        GrowthMath.Trend.DOWN -> R.string.trend_down
+                                    },
+                                ),
+                            )
+                        }
+                    }
+                    if (GrowthMath.band(z) != GrowthMath.Band.NORMAL) add(stringResource(R.string.growth_see_doctor))
+                }
+                notes.forEach {
+                    Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            } else {
+                Text(stringResource(R.string.growth_out_of_range), style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+    }
+
+    // Blocks are 16dp apart; the measurements, each a list item of their own so they can fade in and out, 2dp.
+    val block = Modifier.padding(bottom = 14.dp)
     LazyColumn(
         Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(2.dp),
     ) {
-        item {
+        item(key = "indicator") {
             ConnectedChoice(
                 options = GrowthIndicator.entries.map { stringResource(indicatorLabel(it)) },
                 selected = GrowthIndicator.entries.indexOf(indicator),
                 onSelect = { indicatorCode = GrowthIndicator.entries[it].code },
+                modifier = block,
             )
         }
-        val latest = entries.lastOrNull { valueOf(it) != null }
-        if (latest != null && sex != null) {
-            item {
-                val value = valueOf(latest)!!
-                val months = ChildAge.referenceMonths(birth, profile.weeksAtBirth, latest.date)
-                val latestBeforeTerm = beforeTerm(latest)
-                val lms = if (latestBeforeTerm) null else app.content.growth.lms(indicator, sex.whoCode, months)
-                Column(Modifier.padding(horizontal = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        stringResource(R.string.latest_measurement_on, Format.date(latest.date)),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Text(
-                        "${Format.decimal(value, 2)} ${stringResource(indicatorUnit(indicator))}",
-                        style = MaterialTheme.typography.displaySmall,
-                    )
-                    if (latestBeforeTerm) {
-                        Text(stringResource(R.string.growth_preterm_note), style = MaterialTheme.typography.bodyMedium)
-                    } else if (lms != null) {
-                        val z = lms.zScore(value)
-                        GrowthBandText(GrowthMath.band(z))
-                        val pct = GrowthMath.percentile(z).roundToInt().coerceIn(1, 99)
-                        val notes = buildList {
-                            add(stringResource(R.string.percentile_plain, pct.toString()))
-                            // Compare with the measurement before this one (same indicator, both on the WHO charts).
-                            val usable = entries.filter { valueOf(it) != null && !beforeTerm(it) }
-                            val before = usable.getOrNull(usable.size - 2)
-                            if (before != null && usable.last() == latest) {
-                                val beforeLms = app.content.growth.lms(indicator, sex.whoCode, ChildAge.referenceMonths(birth, profile.weeksAtBirth, before.date))
-                                if (beforeLms != null) {
-                                    add(
-                                        stringResource(
-                                            when (GrowthMath.trend(beforeLms.zScore(valueOf(before)!!), z)) {
-                                                GrowthMath.Trend.UP -> R.string.trend_up
-                                                GrowthMath.Trend.STEADY -> R.string.trend_steady
-                                                GrowthMath.Trend.DOWN -> R.string.trend_down
-                                            },
-                                        ),
-                                    )
-                                }
-                            }
-                            if (GrowthMath.band(z) != GrowthMath.Band.NORMAL) add(stringResource(R.string.growth_see_doctor))
-                        }
-                        notes.forEach {
-                            Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                    } else {
-                        Text(stringResource(R.string.growth_out_of_range), style = MaterialTheme.typography.bodyMedium)
-                    }
+        if (sex != null && entries.any { valueOf(it) != null }) {
+            item(key = "latest") {
+                // Weight, length and head each have their own reading; a new one fades in when another is chosen.
+                AnimatedContent(
+                    targetState = indicator,
+                    modifier = block.animateItem(),
+                    transitionSpec = { fadeAndResize() },
+                    label = "latest",
+                ) { shownIndicator ->
+                    LatestReading(shownIndicator)
                 }
             }
         }
-        item {
-            AppCard {
-                Text(stringResource(indicatorTitle(indicator)), style = MaterialTheme.typography.titleLarge)
+        item(key = "chart") {
+            AppCard(block.animateItem()) {
+                Crossfade(targetState = indicator, animationSpec = AppMotion.slowEffects(), label = "chart-title") {
+                    Text(stringResource(indicatorTitle(it)), style = MaterialTheme.typography.titleLarge)
+                }
                 if (sex == null) {
                     Text(stringResource(R.string.growth_need_sex), style = MaterialTheme.typography.bodyLarge)
                 } else {
@@ -177,15 +205,18 @@ fun GrowthScreen(app: MahdApp, profile: Profile) {
                             selectedColors = { MaterialTheme.colorScheme.secondaryContainer to MaterialTheme.colorScheme.onSecondaryContainer },
                         )
                     }
-                    GrowthChart(
-                        standards = app.content.growth,
-                        indicator = indicator,
-                        sexCode = sex.whoCode,
-                        points = points,
-                        minMonth = minMonth,
-                        maxMonth = maxMonth,
-                        valueLabel = { Format.decimal(it, if (indicator == GrowthIndicator.WEIGHT) 2 else 1) },
-                    )
+                    // Another measure cross-fades to its own chart; the range (all / recent months) glides inside it.
+                    Crossfade(targetState = indicator, animationSpec = AppMotion.slowEffects(), label = "chart") { shownIndicator ->
+                        GrowthChart(
+                            standards = app.content.growth,
+                            indicator = shownIndicator,
+                            sexCode = sex.whoCode,
+                            points = pointsOf(shownIndicator),
+                            minMonth = minMonth,
+                            maxMonth = maxMonth,
+                            valueLabel = { Format.decimal(it, if (shownIndicator == GrowthIndicator.WEIGHT) 2 else 1) },
+                        )
+                    }
                     Text(
                         stringResource(R.string.chart_axis_hint, stringResource(indicatorUnit(indicator))),
                         style = MaterialTheme.typography.bodyMedium,
@@ -202,21 +233,24 @@ fun GrowthScreen(app: MahdApp, profile: Profile) {
                 }
             }
         }
-        item {
-            ExpressiveButton(onClick = { adding = true }, modifier = Modifier.fillMaxWidth(), icon = R.drawable.ic_add) {
+        item(key = "add") {
+            ExpressiveButton(onClick = { adding = true }, modifier = block.animateItem().fillMaxWidth(), icon = R.drawable.ic_add) {
                 Text(stringResource(R.string.add_measurement))
             }
         }
         if (entries.isEmpty()) {
-            item { EmptyState(stringResource(R.string.growth_empty)) }
+            item(key = "empty") { EmptyState(stringResource(R.string.growth_empty), Modifier.animateItem()) }
         } else {
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    SectionTitle(stringResource(R.string.measurements_history))
-                    ListGroup {
-                        entries.asReversed().forEach { e -> MeasurementRow(e, onDelete = { deleting = e }) }
-                    }
-                }
+            item(key = "history") { SectionTitle(stringResource(R.string.measurements_history), Modifier.animateItem().padding(bottom = 6.dp)) }
+            val newestFirst = entries.asReversed()
+            // A new measurement fades in at the top and the others glide down; a deleted one fades away.
+            itemsIndexed(newestFirst, key = { _, e -> e.id }) { i, e ->
+                MeasurementRow(
+                    e,
+                    shape = groupRowShape(i, newestFirst.size),
+                    modifier = Modifier.animateItem(AppMotion.slowEffects(), AppMotion.defaultSpatial(), AppMotion.defaultEffects()),
+                    onDelete = { deleting = e },
+                )
             }
         }
     }
@@ -245,7 +279,7 @@ fun GrowthScreen(app: MahdApp, profile: Profile) {
 }
 
 @Composable
-private fun MeasurementRow(e: GrowthEntry, onDelete: () -> Unit) {
+private fun MeasurementRow(e: GrowthEntry, shape: Shape, modifier: Modifier, onDelete: () -> Unit) {
     val parts = buildList {
         e.weightKg?.let { add(stringResource(R.string.value_weight, Format.decimal(it, 2))) }
         e.lengthCm?.let { add(stringResource(R.string.value_length, Format.decimal(it))) }
@@ -253,6 +287,8 @@ private fun MeasurementRow(e: GrowthEntry, onDelete: () -> Unit) {
     }
     GroupItem(
         headline = parts.joinToString("  ·  "),
+        modifier = modifier,
+        shape = shape,
         supporting = Format.date(e.date),
         trailing = {
             IconButton(onClick = onDelete) {

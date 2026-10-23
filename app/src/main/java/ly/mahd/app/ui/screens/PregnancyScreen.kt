@@ -1,6 +1,7 @@
 package ly.mahd.app.ui.screens
 
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -10,19 +11,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import ly.mahd.app.MahdApp
 import ly.mahd.app.R
 import ly.mahd.app.content.FatherStage
@@ -37,27 +38,41 @@ import ly.mahd.app.ui.components.AppIcon
 import ly.mahd.app.ui.components.DraftNotice
 import ly.mahd.app.ui.components.GroupRow
 import ly.mahd.app.ui.components.ListGroup
+import ly.mahd.app.ui.components.RollingText
 import ly.mahd.app.ui.components.TrimesterMoons
 import ly.mahd.app.ui.components.LocalParent
 import ly.mahd.app.ui.components.LocalToday
 import ly.mahd.app.ui.components.SubScreen
 import ly.mahd.app.ui.components.WarningCard
+import ly.mahd.app.ui.components.fadeAndResize
+import ly.mahd.app.ui.theme.AppMotion
 import ly.mahd.app.util.Format
 
-/** Week-by-week pregnancy guide. Opens on the current week; arrows move between weeks. */
+/** The page gutter; the weeks slide edge to edge under it. */
+private val GUTTER = 16.dp
+
+/**
+ * Week-by-week pregnancy guide. Opens on the current week. The weeks are pages that follow the finger (the next week
+ * lies to the left in Arabic, like the next page of a book); the arrows move one week too.
+ */
 @Composable
 fun PregnancyScreen(app: MahdApp, profile: Profile, nav: Navigator, initialWeek: Int?, standalone: Boolean) {
     val today = LocalToday.current
     val content = app.content.pregnancy
     val currentWeek = profile.dueDate?.let { PregnancyMath.gestationalAge(it, today).weeks }
         ?.coerceIn(1, content.lastWeek) ?: 1
-    var week by rememberSaveable(profile.id) { mutableIntStateOf(initialWeek ?: currentWeek) }
+    val pager = rememberPagerState(initialPage = (initialWeek ?: currentWeek).coerceIn(1, content.lastWeek) - 1) { content.lastWeek }
+    // The week mostly on screen: the number and the moons follow it during a swipe.
+    val week = pager.currentPage + 1
+    val scope = rememberCoroutineScope()
+    fun goTo(w: Int) {
+        scope.launch { pager.animateScrollToPage(w.coerceIn(1, content.lastWeek) - 1, animationSpec = AppMotion.defaultSpatial()) }
+    }
 
     val body: @Composable (PaddingValues) -> Unit = { padding ->
         LazyColumn(
             Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
-                start = 16.dp, end = 16.dp,
                 top = padding.calculateTopPadding() + 16.dp,
                 bottom = padding.calculateBottomPadding() + 16.dp,
             ),
@@ -68,16 +83,28 @@ fun PregnancyScreen(app: MahdApp, profile: Profile, nav: Navigator, initialWeek:
                     week = week,
                     lastWeek = content.lastWeek,
                     isCurrent = week == currentWeek,
-                    onWeek = { week = it },
-                    onToday = { week = currentWeek },
+                    onWeek = ::goTo,
+                    onToday = { goTo(currentWeek) },
+                    modifier = Modifier.padding(horizontal = GUTTER),
                 )
             }
-            item { TrimesterMoons(weeks = week.toFloat()) }
-            if (!content.reviewed) item { DraftNotice() }
-            item { Crossfade(targetState = week, label = "week") { wk -> WeekDetail(content.week(wk), content.fatherStage(wk)) } }
+            item { TrimesterMoons(weeks = week.toFloat(), Modifier.padding(horizontal = GUTTER)) }
+            if (!content.reviewed) item { DraftNotice(modifier = Modifier.padding(horizontal = GUTTER)) }
+            item {
+                HorizontalPager(
+                    state = pager,
+                    // Weeks are not all as long: the space eases to the new week's length.
+                    modifier = Modifier.fillMaxWidth().animateContentSize(AppMotion.defaultSpatial()),
+                    contentPadding = PaddingValues(horizontal = GUTTER),
+                    pageSpacing = GUTTER,
+                    verticalAlignment = Alignment.Top,
+                    key = { it },
+                ) { page -> WeekDetail(content.week(page + 1), content.fatherStage(page + 1)) }
+            }
             item {
                 WarningCard(
                     title = stringResource(R.string.danger_signs_title),
+                    modifier = Modifier.padding(horizontal = GUTTER),
                     onClick = { nav.push(Routes.DANGER_SIGNS) },
                 ) { Text(stringResource(R.string.danger_signs_teaser), style = MaterialTheme.typography.bodyLarge) }
             }
@@ -92,19 +119,26 @@ fun PregnancyScreen(app: MahdApp, profile: Profile, nav: Navigator, initialWeek:
 }
 
 @Composable
-private fun WeekSwitcher(week: Int, lastWeek: Int, isCurrent: Boolean, onWeek: (Int) -> Unit, onToday: () -> Unit) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+private fun WeekSwitcher(
+    week: Int,
+    lastWeek: Int,
+    isCurrent: Boolean,
+    onWeek: (Int) -> Unit,
+    onToday: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             IconButton(onClick = { onWeek(week - 1) }, enabled = week > 1) {
                 AppIcon(R.drawable.ic_chevron_back, stringResource(R.string.previous_week))
             }
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
+                RollingText(
                     stringResource(R.string.pregnancy_week_number, week.toString()),
                     style = MaterialTheme.typography.displaySmall,
                     color = MaterialTheme.colorScheme.primary,
                 )
-                Text(
+                RollingText(
                     stringResource(R.string.trimester_label, stringResource(trimesterName(PregnancyMath.trimester(week)))),
                     style = MaterialTheme.typography.bodyMedium,
                 )
@@ -113,14 +147,21 @@ private fun WeekSwitcher(week: Int, lastWeek: Int, isCurrent: Boolean, onWeek: (
                 AppIcon(R.drawable.ic_chevron_forward, stringResource(R.string.next_week))
             }
         }
-        if (isCurrent) {
-            Text(
-                stringResource(R.string.this_is_your_week),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        } else {
-            TextButton(onClick = onToday) { Text(stringResource(R.string.back_to_current_week)) }
+        AnimatedContent(
+            targetState = isCurrent,
+            transitionSpec = { fadeAndResize() },
+            contentAlignment = Alignment.Center,
+            label = "this-week",
+        ) { current ->
+            if (current) {
+                Text(
+                    stringResource(R.string.this_is_your_week),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                TextButton(onClick = onToday) { Text(stringResource(R.string.back_to_current_week)) }
+            }
         }
     }
 }

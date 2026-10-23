@@ -169,7 +169,16 @@ fun GroupRow(
         Column(Modifier.padding(contentPadding), verticalArrangement = Arrangement.spacedBy(spacing), content = content)
     }
     if (onClick != null) {
-        Surface(onClick = onClick, modifier = modifier.fillMaxWidth(), shape = shape, color = container, content = inner)
+        // A pressed row rounds out its corners, like the buttons squash.
+        val source = remember { MutableInteractionSource() }
+        Surface(
+            onClick = onClick,
+            modifier = modifier.fillMaxWidth(),
+            shape = rememberPressMorph(shape, source),
+            color = container,
+            interactionSource = source,
+            content = inner,
+        )
     } else {
         Surface(modifier = modifier.fillMaxWidth(), shape = shape, color = container, content = inner)
     }
@@ -186,8 +195,9 @@ fun GroupItem(
     leading: (@Composable () -> Unit)? = null,
     trailing: (@Composable () -> Unit)? = null,
     onClick: (() -> Unit)? = null,
+    shape: Shape = AppShape.groupInner,
 ) {
-    GroupRow(modifier, onClick = onClick, contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp)) {
+    GroupRow(modifier, onClick = onClick, contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp), shape = shape) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (leading != null) {
                 leading()
@@ -211,6 +221,16 @@ fun GroupItem(
     }
 }
 
+/**
+ * The corners of row [index] of [count] when a group's rows are separate list items (so each can come, go and move
+ * with an animation): the group's outer corners on the first and last row, the inner ones between.
+ */
+fun groupRowShape(index: Int, count: Int): RoundedCornerShape {
+    val top = if (index == 0) 24.dp else 6.dp
+    val bottom = if (index == count - 1) 24.dp else 6.dp
+    return RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom)
+}
+
 /** A single free-standing block (a group of one). */
 @Composable
 fun AppCard(
@@ -223,7 +243,15 @@ fun AppCard(
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
     }
     if (onClick != null) {
-        Surface(onClick = onClick, modifier = modifier.fillMaxWidth(), shape = AppShape.group, color = containerColor, content = inner)
+        val source = remember { MutableInteractionSource() }
+        Surface(
+            onClick = onClick,
+            modifier = modifier.pressScale(source).fillMaxWidth(),
+            shape = AppShape.group,
+            color = containerColor,
+            interactionSource = source,
+            content = inner,
+        )
     } else {
         Surface(modifier = modifier.fillMaxWidth(), shape = AppShape.group, color = containerColor, content = inner)
     }
@@ -242,7 +270,16 @@ fun FeaturedCard(
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp), content = content)
     }
     if (onClick != null) {
-        Surface(onClick = onClick, modifier = modifier.fillMaxWidth(), shape = AppShape.featured, color = container, contentColor = contentColor, content = inner)
+        val source = remember { MutableInteractionSource() }
+        Surface(
+            onClick = onClick,
+            modifier = modifier.pressScale(source).fillMaxWidth(),
+            shape = AppShape.featured,
+            color = container,
+            contentColor = contentColor,
+            interactionSource = source,
+            content = inner,
+        )
     } else {
         Surface(modifier = modifier.fillMaxWidth(), shape = AppShape.featured, color = container, contentColor = contentColor, content = inner)
     }
@@ -382,7 +419,8 @@ fun ExpressiveButton(
 
 /**
  * A connected button group for picking one of a few options: pill ends, small corners between the segments,
- * and the selected segment rounds out into a full pill. [selected] may be null (nothing chosen yet).
+ * and the selected segment rounds out into a full pill. A pressed segment widens a little, pushing its neighbours
+ * aside (Material 3 Expressive). [selected] may be null (nothing chosen yet).
  */
 @Composable
 fun ConnectedChoice(
@@ -407,15 +445,23 @@ fun ConnectedChoice(
             val start by animateDpAsState(if (isSelected || i == 0) outer else inner, spec, label = "start")
             val end by animateDpAsState(if (isSelected || i == options.lastIndex) outer else inner, spec, label = "end")
             val (on, onContent) = selectedColors(i)
-            val bg by animateColorAsState(if (isSelected) on else unselectedColor, label = "bg")
-            val fg = if (isSelected) onContent else MaterialTheme.colorScheme.onSurface
+            val bg by animateColorAsState(if (isSelected) on else unselectedColor, AppMotion.defaultEffects(), label = "bg")
+            val fg by animateColorAsState(
+                if (isSelected) onContent else MaterialTheme.colorScheme.onSurface,
+                AppMotion.defaultEffects(),
+                label = "fg",
+            )
+            val source = remember { MutableInteractionSource() }
+            val pressed by source.collectIsPressedAsState()
+            val width by animateFloatAsState(if (pressed) 1.15f else 1f, AppMotion.fastSpatial(), label = "width")
             Surface(
                 selected = isSelected,
                 onClick = { onSelect(i) },
-                modifier = Modifier.weight(1f).height(height).then(segmentModifier(i)),
+                modifier = Modifier.weight(width.coerceAtLeast(0.5f)).height(height).then(segmentModifier(i)),
                 shape = RoundedCornerShape(topStart = start, bottomStart = start, topEnd = end, bottomEnd = end),
                 color = bg,
                 contentColor = fg,
+                interactionSource = source,
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(

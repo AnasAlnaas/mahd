@@ -3,6 +3,7 @@ package ly.mahd.app.ui.screens
 import android.content.res.Resources
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -53,7 +54,12 @@ import ly.mahd.app.ui.Navigator
 import ly.mahd.app.ui.Routes
 import ly.mahd.app.ui.components.AppCard
 import ly.mahd.app.ui.components.AppIcon
+import ly.mahd.app.ui.components.EnterStagger
 import ly.mahd.app.ui.components.ExpressiveButton
+import ly.mahd.app.ui.components.RollingText
+import ly.mahd.app.ui.components.rememberEnterStagger
+import ly.mahd.app.ui.components.staggerIn
+import ly.mahd.app.ui.theme.AppMotion
 import ly.mahd.app.ui.components.GroupItem
 import ly.mahd.app.ui.components.GroupRow
 import ly.mahd.app.ui.components.ListGroup
@@ -73,14 +79,32 @@ fun HomeScreen(app: MahdApp, profile: Profile, family: List<Profile>, nav: Navig
     if (profile.isPregnancy) PregnancyHome(app, profile, family, nav) else ChildHome(app, profile, family, nav)
 }
 
+/** Adds Home's blocks, each under a stable key (see [HomeList]). */
+private class HomeBlocks(private val list: LazyListScope, private val stagger: EnterStagger) {
+    private var index = 0
+
+    fun block(key: String, content: @Composable () -> Unit) {
+        val i = index++
+        list.item(key = key) {
+            // A block that comes or goes (the reminders card, today's verse) fades, and the others glide to their place.
+            Box(
+                Modifier
+                    .animateItem(AppMotion.slowEffects(), AppMotion.defaultSpatial(), AppMotion.defaultEffects())
+                    .staggerIn(stagger, i),
+            ) { content() }
+        }
+    }
+}
+
+/** Home's page. The first time it opens, its blocks rise into place one after another ([rememberEnterStagger]). */
 @Composable
-private fun HomeList(content: LazyListScope.() -> Unit) {
+private fun HomeList(profile: Profile, content: HomeBlocks.() -> Unit) {
+    val stagger = rememberEnterStagger("home:${profile.id}")
     LazyColumn(
         Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
-        content = content,
-    )
+    ) { HomeBlocks(this, stagger).content() }
 }
 
 /** The top of Home: no card, just the one number that matters today, large ([sub] in a smaller line right under it). */
@@ -114,8 +138,8 @@ private fun PregnancyHome(app: MahdApp, profile: Profile, family: List<Profile>,
     val week = app.content.pregnancy.week(ga.weeks.coerceAtLeast(1))
     val daysLeft = PregnancyMath.daysUntilDue(due, today)
 
-    HomeList {
-        item {
+    HomeList(profile) {
+        block("hero") {
             Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
                 Hero(
                     overline = greeting(),
@@ -133,9 +157,9 @@ private fun PregnancyHome(app: MahdApp, profile: Profile, family: List<Profile>,
                 TrimesterMoons(weeks = ga.weeks + ga.days / 7f)
             }
         }
-        if (askForReminders) item { RemindersPrompt(app, profile) }
-        advice?.let { item { AdviceCard(it, app.content.advice.factsReviewed) } }
-        item {
+        if (askForReminders) block("reminders") { RemindersPrompt(app, profile) }
+        advice?.let { block("advice") { AdviceCard(it, app.content.advice.factsReviewed) } }
+        block("baby") {
             ListGroup {
                 GroupItem(
                     overline = stringResource(R.string.section_baby),
@@ -160,9 +184,9 @@ private fun PregnancyHome(app: MahdApp, profile: Profile, family: List<Profile>,
                 ExercisesRow(pregnancy = true, nav)
             }
         }
-        item { BabyBornCard(profile, nav) }
+        block("born") { BabyBornCard(profile, nav) }
         // Last on the page (the owner's choice); it stays one tap away on the pregnancy tab too.
-        item {
+        block("danger") {
             WarningCard(
                 title = stringResource(R.string.danger_signs_title),
                 onClick = { nav.push(Routes.DANGER_SIGNS) },
@@ -235,8 +259,8 @@ private fun ChildHome(app: MahdApp, profile: Profile, family: List<Profile>, nav
         }
     }
 
-    HomeList {
-        item {
+    HomeList(profile) {
+        block("hero") {
             Hero(
                 overline = greeting(),
                 title = stringResource(R.string.child_age_title, profileName(profile)),
@@ -246,10 +270,10 @@ private fun ChildHome(app: MahdApp, profile: Profile, family: List<Profile>, nav
             )
         }
         // The mother's own forty days, right under the baby's age (shown only until the six-week check-up).
-        if (PostpartumRules.isActive(birth, today, app.content.postpartum.lastDay)) item { PostpartumCard(app, profile, nav) }
-        if (askForReminders) item { RemindersPrompt(app, profile) }
-        advice?.let { item { AdviceCard(it, app.content.advice.factsReviewed) } }
-        item {
+        if (PostpartumRules.isActive(birth, today, app.content.postpartum.lastDay)) block("postpartum") { PostpartumCard(app, profile, nav) }
+        if (askForReminders) block("reminders") { RemindersPrompt(app, profile) }
+        advice?.let { block("advice") { AdviceCard(it, app.content.advice.factsReviewed) } }
+        block("areas") {
             ListGroup {
                 NextVaccineRow(plans, nav)
                 MilestonesRow(app.content.milestones, months, data, nav)
@@ -258,9 +282,9 @@ private fun ChildHome(app: MahdApp, profile: Profile, family: List<Profile>, nav
                 if (ChildAge.days(birth, today) < EXERCISES_UNTIL_DAY) ExercisesRow(pregnancy = false, nav)
             }
         }
-        item { TipBlock(group) }
+        block("tip") { TipBlock(group) }
         // Last on the page (the owner's choice).
-        item {
+        block("danger") {
             WarningCard(
                 title = stringResource(R.string.child_danger_signs_title),
                 onClick = { nav.push(Routes.CHILD_DANGER_SIGNS) },
@@ -300,7 +324,7 @@ private fun NextVaccineRow(plans: List<VaccinePlanner.VisitPlan>, nav: Navigator
             Spacer(Modifier.width(16.dp))
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 MoonPhase(summary.progress, size = 56.dp)
-                Text(
+                RollingText(
                     stringResource(R.string.count_of_total, summary.given.toString(), summary.total.toString()),
                     style = MaterialTheme.typography.labelMedium,
                     color = colors.onSurfaceVariant,

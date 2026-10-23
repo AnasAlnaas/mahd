@@ -3,6 +3,8 @@ package ly.mahd.app.ui.screens
 import android.content.Context
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,7 +28,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
@@ -60,7 +61,10 @@ import ly.mahd.app.ui.components.LocalParent
 import ly.mahd.app.ui.components.LocalToday
 import ly.mahd.app.ui.components.SectionTitle
 import ly.mahd.app.ui.components.SubScreen
+import ly.mahd.app.ui.components.fold
 import ly.mahd.app.ui.components.rememberCanPostNotifications
+import ly.mahd.app.ui.components.unfold
+import ly.mahd.app.ui.theme.AppMotion
 import ly.mahd.app.ui.ProfileAvatar
 import ly.mahd.app.ui.profileName
 import ly.mahd.app.ui.theme.LocalSurfaces
@@ -149,11 +153,16 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
                     // Rides on the reminders' daily check, so it is off (and greyed out) while they are off.
                     GroupRow(onClick = if (reminders) ({ app.prefs.setAdviceNotifications(!advice) }) else null) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
+                            val titleColor by animateColorAsState(
+                                if (reminders) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                                AppMotion.slowEffects(),
+                                label = "advice-title",
+                            )
                             Text(
                                 stringResource(R.string.advice_switch),
                                 Modifier.weight(1f),
                                 style = MaterialTheme.typography.titleMedium,
-                                color = if (reminders) Color.Unspecified else MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = titleColor,
                             )
                             Switch(checked = reminders && advice, onCheckedChange = null, enabled = reminders)
                         }
@@ -163,7 +172,7 @@ fun SettingsScreen(app: MahdApp, nav: Navigator, profiles: List<Profile>) {
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
-                    if (reminders && !canPost) {
+                    AnimatedVisibility(visible = reminders && !canPost, enter = unfold(), exit = fold()) {
                         GroupItem(
                             headline = stringResource(R.string.open_notification_settings),
                             supporting = stringResource(R.string.notifications_blocked),

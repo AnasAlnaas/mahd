@@ -1,18 +1,22 @@
 package ly.mahd.app.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -40,6 +44,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import ly.mahd.app.MahdApp
@@ -57,6 +62,9 @@ import ly.mahd.app.ui.components.LocalToday
 import ly.mahd.app.ui.components.Pill
 import ly.mahd.app.ui.components.MoonPhase
 import ly.mahd.app.ui.components.ExpressiveButton
+import ly.mahd.app.ui.components.RollingText
+import ly.mahd.app.ui.components.fadeAndResize
+import ly.mahd.app.ui.theme.AppMotion
 import ly.mahd.app.ui.theme.LocalSurfaces
 import ly.mahd.app.ui.theme.LocalStatusColors
 import ly.mahd.app.util.Format
@@ -239,11 +247,12 @@ private fun SummaryHeader(summary: VaccinePlanner.Summary) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.vaccines_title), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(
+                // The numbers roll to their new values as doses are recorded.
+                RollingText(
                     stringResource(R.string.count_of_total, summary.given.toString(), summary.total.toString()),
                     style = MaterialTheme.typography.displaySmall,
                 )
-                Text(
+                RollingText(
                     if (late) stringResource(R.string.vaccine_summary_late, Format.doses(res, summary.lateDoses))
                     else stringResource(R.string.vaccine_summary_ok),
                     style = MaterialTheme.typography.titleMedium,
@@ -267,36 +276,51 @@ private fun SummaryHeader(summary: VaccinePlanner.Summary) {
 
 private val NODE_SIZE = 28.dp
 private val NODE_TOP = 8.dp
+private val RAIL_WIDTH = 40.dp
 
-/** One step of the timeline: the vertical rail with its status node on the side, [content] beside it. */
+/**
+ * One step of the timeline: the vertical rail with its status node on the side, [content] beside it. The rail is
+ * drawn behind the whole row, so it follows the row's height while a visit folds or unfolds.
+ */
 @Composable
 private fun TimelineRow(status: Status, isFirst: Boolean, isLast: Boolean, content: @Composable () -> Unit) {
     val line = MaterialTheme.colorScheme.outlineVariant
-    Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
-        Box(
-            Modifier
-                .width(40.dp)
-                .fillMaxHeight()
-                .drawBehind {
-                    val x = size.width / 2
-                    val nodeCenter = (NODE_TOP + NODE_SIZE / 2).toPx()
-                    val top = if (isFirst) nodeCenter else 0f
-                    val bottom = if (isLast) nodeCenter else size.height
-                    drawLine(line, Offset(x, top), Offset(x, bottom), strokeWidth = 3.dp.toPx())
-                },
-            contentAlignment = Alignment.TopCenter,
-        ) {
+    Row(
+        Modifier.fillMaxWidth().drawBehind {
+            val half = RAIL_WIDTH.toPx() / 2
+            val x = if (layoutDirection == LayoutDirection.Rtl) size.width - half else half
+            val nodeCenter = (NODE_TOP + NODE_SIZE / 2).toPx()
+            val top = if (isFirst) nodeCenter else 0f
+            val bottom = if (isLast) nodeCenter else size.height
+            drawLine(line, Offset(x, top), Offset(x, bottom), strokeWidth = 3.dp.toPx())
+        },
+    ) {
+        Box(Modifier.width(RAIL_WIDTH), contentAlignment = Alignment.TopCenter) {
             TimelineNode(status, Modifier.padding(top = NODE_TOP))
         }
         Column(Modifier.weight(1f).padding(bottom = 12.dp)) { content() }
     }
 }
 
+/** The node of a visit; a new state pops in (springing up from small), e.g. turning green when the last dose is in. */
 @Composable
 private fun TimelineNode(status: Status, modifier: Modifier = Modifier) {
+    AnimatedContent(
+        targetState = status,
+        modifier = modifier,
+        transitionSpec = {
+            (scaleIn(AppMotion.fastSpatial(), initialScale = 0.4f) + fadeIn(AppMotion.defaultEffects())) togetherWith
+                fadeOut(AppMotion.fastEffects()) using null
+        },
+        label = "node",
+    ) { NodeFor(it) }
+}
+
+@Composable
+private fun NodeFor(status: Status) {
     val colors = MaterialTheme.colorScheme
     val health = LocalStatusColors.current
-    val base = modifier.size(NODE_SIZE)
+    val base = Modifier.size(NODE_SIZE)
     // Each fill has its matching "on" colour, so the mark stays readable in dark mode as well
     // (white on the light green of the dark theme was hard to see).
     when (status) {
@@ -348,32 +372,55 @@ private fun VisitCard(
     onMarkUpTo: (() -> Unit)?,
     onDoseClick: (VaccineDose) -> Unit,
 ) {
+    // Folding and unfolding fade between the line and the card while the space grows or shrinks to fit.
+    AnimatedContent(targetState = collapsed, transitionSpec = { fadeAndResize() }, label = "visit") { folded ->
+        if (folded) FoldedVisit(plan, onToggle)
+        else OpenVisit(plan, onToggle, onMarkAll, onSkipRemaining, onMarkUpTo, onDoseClick)
+    }
+}
+
+/** A folded visit is a quiet line on the page, not a card: only the visits that need something stand out. */
+@Composable
+private fun FoldedVisit(plan: VaccinePlanner.VisitPlan, onToggle: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .clip(MaterialTheme.shapes.medium)
+            .clickable(onClick = onToggle)
+            .padding(start = 12.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(plan.visit.title, style = MaterialTheme.typography.titleMedium)
+            Text(Format.date(plan.dueDate), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+        }
+        StatusPill(plan.status)
+        AppIcon(R.drawable.ic_expand, stringResource(R.string.visit_expand), Modifier.padding(start = 4.dp), tint = colors.onSurfaceVariant)
+    }
+}
+
+@Composable
+private fun OpenVisit(
+    plan: VaccinePlanner.VisitPlan,
+    onToggle: () -> Unit,
+    onMarkAll: () -> Unit,
+    onSkipRemaining: () -> Unit,
+    onMarkUpTo: (() -> Unit)?,
+    onDoseClick: (VaccineDose) -> Unit,
+) {
     val res = LocalContext.current.resources
     val status = LocalStatusColors.current
     val colors = MaterialTheme.colorScheme
     val highlight = plan.status == Status.OVERDUE || plan.status == Status.DUE_TODAY || plan.status == Status.PARTLY_DONE
+    val container by animateColorAsState(
+        if (highlight) colors.errorContainer.copy(alpha = 0.5f) else LocalSurfaces.current.groupRow,
+        AppMotion.slowEffects(),
+        label = "visit-color",
+    )
 
-    // A folded visit is a quiet line on the page, not a card: only the visits that need something stand out.
-    if (collapsed) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .clip(MaterialTheme.shapes.medium)
-                .clickable(onClick = onToggle)
-                .padding(start = 12.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(plan.visit.title, style = MaterialTheme.typography.titleMedium)
-                Text(Format.date(plan.dueDate), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
-            }
-            StatusPill(plan.status)
-            AppIcon(R.drawable.ic_expand, stringResource(R.string.visit_expand), Modifier.padding(start = 4.dp), tint = colors.onSurfaceVariant)
-        }
-        return
-    }
-
-    AppCard(containerColor = if (highlight) colors.errorContainer.copy(alpha = 0.5f) else LocalSurfaces.current.groupRow) {
+    // A recorded dose adds its date line: the card grows to it instead of jumping.
+    AppCard(Modifier.animateContentSize(AppMotion.defaultSpatial()), containerColor = container) {
         Row(
             Modifier.fillMaxWidth().clickable(enabled = plan.isComplete || plan.status == Status.UPCOMING, onClick = onToggle),
             verticalAlignment = Alignment.CenterVertically,

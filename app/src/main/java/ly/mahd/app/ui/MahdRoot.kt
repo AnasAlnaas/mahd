@@ -1,7 +1,15 @@
 package ly.mahd.app.ui
 
+import androidx.activity.BackEventCompat
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.PredictiveBackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.EnterExitState
+import androidx.compose.animation.core.SeekableTransitionState
+import androidx.compose.animation.core.animateDp
+import androidx.compose.animation.core.rememberTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -27,23 +35,33 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.launch
 import ly.mahd.app.MahdApp
 import ly.mahd.app.R
 import ly.mahd.app.data.Profile
 import ly.mahd.app.ui.components.AppIcon
+import ly.mahd.app.ui.components.CloseScreenProgress
+import ly.mahd.app.ui.components.closeScreen
+import ly.mahd.app.ui.components.fadeThrough
+import ly.mahd.app.ui.components.openScreen
 import ly.mahd.app.ui.theme.AppMotion
 import ly.mahd.app.ui.components.LocalToday
 import ly.mahd.app.ui.components.MoonPhase
@@ -68,8 +86,11 @@ import ly.mahd.app.ui.screens.PregnancyScreen
 import ly.mahd.app.ui.screens.SettingsScreen
 import ly.mahd.app.ui.screens.VaccinesScreen
 
+/** The big stages of the app: still loading, who uses it, the first run, and the app itself. */
+private enum class Phase { LOADING, PARENT, ONBOARDING, MAIN }
+
 /**
- * Decides what to show: first-run welcome, or the main app for the selected profile.
+ * Decides what to show: first-run welcome, or the main app for the selected profile. The stages fade into each other.
  * [openRequest] (from a tapped reminder) switches to that profile and tab once, then [onOpenHandled] clears it.
  */
 @Composable
@@ -80,29 +101,38 @@ fun MahdRoot(app: MahdApp, openRequest: OpenRequest?, onOpenHandled: () -> Unit)
     val selectedId by app.prefs.selectedProfileId.collectAsState()
     val nav = rememberNavigator()
 
-    val list = profiles
-    when {
-        list == null -> Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
+    val phase = when {
+        profiles == null -> Phase.LOADING
         // First of all: who uses the app (also asked once of mothers who installed before the father version).
-        parent == null -> ParentChoiceScreen(app)
-        !accepted || list.isEmpty() -> OnboardingFlow(app)
-        else -> {
-            val selected = list.firstOrNull { it.id == selectedId } ?: list.first()
-            if (openRequest != null) {
-                // Select the profile first; the tab is opened when this runs again with that profile selected
-                // (otherwise the tab could be checked against the previous profile and dropped).
-                LaunchedEffect(openRequest, selected.id) {
-                    when {
-                        list.none { it.id == openRequest.profileId } -> onOpenHandled() // deleted since the reminder
-                        selected.id != openRequest.profileId -> app.prefs.selectProfile(openRequest.profileId)
-                        else -> {
-                            nav.selectTab(openRequest.route)
-                            onOpenHandled()
+        parent == null -> Phase.PARENT
+        !accepted || profiles.isNullOrEmpty() -> Phase.ONBOARDING
+        else -> Phase.MAIN
+    }
+    Crossfade(targetState = phase, animationSpec = AppMotion.slowEffects(), label = "phase") { shown ->
+        val list = profiles.orEmpty()
+        when {
+            shown == Phase.PARENT -> ParentChoiceScreen(app)
+            shown == Phase.ONBOARDING -> OnboardingFlow(app)
+            // Loading, or the main screens fading out after the last profile was deleted.
+            shown == Phase.LOADING || list.isEmpty() -> Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background))
+            else -> {
+                val selected = list.firstOrNull { it.id == selectedId } ?: list.first()
+                if (openRequest != null && phase == Phase.MAIN) {
+                    // Select the profile first; the tab is opened when this runs again with that profile selected
+                    // (otherwise the tab could be checked against the previous profile and dropped).
+                    LaunchedEffect(openRequest, selected.id) {
+                        when {
+                            list.none { it.id == openRequest.profileId } -> onOpenHandled() // deleted since the reminder
+                            selected.id != openRequest.profileId -> app.prefs.selectProfile(openRequest.profileId)
+                            else -> {
+                                nav.selectTab(openRequest.route)
+                                onOpenHandled()
+                            }
                         }
                     }
                 }
+                MainNav(app, nav, list, selected)
             }
-            MainNav(app, nav, list, selected)
         }
     }
 }
@@ -111,28 +141,126 @@ private fun tabsFor(profile: Profile): List<String> =
     if (profile.isPregnancy) listOf(Routes.HOME, Routes.PREGNANCY)
     else listOf(Routes.HOME, Routes.VACCINES, Routes.MILESTONES, Routes.PHOTOS)
 
+/** All the tabs are one screen (they fade into each other inside it); every other route is a screen of its own. */
+private const val TABS_KEY = "tabs"
+
+private fun screenKey(route: String): String = if (route.routeName in Routes.TABS) TABS_KEY else route
+
+/**
+ * What fills the window, and how deep it is in the navigator: a deeper screen slides in, a shallower one is uncovered.
+ * Two screens with the same [key] are the same screen (switching tabs is not a change of screen).
+ */
+private class Screen(val key: String, val depth: Int) {
+    override fun equals(other: Any?) = other is Screen && other.key == key
+    override fun hashCode() = key.hashCode()
+}
+
+private fun isBack(from: Screen, to: Screen) = to.depth < from.depth || (to.depth == from.depth && to.key == TABS_KEY)
+
+/** How round a screen's corners get while it slides in or shrinks away (like Android's own back animation). */
+private val MOVING_SCREEN_CORNER = 28.dp
+
+/**
+ * The screens: opening one slides it in, going back slides it away and uncovers the one below — following the finger
+ * during Android's back swipe (predictive back). The tabs keep their place (scroll, chosen chart) while a screen is
+ * open on top of them.
+ */
 @Composable
 private fun MainNav(app: MahdApp, nav: Navigator, profiles: List<Profile>, selected: Profile) {
-    BackHandler(enabled = nav.canGoBack) { nav.back() }
+    val scope = rememberCoroutineScope()
+    val current = Screen(screenKey(nav.current), nav.depth)
+    val state = remember { SeekableTransitionState(current) }
+    val transition = rememberTransition(state, label = "screens")
+
+    // Follow the navigator. Going back runs along a spring (also after a back swipe is let go); opening uses its own.
+    LaunchedEffect(current) {
+        // The screen being left: the one on top, or the one still sliding in when the navigator changed again.
+        // (After a back swipe the transition already points at the new screen, so it leaves the one it started from.)
+        val from = if (state.targetState == current) state.currentState else state.targetState
+        state.animateTo(current, if (isBack(from, current)) CloseScreenProgress else null)
+    }
+    // During a back swipe the screen moves the way the finger does (away from the edge it started from).
+    var swipeTowards by remember { mutableStateOf<SlideDirection?>(null) }
+    PredictiveBackHandler(enabled = nav.canGoBack) { swipe ->
+        val previous = nav.previous?.let { Screen(screenKey(it), nav.depth - 1) }?.takeIf { it != current }
+        try {
+            swipe.collect { event ->
+                if (swipeTowards == null) {
+                    swipeTowards = if (event.swipeEdge == BackEventCompat.EDGE_RIGHT) SlideDirection.Left else SlideDirection.Right
+                }
+                if (previous != null) state.seekTo(event.progress, previous)
+            }
+            nav.back()
+        } catch (e: CancellationException) {
+            // The swipe was given up: the screen settles back where it was.
+            scope.launch { state.animateTo(state.currentState) }
+            throw e
+        } finally {
+            swipeTowards = null
+        }
+    }
     BackHandler(enabled = !nav.canGoBack && nav.current != Routes.HOME) { nav.selectTab(Routes.HOME) }
 
-    val route = nav.current
+    // The tab under the open screens (kept while the bottom of the stack is a screen opened on its own).
+    var lastTab by rememberSaveable { mutableStateOf(Routes.HOME) }
+    val root = nav.root
+    val tabRoute = if (root.routeName in Routes.TABS) root else lastTab
+    if (tabRoute != lastTab) SideEffect { lastTab = tabRoute }
+
+    // Each open screen keeps what it remembers (its scroll, for one) while another is on top of it; a closed screen
+    // forgets it, so it opens fresh the next time.
+    val holder = rememberSaveableStateHolder()
+    val openKeys = nav.routes.map(::screenKey).toSet()
+    val lastOpenKeys = remember { arrayOf(openKeys) }
+    LaunchedEffect(openKeys) {
+        (lastOpenKeys[0] - openKeys).forEach(holder::removeState)
+        lastOpenKeys[0] = openKeys
+    }
+
+    transition.AnimatedContent(
+        transitionSpec = { if (isBack(initialState, targetState)) closeScreen(swipeTowards ?: SlideDirection.End) else openScreen() },
+        contentKey = { it.key },
+    ) { screen ->
+        val corner by this.transition.animateDp(label = "corner") { if (it == EnterExitState.Visible) 0.dp else MOVING_SCREEN_CORNER }
+        Box(
+            Modifier.fillMaxSize().graphicsLayer {
+                shape = RoundedCornerShape(corner)
+                clip = corner > 0.dp
+            },
+        ) {
+            holder.SaveableStateProvider(screen.key) {
+                // Only the screen being shown may move the navigator (not one sliding away or peeking during a swipe).
+                val active = screen.key == screenKey(nav.current)
+                ScreenContent(app, nav, profiles, selected, if (screen.key == TABS_KEY) tabRoute else screen.key, active)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ScreenContent(app: MahdApp, nav: Navigator, profiles: List<Profile>, selected: Profile, route: String, active: Boolean) {
+    /** For a route that cannot be shown (its profile was deleted, say): move on, if this screen is the one shown. */
+    @Composable
+    fun redirect(action: () -> Unit) {
+        if (active) LaunchedEffect(route) { action() }
+    }
+
     val arg = route.routeArg
     when (route.routeName) {
-        in Routes.TABS -> TabsScaffold(app, nav, profiles, selected, route)
+        in Routes.TABS -> TabsScaffold(app, nav, profiles, selected, route, active)
         Routes.ADD_PREGNANCY -> PregnancyFormScreen(app, existing = null, onClose = nav::back)
         Routes.ADD_CHILD -> ChildFormScreen(app, existing = null, onClose = nav::back)
         "edit" -> {
             val profile = profiles.firstOrNull { it.id == arg?.toLongOrNull() }
             when {
-                profile == null -> LaunchedEffect(route) { nav.back() }
+                profile == null -> redirect { nav.back() }
                 profile.isPregnancy -> PregnancyFormScreen(app, existing = profile, onClose = nav::back)
                 else -> ChildFormScreen(app, existing = profile, onClose = nav::back)
             }
         }
         "born" -> {
             val profile = profiles.firstOrNull { it.id == arg?.toLongOrNull() }
-            if (profile == null) LaunchedEffect(route) { nav.back() }
+            if (profile == null) redirect { nav.back() }
             else BabyBornScreen(app, profile, onDone = { nav.selectTab(Routes.HOME) }, onClose = nav::back)
         }
         "week" -> PregnancyScreen(app, selected, nav, initialWeek = arg?.toIntOrNull(), standalone = true)
@@ -141,29 +269,32 @@ private fun MainNav(app: MahdApp, nav: Navigator, profiles: List<Profile>, selec
         // Opened from Home or from a check-up reminder; back goes Home (see BackHandler above).
         Routes.POSTPARTUM ->
             if (selected.isChild) PostpartumScreen(app, selected, onBack = { if (nav.canGoBack) nav.back() else nav.selectTab(Routes.HOME) })
-            else LaunchedEffect(route) { nav.selectTab(Routes.HOME) }
+            else redirect { nav.selectTab(Routes.HOME) }
         Routes.HOSPITAL_BAG ->
             if (selected.isPregnancy) HospitalBagScreen(app, selected, onBack = nav::back)
-            else LaunchedEffect(route) { nav.selectTab(Routes.HOME) }
+            else redirect { nav.selectTab(Routes.HOME) }
         Routes.EXERCISES -> ExercisesScreen(app, selected, onBack = nav::back)
         "photo" -> {
             val id = arg?.toLongOrNull()
-            if (id == null) LaunchedEffect(route) { nav.back() } else PhotoScreen(app, selected, id, nav)
+            if (id == null) redirect { nav.back() } else PhotoScreen(app, selected, id, nav)
         }
         "compare" -> CompareScreen(app, selected, firstId = arg?.toLongOrNull()?.takeIf { it > 0 }, onBack = nav::back)
         Routes.SETTINGS -> SettingsScreen(app, nav, profiles)
         Routes.ABOUT -> AboutScreen(app, onBack = nav::back)
-        else -> LaunchedEffect(route) { nav.selectTab(Routes.HOME) }
+        else -> redirect { nav.selectTab(Routes.HOME) }
     }
 }
 
+/** One page of the tabs: a tab of one profile. Another profile is another page, so nothing of the last child shows. */
+private data class TabPage(val tab: String, val profileId: Long)
+
 @Composable
-private fun TabsScaffold(app: MahdApp, nav: Navigator, profiles: List<Profile>, selected: Profile, route: String) {
+private fun TabsScaffold(app: MahdApp, nav: Navigator, profiles: List<Profile>, selected: Profile, route: String, active: Boolean) {
     val tabs = tabsFor(selected)
     // Growth is the second part of the skills tab, not a tab of its own.
     val shown = if (route == Routes.GROWTH) Routes.MILESTONES else route
     val tab = if (shown in tabs) shown else Routes.HOME
-    if (tab != shown) LaunchedEffect(route, selected.id) { nav.selectTab(Routes.HOME) }
+    if (tab != shown && active) LaunchedEffect(route, selected.id) { nav.selectTab(Routes.HOME) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -197,17 +328,23 @@ private fun TabsScaffold(app: MahdApp, nav: Navigator, profiles: List<Profile>, 
             }
         },
     ) { padding ->
-        // A soft fade when switching tabs.
-        Crossfade(targetState = tab, animationSpec = AppMotion.defaultEffects(), label = "tab") { current ->
-            Box(Modifier.padding(padding).fillMaxSize()) {
-                // A fresh screen for each profile, so nothing of the previous child shows while the new data loads.
-                key(selected.id) {
-                    when (current) {
-                        Routes.HOME -> HomeScreen(app, selected, profiles, nav)
-                        Routes.PREGNANCY -> PregnancyScreen(app, selected, nav, initialWeek = null, standalone = false)
-                        Routes.VACCINES -> VaccinesScreen(app, selected)
-                        Routes.MILESTONES -> SkillsAndGrowth(app, selected, nav, growth = route == Routes.GROWTH)
-                        Routes.PHOTOS -> PhotosScreen(app, selected, nav)
+        // Material's fade through between tabs, and between profiles.
+        AnimatedContent(
+            targetState = TabPage(tab, selected.id),
+            modifier = Modifier.padding(padding).fillMaxSize(),
+            transitionSpec = { fadeThrough() },
+            label = "tab",
+        ) { page ->
+            // The page going away keeps showing its own profile.
+            val profile = profiles.firstOrNull { it.id == page.profileId }
+            Box(Modifier.fillMaxSize()) {
+                if (profile != null) {
+                    when (page.tab) {
+                        Routes.HOME -> HomeScreen(app, profile, profiles, nav)
+                        Routes.PREGNANCY -> PregnancyScreen(app, profile, nav, initialWeek = null, standalone = false)
+                        Routes.VACCINES -> VaccinesScreen(app, profile)
+                        Routes.MILESTONES -> SkillsAndGrowth(app, profile, nav, growth = route == Routes.GROWTH)
+                        Routes.PHOTOS -> PhotosScreen(app, profile, nav)
                     }
                 }
             }
@@ -277,9 +414,14 @@ private fun ProfileSwitcher(app: MahdApp, nav: Navigator, profiles: List<Profile
                 .padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            ProfileAvatar(selected)
-            Spacer(Modifier.width(10.dp))
-            Text(profileName(selected), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleLarge)
+            // The picture and name of the new profile fade in with its page.
+            Crossfade(targetState = selected, animationSpec = AppMotion.slowEffects(), label = "profile") { p ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    ProfileAvatar(p)
+                    Spacer(Modifier.width(10.dp))
+                    Text(profileName(p), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleLarge)
+                }
+            }
             AppIcon(R.drawable.ic_expand, stringResource(R.string.switch_profile))
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {

@@ -187,6 +187,15 @@ JBR works). Keep the project outside OneDrive.
   and little else. Milestone domains use `domainAccent(id)`. Extra surface roles live in `LocalSurfaces`.
 - material3 1.4 keeps `MaterialExpressiveTheme`/`MotionScheme` internal, so the expressive springs are copied in
   `AppMotion` (Theme.kt). Swap to the official API when material3 1.5 is stable (not before: no beta libraries).
+- Motion (owner asked for a smoother, more animated app, 2026-10-22; rules in DIRECTION.md "Motion"): helpers live in
+  `components/Motion.kt` (openScreen/closeScreen, fadeThrough, sharedAxisX, fadeAndResize, unfold/fold, RollingText,
+  rememberPressMorph, pressScale, staggerIn, FadeInImage). `MainNav` drives screens with a `SeekableTransitionState` +
+  `PredictiveBackHandler` (manifest: `enableOnBackInvokedCallback`); all tabs are one screen (`TABS_KEY`), so a `Screen`
+  equals another by key only. Screens stay composed while they slide out or peek during a back swipe, so anything that
+  navigates by itself must run only for the screen shown (`active` / `redirect` in MahdRoot). A `SaveableStateHolder`
+  keeps open screens' state (the tabs' scroll) and forgets closed ones. Content that leaves through an animation must
+  render from the state it was given (`AnimatedContent { shown -> }`), never from the new value. The onboarding forms
+  pass `onSaved = {}`: MahdRoot crossfades to the main screens by itself.
 - Tab icons are hand-drawn line icons (1.8 stroke, round caps): home = crescent, vaccines = syringe, growth = chart
   (the النمو tab), photos = frame, pregnancy = heart; `ic_milestones` (building blocks) is no longer on the bar.
 - Vaccines screen is a timeline: finished visits and all future visits except the next one fold into one quiet line.

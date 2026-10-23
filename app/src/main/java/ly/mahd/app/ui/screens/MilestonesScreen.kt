@@ -1,5 +1,6 @@
 package ly.mahd.app.ui.screens
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -59,9 +60,11 @@ import ly.mahd.app.ui.components.GroupRow
 import ly.mahd.app.ui.components.LocalParent
 import ly.mahd.app.ui.components.LocalToday
 import ly.mahd.app.ui.components.MoonPhase
-import ly.mahd.app.ui.components.SectionTitle
+import ly.mahd.app.ui.components.RollingText
 import ly.mahd.app.ui.components.SparkBurst
+import ly.mahd.app.ui.components.sharedAxisX
 import ly.mahd.app.ui.components.WarningCard
+import ly.mahd.app.ui.components.groupRowShape
 import ly.mahd.app.ui.Navigator
 import ly.mahd.app.ui.Routes
 import ly.mahd.app.ui.profileName
@@ -92,8 +95,16 @@ fun SkillsAndGrowth(app: MahdApp, profile: Profile, nav: Navigator, growth: Bool
             // Each part in its own area colour: skills gold, growth teal.
             selectedColors = { i -> if (i == 0) colors.tertiary to colors.onTertiary else colors.secondary to colors.onSecondary },
         )
-        Box(Modifier.weight(1f)) {
-            if (growth) GrowthScreen(app, profile) else MilestonesScreen(app, profile)
+        // The two parts slide like neighbours: growth lies after the skills.
+        AnimatedContent(
+            targetState = growth,
+            modifier = Modifier.weight(1f),
+            transitionSpec = { sharedAxisX(forward = targetState) },
+            label = "skills-growth",
+        ) { showGrowth ->
+            Box(Modifier.fillMaxSize()) {
+                if (showGrowth) GrowthScreen(app, profile) else MilestonesScreen(app, profile)
+            }
         }
     }
 }
@@ -204,7 +215,7 @@ fun MilestonesScreen(app: MahdApp, profile: Profile) {
         item(key = "moons") { DomainMoons(content.domains, entries, answers, Modifier.padding(bottom = 14.dp)) }
         if (!content.reviewed) item(key = "draft") { DraftNotice(modifier = Modifier.padding(bottom = 14.dp)) }
 
-        sectionTitle("focus-title", "${res.getString(R.string.milestones_focus_title)} · ${lists.focus.size}")
+        sectionTitle("focus-title", res.getString(R.string.milestones_focus_title), lists.focus.size)
         if (lists.focus.isEmpty()) {
             item(key = "all-done") {
                 AppCard(Modifier.animateItem(), containerColor = MaterialTheme.colorScheme.surfaceContainer) {
@@ -215,7 +226,7 @@ fun MilestonesScreen(app: MahdApp, profile: Profile) {
         skillRows(lists.focus, currentGroup, shown, ::answer)
 
         if (lists.done.isNotEmpty()) {
-            sectionTitle("done-title", "${res.getString(R.string.milestones_done_title)} · ${lists.done.size}")
+            sectionTitle("done-title", res.getString(R.string.milestones_done_title), lists.done.size)
             // Earlier ages may have been counted as done when the child was added: say they can be changed.
             if (lists.done.any { it.group.id != currentGroup.id }) {
                 item(key = "done-hint") {
@@ -290,8 +301,21 @@ fun MilestonesScreen(app: MahdApp, profile: Profile) {
     }
 }
 
-private fun LazyListScope.sectionTitle(key: String, text: String) {
-    item(key = key) { SectionTitle(text, Modifier.padding(top = 4.dp, bottom = 6.dp).animateItem()) }
+/** A section's name and how many skills it holds; the count rolls as skills move between the sections. */
+private fun LazyListScope.sectionTitle(key: String, title: String, count: Int) {
+    item(key = key) {
+        val style = MaterialTheme.typography.titleSmall
+        val color = MaterialTheme.colorScheme.onSurfaceVariant
+        Row(
+            Modifier.animateItem().padding(start = 8.dp, end = 8.dp, top = 16.dp, bottom = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(title, style = style, color = color)
+            Text("·", style = style, color = color)
+            RollingText(count.toString(), style = style, color = color)
+        }
+    }
 }
 
 /**
@@ -309,7 +333,7 @@ private fun LazyListScope.skillRows(
             entry = e,
             showAge = e.group.id != currentGroup.id,
             answer = answers[e.item.id],
-            shape = sectionRowShape(i, rows.size),
+            shape = groupRowShape(i, rows.size),
             modifier = Modifier.animateItem(
                 fadeInSpec = AppMotion.defaultEffects(),
                 placementSpec = AppMotion.slowSpatial(),
@@ -318,12 +342,6 @@ private fun LazyListScope.skillRows(
             onAnswer = { onAnswer(e.item.id, it) },
         )
     }
-}
-
-private fun sectionRowShape(index: Int, count: Int): RoundedCornerShape {
-    val top = if (index == 0) 24.dp else 6.dp
-    val bottom = if (index == count - 1) 24.dp else 6.dp
-    return RoundedCornerShape(topStart = top, topEnd = top, bottomStart = bottom, bottomEnd = bottom)
 }
 
 /**
@@ -422,7 +440,7 @@ private fun DomainMoons(
                 val yes = items.count { answers[it.item.id] == MilestoneAnswer.YES }
                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     MoonPhase(yes / items.size.toFloat(), size = 52.dp, lit = domainAccent(d.id))
-                    Text(
+                    RollingText(
                         stringResource(R.string.count_of_total, yes.toString(), items.size.toString()),
                         style = MaterialTheme.typography.labelLarge,
                         modifier = Modifier.padding(top = 4.dp),

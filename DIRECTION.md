@@ -43,8 +43,22 @@ its 0–9 digits are open and clear, and its modern-Kufi construction matches Ex
 Material 3 Expressive's springs (slight overshoot), as `AppMotion` in Theme.kt. material3 1.4 keeps
 `MaterialExpressiveTheme`/`MotionScheme` internal, so the values are copied; when 1.5 is stable, switch to the official API.
 - Moons fill with the slow spatial spring when they appear or change (the signature moment).
-- Pressed buttons squash; selected choice segments round out.
-- Tabs crossfade. Nothing loops, nothing moves on its own — with one exception (owner's request, 2026-10-16): an
+- Touch: pressed buttons squash; pressed rows round out their corners; pressed cards and photo tiles give a little
+  (shrink a touch); the pressed segment of a connected group widens and pushes its neighbours; selected segments
+  round out.
+- Screens (owner's request for more fluid motion, 2026-10-22): opening one slides it in from the end side (the left in
+  Arabic) with a fade; going back shrinks it away towards the end with rounding corners, following the finger during
+  Android's back swipe (predictive back). The tabs keep their scroll while a screen is open on top of them.
+- Tabs and profiles change with Material's fade through. Neighbours (skills / growth, pregnancy / after the birth, the
+  first-run steps, the two steps of "my baby is born") use the shared X axis. Pregnancy weeks are pages under the finger.
+- Changes in place: a number that changes rolls like a counter (`RollingText`); blocks that come or go fade while the
+  rest glides (`animateItem`); folding blocks (vaccine visits) cross-fade and resize; a vaccine node pops when its
+  state changes; the growth chart glides between "all" and "recent months"; pictures fade in once loaded.
+- Home's blocks rise into place one after another the first time each profile's Home opens after the app starts
+  (never again until the app restarts).
+- All of it is in `components/Motion.kt` and answers something the mother did or opened. With the phone's animations
+  turned off, Compose finishes every one at once.
+- Nothing loops, nothing moves on its own — with one exception (owner's request, 2026-10-16): an
   exercise with two pose pictures shows them in one frame, taking turns (hold ~1.1 s, fade 0.45 s) like a tiny
   flip-book. It stays still when the phone's animations are off; a tap shows the next pose.
 

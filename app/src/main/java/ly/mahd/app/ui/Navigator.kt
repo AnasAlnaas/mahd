@@ -15,6 +15,18 @@ class Navigator(initial: List<String>) {
     val current: String get() = stack.last()
     val canGoBack: Boolean get() = stack.size > 1
 
+    /** The screen [back] returns to (null when there is none). */
+    val previous: String? get() = stack.getOrNull(stack.size - 2)
+
+    /** The screen at the bottom: a tab, or a screen opened on its own (e.g. from a reminder). */
+    val root: String get() = stack.first()
+
+    /** How many screens are open (1 = only the root): tells opening a screen from going back. */
+    val depth: Int get() = stack.size
+
+    /** Every open screen, the root first. */
+    val routes: List<String> get() = stack.toList()
+
     fun push(route: String) {
         if (current != route) stack.add(route)
     }

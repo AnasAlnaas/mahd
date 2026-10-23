@@ -11,7 +11,9 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -76,6 +78,11 @@ import ly.mahd.app.ui.Navigator
 import ly.mahd.app.ui.Routes
 import ly.mahd.app.ui.components.AppCard
 import ly.mahd.app.ui.components.ExpressiveButton
+import ly.mahd.app.ui.components.FadeInImage
+import ly.mahd.app.ui.components.fold
+import ly.mahd.app.ui.components.pressScale
+import ly.mahd.app.ui.components.unfold
+import ly.mahd.app.ui.theme.AppMotion
 import ly.mahd.app.ui.theme.LocalSurfaces
 import ly.mahd.app.ui.components.ConfirmDialog
 import ly.mahd.app.ui.components.DatePickerPopup
@@ -181,11 +188,14 @@ fun PhotosScreen(app: MahdApp, profile: Profile, nav: Navigator) {
                         onClick = { gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
                     ) { Text(stringResource(R.string.photos_pick)) }
                 }
-                if (busy) {
-                    Text(stringResource(R.string.photos_adding), style = MaterialTheme.typography.bodyMedium)
-                    LinearProgressIndicator(Modifier.fillMaxWidth())
+                // The "adding" line and the compare button unfold in place instead of pushing the grid down at once.
+                AnimatedVisibility(visible = busy, enter = unfold(), exit = fold()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(stringResource(R.string.photos_adding), style = MaterialTheme.typography.bodyMedium)
+                        LinearProgressIndicator(Modifier.fillMaxWidth())
+                    }
                 }
-                if (photos.size >= 2) {
+                AnimatedVisibility(visible = photos.size >= 2, enter = unfold(), exit = fold()) {
                     ExpressiveButton(onClick = { nav.push(Routes.compare(null)) }, modifier = Modifier.fillMaxWidth(), tonal = true) {
                         Text(stringResource(R.string.photos_compare))
                     }
@@ -197,8 +207,12 @@ fun PhotosScreen(app: MahdApp, profile: Profile, nav: Navigator) {
                 EmptyState(stringResource(R.string.photos_empty, profileName(profile)))
             }
         }
+        // New photos fade in and the others glide to make room; a deleted one fades away.
         items(photos.asReversed(), key = { it.id }) { photo ->
-            PhotoTile(app.photos, photo, photoAge(res, birth, photo.date)) { nav.push(Routes.photo(photo.id)) }
+            PhotoTile(
+                app.photos, photo, photoAge(res, birth, photo.date),
+                Modifier.animateItem(AppMotion.slowEffects(), AppMotion.defaultSpatial(), AppMotion.defaultEffects()),
+            ) { nav.push(Routes.photo(photo.id)) }
         }
         item(span = { GridItemSpan(maxLineSpan) }) {
             AppCard(modifier = Modifier.padding(top = 8.dp), containerColor = MaterialTheme.colorScheme.surfaceContainer) {
@@ -217,8 +231,16 @@ fun PhotosScreen(app: MahdApp, profile: Profile, nav: Navigator) {
 }
 
 @Composable
-private fun PhotoTile(store: PhotoStore, photo: Photo, label: String, onClick: () -> Unit) {
-    Box(Modifier.aspectRatio(1f).clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick)) {
+private fun PhotoTile(store: PhotoStore, photo: Photo, label: String, modifier: Modifier, onClick: () -> Unit) {
+    // A tile gives a little under the finger, like the cards.
+    val source = remember { MutableInteractionSource() }
+    Box(
+        modifier
+            .pressScale(source, pressedScale = 0.95f)
+            .aspectRatio(1f)
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(interactionSource = source, indication = LocalIndication.current, onClick = onClick),
+    ) {
         PhotoImage(store, photo.file, minSidePx = 320, modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         Text(
             label,
@@ -247,8 +269,9 @@ fun PhotoImage(
     val bitmap by produceState<ImageBitmap?>(null, file, minSidePx) {
         value = withContext(Dispatchers.IO) { store.load(file, minSidePx)?.asImageBitmap() }
     }
+    // The picture fades in over its placeholder once it has loaded.
     Box(modifier.background(MaterialTheme.colorScheme.surfaceVariant)) {
-        bitmap?.let { Image(it, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = contentScale) }
+        FadeInImage(bitmap, contentDescription = null, modifier = Modifier.fillMaxSize(), contentScale = contentScale)
     }
 }
 

@@ -1,5 +1,7 @@
 package ly.mahd.app.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -52,6 +54,10 @@ import ly.mahd.app.ui.components.ConfirmDialog
 import ly.mahd.app.ui.components.DateField
 import ly.mahd.app.ui.components.LocalToday
 import ly.mahd.app.ui.components.SubScreen
+import ly.mahd.app.ui.components.fadeAndResize
+import ly.mahd.app.ui.components.fold
+import ly.mahd.app.ui.components.sharedAxisX
+import ly.mahd.app.ui.components.unfold
 import ly.mahd.app.util.Format
 import java.time.LocalDate
 
@@ -82,7 +88,7 @@ private fun FormColumn(padding: PaddingValues, content: @Composable () -> Unit) 
 // ---------------------------------------------------------------------------------------------
 
 @Composable
-fun PregnancyFormScreen(app: MahdApp, existing: Profile?, onClose: () -> Unit) {
+fun PregnancyFormScreen(app: MahdApp, existing: Profile?, onClose: () -> Unit, onSaved: () -> Unit = onClose) {
     val today = LocalToday.current
     val scope = rememberCoroutineScope()
     var name by rememberSaveable { mutableStateOf(existing?.name.orEmpty()) }
@@ -125,47 +131,57 @@ fun PregnancyFormScreen(app: MahdApp, existing: Profile?, onClose: () -> Unit) {
 
             // The calendars also reach back to the saved date when it is older than the usual limit.
             val savedDue = existing?.dueDate
-            if (useLastPeriod) {
-                DateField(
-                    label = stringResource(R.string.last_period_label),
-                    date = lastPeriod,
-                    min = earliest(today.minusWeeks(44), savedDue?.let(PregnancyMath::lastPeriodFromDueDate)),
-                    max = today,
-                    onDate = { lastPeriod = it },
-                )
-            } else {
-                DateField(
-                    label = stringResource(R.string.due_date_label),
-                    date = dueDate,
-                    min = earliest(today.minusWeeks(4), savedDue),
-                    max = today.plusWeeks(42),
-                    onDate = { dueDate = it },
-                )
+            // The calendar for the chosen way slides in from the side of its button.
+            AnimatedContent(
+                targetState = useLastPeriod,
+                transitionSpec = { sharedAxisX(forward = !targetState) },
+                label = "date-way",
+            ) { byLastPeriod ->
+                if (byLastPeriod) {
+                    DateField(
+                        label = stringResource(R.string.last_period_label),
+                        date = lastPeriod,
+                        min = earliest(today.minusWeeks(44), savedDue?.let(PregnancyMath::lastPeriodFromDueDate)),
+                        max = today,
+                        onDate = { lastPeriod = it },
+                    )
+                } else {
+                    DateField(
+                        label = stringResource(R.string.due_date_label),
+                        date = dueDate,
+                        min = earliest(today.minusWeeks(4), savedDue),
+                        max = today.plusWeeks(42),
+                        onDate = { dueDate = it },
+                    )
+                }
             }
 
-            if (computedDue != null) {
-                AppCard(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
-                    if (plausible) {
-                        val ga = PregnancyMath.gestationalAge(computedDue, today)
-                        Text(
-                            stringResource(R.string.computed_due_date, Format.date(computedDue)),
-                            style = MaterialTheme.typography.titleMedium,
-                        )
-                        Text(
-                            stringResource(R.string.computed_current_week, Format.gestationalAge(res, ga.weeks, ga.days)),
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                    } else if (keepsPastDate) {
-                        Text(
-                            stringResource(R.string.computed_due_date, Format.date(computedDue)),
-                            style = MaterialTheme.typography.titleMedium,
-                        )
-                        Text(
-                            stringResource(R.string.past_due, Format.days(res, -PregnancyMath.daysUntilDue(computedDue, today))),
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                    } else {
-                        Text(stringResource(R.string.due_date_not_plausible), style = MaterialTheme.typography.bodyLarge)
+            // The result of the chosen date; it fades to the new one (and grows or shrinks to fit) when the date changes.
+            AnimatedContent(targetState = computedDue, transitionSpec = { fadeAndResize() }, label = "due") { due ->
+                if (due != null) {
+                    AppCard(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
+                        if (PregnancyMath.isPlausibleDueDate(due, today)) {
+                            val ga = PregnancyMath.gestationalAge(due, today)
+                            Text(
+                                stringResource(R.string.computed_due_date, Format.date(due)),
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                            Text(
+                                stringResource(R.string.computed_current_week, Format.gestationalAge(res, ga.weeks, ga.days)),
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                        } else if (due == existing?.dueDate && due.isBefore(today)) {
+                            Text(
+                                stringResource(R.string.computed_due_date, Format.date(due)),
+                                style = MaterialTheme.typography.titleMedium,
+                            )
+                            Text(
+                                stringResource(R.string.past_due, Format.days(res, -PregnancyMath.daysUntilDue(due, today))),
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                        } else {
+                            Text(stringResource(R.string.due_date_not_plausible), style = MaterialTheme.typography.bodyLarge)
+                        }
                     }
                 }
             }
@@ -188,7 +204,7 @@ fun PregnancyFormScreen(app: MahdApp, existing: Profile?, onClose: () -> Unit) {
                         } else {
                             app.repository.updateProfile(existing.copy(name = name.trim(), dueDate = due))
                         }
-                        onClose()
+                        onSaved()
                     }
                 },
                 enabled = valid,
@@ -230,7 +246,7 @@ private val PRETERM_WEEKS = (24..36).toList()
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ChildFormScreen(app: MahdApp, existing: Profile?, onClose: () -> Unit) {
+fun ChildFormScreen(app: MahdApp, existing: Profile?, onClose: () -> Unit, onSaved: () -> Unit = onClose) {
     val today = LocalToday.current
     val scope = rememberCoroutineScope()
     var name by rememberSaveable { mutableStateOf(existing?.name.orEmpty()) }
@@ -282,7 +298,7 @@ fun ChildFormScreen(app: MahdApp, existing: Profile?, onClose: () -> Unit) {
                                 existing.copy(kind = ProfileKind.CHILD, name = name.trim(), sex = s, birthDate = b, weeksAtBirth = weeks),
                             )
                         }
-                        onClose()
+                        onSaved()
                     }
                 },
                 enabled = valid,
@@ -350,11 +366,14 @@ private fun PrematureFields(premature: Boolean, onPremature: (Boolean) -> Unit, 
             }
             Switch(checked = premature, onCheckedChange = onPremature)
         }
-        if (premature) {
-            Text(stringResource(R.string.premature_weeks_label), style = MaterialTheme.typography.labelLarge)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                PRETERM_WEEKS.forEach { w ->
-                    AppFilterChip(selected = weeks == w, onClick = { onWeeks(w) }, label = w.toString())
+        // The weeks unfold under the switch.
+        AnimatedVisibility(visible = premature, enter = unfold(), exit = fold()) {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.premature_weeks_label), style = MaterialTheme.typography.labelLarge)
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    PRETERM_WEEKS.forEach { w ->
+                        AppFilterChip(selected = weeks == w, onClick = { onWeeks(w) }, label = w.toString())
+                    }
                 }
             }
         }
@@ -376,16 +395,12 @@ fun BabyBornScreen(app: MahdApp, pregnancy: Profile, onDone: () -> Unit, onClose
     var sex by rememberSaveable { mutableStateOf<String?>(null) }
     var birth by rememberSaveable(stateSaver = dateSaver) { mutableStateOf<LocalDate?>(today) }
 
-    val birthType = BirthType.fromCode(birthTypeCode)
-    if (birthType == null) {
-        BirthTypeDecision(onPick = { birthTypeCode = it.code }, onClose = onClose)
-        return
-    }
-
     val weeksAtBirth = birth?.let { PregnancyMath.gestationalAge(due, it).weeks }
     val valid = name.isNotBlank() && sex != null && birth != null
 
-    SubScreen(title = stringResource(R.string.baby_born_title), onBack = onClose) { padding ->
+    /** The second step: the baby's details, after [birthType] was chosen. */
+    @Composable
+    fun Details(birthType: BirthType) = SubScreen(title = stringResource(R.string.baby_born_title), onBack = onClose) { padding ->
         FormColumn(padding) {
             AppCard(containerColor = MaterialTheme.colorScheme.primaryContainer) {
                 MoonPhase(1f, size = 40.dp)
@@ -414,14 +429,16 @@ fun BabyBornScreen(app: MahdApp, pregnancy: Profile, onDone: () -> Unit, onClose
                 max = today,
                 onDate = { birth = it },
             )
-            if (weeksAtBirth != null) {
-                AppCard(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
-                    Text(
-                        stringResource(R.string.baby_born_weeks, weeksAtBirth.toString()),
-                        style = MaterialTheme.typography.bodyLarge,
-                    )
-                    if (weeksAtBirth < 37) {
-                        Text(stringResource(R.string.baby_born_premature_note), style = MaterialTheme.typography.bodyMedium)
+            AnimatedContent(targetState = weeksAtBirth, transitionSpec = { fadeAndResize() }, label = "weeks") { weeks ->
+                if (weeks != null) {
+                    AppCard(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
+                        Text(
+                            stringResource(R.string.baby_born_weeks, weeks.toString()),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+                        if (weeks < 37) {
+                            Text(stringResource(R.string.baby_born_premature_note), style = MaterialTheme.typography.bodyMedium)
+                        }
                     }
                 }
             }
@@ -450,6 +467,15 @@ fun BabyBornScreen(app: MahdApp, pregnancy: Profile, onDone: () -> Unit, onClose
                 Text(stringResource(R.string.action_cancel))
             }
         }
+    }
+
+    // The two steps slide like pages ("change" goes back to the first).
+    AnimatedContent(
+        targetState = BirthType.fromCode(birthTypeCode),
+        transitionSpec = { sharedAxisX(forward = targetState != null) },
+        label = "born-step",
+    ) { birthType ->
+        if (birthType == null) BirthTypeDecision(onPick = { birthTypeCode = it.code }, onClose = onClose) else Details(birthType)
     }
 }
 

@@ -1,5 +1,7 @@
 package ly.mahd.app.ui.screens
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -40,6 +42,8 @@ import ly.mahd.app.ui.components.ListGroup
 import ly.mahd.app.ui.components.LocalParent
 import ly.mahd.app.ui.components.LocalToday
 import ly.mahd.app.ui.components.MoonPhase
+import ly.mahd.app.ui.components.RollingText
+import ly.mahd.app.ui.theme.AppMotion
 import ly.mahd.app.ui.components.SectionTitle
 import ly.mahd.app.ui.components.SubScreen
 import ly.mahd.app.ui.components.WarningCard
@@ -139,14 +143,18 @@ fun PostpartumScreen(app: MahdApp, child: Profile, onBack: () -> Unit) {
                     BirthType.CAESAREAN -> stage.caesarean
                     null -> stage.natural + stage.caesarean
                 }
-                ListGroup { GroupRow { BulletList(normal) } }
+                // Choosing the kind of birth grows or shrinks this list smoothly.
+                ListGroup(Modifier.animateContentSize(AppMotion.defaultSpatial())) { GroupRow { BulletList(normal) } }
             }
 
             item { SectionTitle(stringResource(R.string.postpartum_tips_title)) }
             item { ListGroup { GroupRow { BulletList(if (father) stage.tipsFather else stage.tips) } } }
 
             item {
-                WarningCard(title = stringResource(R.string.postpartum_emergency_title)) {
+                WarningCard(
+                    title = stringResource(R.string.postpartum_emergency_title),
+                    modifier = Modifier.animateContentSize(AppMotion.defaultSpatial()),
+                ) {
                     val signs = content.emergencySigns + if (type != BirthType.NATURAL) content.emergencySignsCaesarean else emptyList()
                     BulletList(signs, bullet = MaterialTheme.colorScheme.error)
                 }
@@ -238,7 +246,7 @@ fun HospitalBagScreen(app: MahdApp, pregnancy: Profile, onBack: () -> Unit) {
                     MoonPhase(done / bag.allIds.size.toFloat(), size = 56.dp)
                     Spacer(Modifier.width(16.dp))
                     Column {
-                        Text(
+                        RollingText(
                             res.getString(R.string.bag_progress, done.toString(), bag.allIds.size.toString()),
                             style = MaterialTheme.typography.titleLarge,
                         )
@@ -258,11 +266,13 @@ fun HospitalBagScreen(app: MahdApp, pregnancy: Profile, onBack: () -> Unit) {
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Checkbox(checked = isPacked, onCheckedChange = null, modifier = Modifier.padding(12.dp))
-                                    Text(
-                                        bagItem.text,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = if (isPacked) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                                    // A packed item quietens with the tick.
+                                    val textColor by animateColorAsState(
+                                        if (isPacked) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface,
+                                        AppMotion.slowEffects(),
+                                        label = "packed",
                                     )
+                                    Text(bagItem.text, style = MaterialTheme.typography.bodyLarge, color = textColor)
                                 }
                             }
                         }
